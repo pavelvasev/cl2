@@ -1,0 +1,22 @@
+<!doctype html>
+<head>
+<script type="importmap">
+  {
+    "imports": {
+      "cl2": "../../runtime/cl2.js"
+    }
+  }
+</script>
+<script src="cl2-browser.js"> </script>
+</head>
+<body>
+
+<script type="module">
+  import * as M from "./main.cl.js"
+  M.create_main({}).output.changed.subscribe( (elem) => {
+    document.documentElement.appendChild( elem )
+    //console.log("seee elem",elem)
+  } )
+</script>
+
+</body>

@@ -1,0 +1,41 @@
+{
+  "name": "cl2",
+  "exports": {
+    ".": "./runtime/cl2.js"
+   },
+  "type": "module",
+  "version": "1.0.42",
+  "description": "Visualizes scenes written in Compalang.",
+  "main": "app.js",
+  "directories": {
+    "example": "examples"
+  },
+  "bin": {
+    "vrungel": "./server.mjs",
+    "vrungel-setup": "./local-data-server-setup/setup.mjs",
+    "vrungel-setup-off": "./local-data-server-setup/setup-off.mjs"
+  },
+  "scripts": {
+    "start": "node ./server.mjs",
+    "setup": "node ./local-data-server-setup/setup.mjs",
+    "setupoff": "node ./local-data-server-setup/setup.mjs off",
+    "node": "node ./vrungel-node.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viewzavr/vrungel.git"
+  },
+  "author": "Pavel Vasev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/viewzavr/vrungel/issues"
+  },
+  "homepage": "https://github.com/viewzavr/vrungel#readme",
+  "dependencies": {
+    "chalk": "^5.1.2",
+    "console-stamp": "^3.0.6",
+    "node-static": "^0.7.11",
+    "opener": "^1.5.2",
+    "peggy": "^1.2.0"
+  }
+}
