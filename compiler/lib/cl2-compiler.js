@@ -27,7 +27,7 @@ export function modify_prefix( state={}, new_prefix )
 
 export function modify_parent( state={}, nv, nv2=nv )
 {	
-	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, static_values: {...state.static_values} }
+	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, static_values: {...state.static_values}, next_obj_cb: null }
 	return ns
 }
 
@@ -372,7 +372,9 @@ export function default_obj2js( obj,state ) {
 			let linkstr = `${objid}.release.subscribe( CL2.create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ) // hehe objid=${objid} prefix=${state.prefix}`
 			bindings.push( `//bindings from ${objid}`,linkstr )
 		}
-		
+
+	if (state.next_obj_cb)
+		state.next_obj_cb( obj, objid, strs)		
 
 	return {main:strs,bindings}
 }

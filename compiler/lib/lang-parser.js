@@ -438,7 +438,7 @@ function peg$parse(input, options) {
   var peg$c64 = "#";
 
   var peg$r0 = /^[ \t\n\r]/;
-  var peg$r1 = /^[a-zA-Z\u0430-\u044F\u0410-\u042F0-9_\-*&]/;
+  var peg$r1 = /^[a-zA-Z\u0430-\u044F\u0410-\u042F0-9_\-*&~]/;
   var peg$r2 = /^[a-zA-Z\u0430-\u044F\u0410-\u042F0-9_\-.!]/;
   var peg$r3 = /^[a-zA-Z\u0430-\u044F\u0410-\u042F_]/;
   var peg$r4 = /^[.a-zA-Z\u0430-\u044F\u0410-\u042F0-9_]/;
@@ -467,7 +467,7 @@ function peg$parse(input, options) {
   var peg$e13 = peg$literalExpectation("{{", false);
   var peg$e14 = peg$literalExpectation("}}", false);
   var peg$e15 = peg$literalExpectation("~", false);
-  var peg$e16 = peg$classExpectation([["a", "z"], ["A", "Z"], ["\u0430", "\u044F"], ["\u0410", "\u042F"], ["0", "9"], "_", "-", "*", "&"], false, false);
+  var peg$e16 = peg$classExpectation([["a", "z"], ["A", "Z"], ["\u0430", "\u044F"], ["\u0410", "\u042F"], ["0", "9"], "_", "-", "*", "&", "~"], false, false);
   var peg$e17 = peg$otherExpectation("feature name");
   var peg$e18 = peg$classExpectation([["a", "z"], ["A", "Z"], ["\u0430", "\u044F"], ["\u0410", "\u042F"], ["0", "9"], "_", "-", ".", "!"], false, false);
   var peg$e19 = peg$literalExpectation("+", false);

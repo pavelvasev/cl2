@@ -74,7 +74,7 @@ export function _let( obj, state )
 // по объектовой записи объекта понять кто его параметры включая каналы
 export function get_obj_params( obj ) {
 	let params = {}
-	let rest_param, named_rest_param, children_param
+	let rest_param, named_rest_param, children_param, next_obj_param
 
 	let in_p = Object.values(obj.children).find( c => c.basis == "in")
 	if (!in_p) return {params}
@@ -105,11 +105,16 @@ export function get_obj_params( obj ) {
 					k.$name_modified = k.$name.slice(0,-1)
 					children_param = k.$name_modified
 				}	
+		  else
+			if (k.$name.endsWith("~")) {
+					k.$name_modified = k.$name.slice(0,-1)
+					next_obj_param = k.$name_modified
+				}
 		}		
 	
 	//console.log("get-obj-params obj=",obj.$name, "in=",in_p,{params,rest_param,named_rest_param})
 
-	return {params,rest_param,named_rest_param,children_param}
+	return {params,rest_param,named_rest_param,children_param,next_obj_param}
 }
 
 export function _in( obj, state )
@@ -136,7 +141,7 @@ export function _obj( obj, state )
 	//strs2.push(`let self=CL2.create_item()`)
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
-	let {params,rest_param,named_rest_param, children_param} = get_obj_params( obj )
+	let {params,rest_param,named_rest_param, children_param,next_obj_param} = get_obj_params( obj )
 	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
@@ -172,7 +177,16 @@ export function _obj( obj, state )
 	// состояние компилятора
 	//console.log("saving to statE:",id, state.current, state.env)
 	state.current[ id ] = {
-		make_code: (obj,state) => C.default_obj2js(obj,state),
+		make_code: (obj,state) => { 
+			let self_objid = `${state.prefix}${obj.$name}` // todd синхронизировать с default_obj2js
+			if (next_obj_param)
+				state.next_obj_cb = (obj,objid,strs) => {
+					if (obj.basis == next_obj_param) {
+						strs.push( `${self_objid}.${next_obj_param}.set( ${objid} )` )
+					}
+					state.next_obj_cb = null
+				}
+			return C.default_obj2js(obj,state) },
 		check_params: ( param_names, locinfo ) => {
 			//console.log("check_params of id",id,"param_names=",param_names,"obj_params=",obj_params)
 			// задача - по каждому указанному входному параметру дать информацию
