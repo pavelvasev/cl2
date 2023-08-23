@@ -179,14 +179,20 @@ export function _obj( obj, state )
 	state.current[ id ] = {
 		make_code: (obj,state) => { 
 			let self_objid = `${state.prefix}${obj.$name}` // todd синхронизировать с default_obj2js
-			if (next_obj_param)
-				state.next_obj_cb = (obj,objid,strs) => {
-					if (obj.basis == next_obj_param) {
-						strs.push( `${self_objid}.${next_obj_param}.set( ${objid} )` )
+
+			let res = C.default_obj2js(obj,state) 
+
+			if (next_obj_param) {
+				state.next_obj_cb = (obj2,objid2,strs) => {
+					if ("_" + obj2.basis == next_obj_param) {						
+						strs.push( `${self_objid}.${next_obj_param}.set( ${objid2} )` )
 					}
 					state.next_obj_cb = null
 				}
-			return C.default_obj2js(obj,state) },
+			}
+			
+			return res
+		},
 		check_params: ( param_names, locinfo ) => {
 			//console.log("check_params of id",id,"param_names=",param_names,"obj_params=",obj_params)
 			// задача - по каждому указанному входному параметру дать информацию

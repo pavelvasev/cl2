@@ -80,7 +80,7 @@ export function code2obj( str, base_url="?" )
 // ну и 2я преобразовала и надо рестартовать процесс с нее же..
 export function objs2obj( objs )
 {
-	//return objs; // пока так..
+	return objs; // пока так..
 
 	//console.log("objs2obj called",objs)
 	for (let i=0; i<objs.length; i++)
@@ -91,15 +91,16 @@ export function objs2obj( objs )
 export function obj2obj( obj, objs, index )
 {	
 	//console.log( "obj2obj, basis=",obj)
-	if (obj.basis == "else") {
+	/*
+	if (obj.basis == "else_old") {
 		//console.log("CATCHED ELSE",obj)
 		obj.basis = "nop"
 		obj.basis_path = ["nop"]
 		let if_record = objs[ index-1 ]
 		//console.log("if record is", if_record)
-		if (obj.params.hasOwnProperty('0')) {			
+		if (obj.params.hasOwnProperty('0')) { // else some
 			if_record.params.else_value = obj.params[0]
-			if (obj.links.hasOwnProperty('0')) {
+			if (obj.links.hasOwnProperty('0')) { // else @k
 				/// ето ссылка
 				if_record.links.else_value = obj.links[0]
 				if_record.links.else_value.to = "else_value"
@@ -116,6 +117,7 @@ export function obj2obj( obj, objs, index )
 		  if_record.params.else_value = v
 		}
 	}
+	*/
 }
 
 // возвращает запись из текущего окружения определения по идентификатору id
@@ -373,8 +375,9 @@ export function default_obj2js( obj,state ) {
 			bindings.push( `//bindings from ${objid}`,linkstr )
 		}
 
-	if (state.next_obj_cb)
+	if (state.next_obj_cb) {
 		state.next_obj_cb( obj, objid, strs)		
+	}
 
 	return {main:strs,bindings}
 }
@@ -391,8 +394,8 @@ export function objToString(obj, ndeep, state ) {
     case "object":
       var indent = Array(ndeep||1).join('\t'), isArray = Array.isArray(obj);
       return '{['[+isArray] + Object.keys(obj).map(function(key){
-           return '\n\t' + indent + key + ': ' + objToString(obj[key], (ndeep||1)+1,state);
-         }).join(',') + '\n' + indent + '}]'[+isArray];
+           return indent + key + ': ' + objToString(obj[key], (ndeep||1)+1,state);
+         }).join(',') + '}]'[+isArray];
     default: return obj.toString();
   }
 }

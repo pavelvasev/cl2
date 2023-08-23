@@ -87,6 +87,14 @@ obj "print" {
 
 // if @cond (block { }) (block { })
 
+obj "else" {
+  in {
+    value: cell
+    else_block&:cell
+  }
+  bind @else_block @value
+}
+
 obj "if"
   {
   in {
@@ -95,6 +103,8 @@ obj "if"
     else_value: cell
 
     then_block&: cell
+
+    _else~: cell
   }
   output: cell
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
@@ -102,6 +112,8 @@ obj "if"
 
   // режим if @cond {}
   bind @then_block @then_value
+
+  //bind @_else.value @else_value
 
   cleanup_current_parent: func {:
     //console.log("cleanup_current_parent",current_parent.get())
@@ -144,7 +156,10 @@ obj "if"
       }
     } else {
       if (current_state.get() != 2) {
-        activate_branch( else_value.get(), value )
+        // ну пока так..
+        let els_value = _else.get() ? _else.get().value.get() : else_value.get()
+        activate_branch( els_value, value )
+        //activate_branch( else_value.get(), value )
         current_state.set( 2 )
       }
     }
