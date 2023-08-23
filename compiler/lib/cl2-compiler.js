@@ -375,7 +375,7 @@ export function default_obj2js( obj,state ) {
 			bindings.push( `//bindings from ${objid}`,linkstr )
 		}
 
-	if (state.next_obj_cb) {
+	if (state.next_obj_cb) { // F-CHAINS-V3
 		state.next_obj_cb( obj, objid, strs)		
 	}
 

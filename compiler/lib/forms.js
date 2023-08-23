@@ -75,6 +75,7 @@ export function _let( obj, state )
 export function get_obj_params( obj ) {
 	let params = {}
 	let rest_param, named_rest_param, children_param, next_obj_param
+	// F-CHAINS-V3 next_obj_param
 
 	let in_p = Object.values(obj.children).find( c => c.basis == "in")
 	if (!in_p) return {params}
@@ -182,9 +183,10 @@ export function _obj( obj, state )
 
 			let res = C.default_obj2js(obj,state) 
 
+			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {
 				state.next_obj_cb = (obj2,objid2,strs) => {
-					if ("_" + obj2.basis == next_obj_param) {						
+					if ("_" + obj2.basis == next_obj_param) {
 						strs.push( `${self_objid}.${next_obj_param}.set( ${objid2} )` )
 					}
 					state.next_obj_cb = null
@@ -322,6 +324,7 @@ export function func( obj, state )
 
 	//state.current[ name ] - а кстати идея.. зарегать так объект..
 	state.static_values[ name ] = true
+	// .static_values это тема, чтобы на функцию не биндиться а как есть передавать
 
 	return {main:strs,bindings:[]}
 }
