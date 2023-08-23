@@ -23,7 +23,8 @@ export var tablica = {
 export function compute( obj, state )
 {
 	// поменяем особые формы
-	let modified = C.modify_env( state, tablica )
+	// let modified = C.modify_env( state, tablica )
+	let modified = {...state}
 
 	// но кстати, мб надо не модифицировать а тупо заменять. чтобы не было путаницы.
 	//let modified = {...state}

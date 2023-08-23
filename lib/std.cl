@@ -1,8 +1,4 @@
 
-
-
-
-
 obj "timer" {
 
   //cells interval=1000 output=0
