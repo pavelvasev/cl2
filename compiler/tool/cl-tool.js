@@ -38,10 +38,10 @@ import * as FBUNDLE from "../plugins/bundle-2/bundle-2.js"
 FBUNDLE.setup( state )
 import * as FMPATH from "../plugins/module-path/module-path.js"
 FMPATH.setup( state )
-/*
+
 import * as FMCOMPUTE from "../plugins/compute/compute.js"
 FMCOMPUTE.setup( state )
-*/
+
 
 // уже прочитанные модули
 let imported_modules = {} // abs-path => state

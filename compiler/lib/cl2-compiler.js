@@ -207,6 +207,10 @@ export function one_obj2js_sp( obj, state )
 	throw new Error(`record ${obj.basis} have no make_code!`)
 }
 
+export function obj_id( obj, state ) {
+	return `${state.prefix}${obj.$name}`
+}
+
 
 export function default_obj2js( obj,state ) {
 	//console.log("default_obj2js",obj)
@@ -267,9 +271,11 @@ export function default_obj2js( obj,state ) {
 			init_consts[ internal_name(name) ] = obj.params[name]
 	}
 
-	let objid = `${state.prefix}${obj.$name}`
+	let objid = obj_id( obj, state )
 	let strs = [`/// object ${objid}`]
 	let strs2 = []
+
+	let bindings_hash_before_rest = {...bindings_hash} // надо для compute_mode
 
 	if (pos_rest.length > 0) {
 
@@ -280,16 +286,17 @@ export function default_obj2js( obj,state ) {
 		for (let j=0; j<pos_rest.length; j++) {
 			let name = pos_rest[j]		
 			if (!bindings_hash[ name ]) {
+				// константа
 				let pos_cell_name = `pos_cell_${objid}_${j}`
 				strs2.push( `let ${pos_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state) })`)
 				strs2.push( `${pos_cell_name}.$title="pos_cell_${j}"; ${pos_cell_name}.attached_to=${objid}` )
 				pos_cells.push(pos_cell_name)
 				delete init_consts[ name ]
-				//init_consts[ name ] = "CL2.NOVALUE"			 
-				
+				//init_consts[ name ] = "CL2.NOVALUE"				
 			}
 			else
 			{
+				// ссылка
 				let to = bindings_hash[ name ]
 				delete bindings_hash[ name ]
 				pos_cells.push(to)
@@ -306,7 +313,8 @@ export function default_obj2js( obj,state ) {
 
 	// init_consts["parent"] = state.struc_parent?.$name || "self"
 	
-	strs.push( `let ${objid} = ${obj.modul_prefix}create_${obj.basis}( ${objToString(init_consts,1,state)} )`)
+  strs.push( `let ${objid} = ${obj.modul_prefix}create_${obj.basis}( ${objToString(init_consts,1,state)} )`)
+
 	strs.push( `${objid}.$title = "${objid}"`)
 	if (state.tree_parent_id) {
 		  // древовидная иерархия.. но там объекты у нас могут путешествовать туды сюды
@@ -342,8 +350,43 @@ export function default_obj2js( obj,state ) {
 	}
 
 	strs.push( strs2 ) // rest-накопления
+	
+	for (let k in bindings_hash) {
+		//let link = obj.links[k]
+		let linkstr = `${objid}.release.once( CL2.create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ) // hehe objid=${objid} prefix=${state.prefix}`
+		bindings.push( `//bindings from ${objid}`,linkstr )
+	}
 
-	//  и фичеры.. это у нас дети которые не дети	
+	if (state.next_obj_cb) { // F-CHAINS-V3
+		state.next_obj_cb( obj, objid, strs)
+	}
+
+	if (state.compute_mode) {
+		// идея - делаем оболочку над объектом. 
+
+	  // нам не надо слушать рест - он всегда определен и он есть список примитивов (которые и надо слушать)
+	  // поэтому вместо него мы используем его значения
+
+		let source_comms = Object.values(bindings_hash_before_rest)
+		
+
+	  //strs.push( `let ${objid} = create_task( ${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)} )`)
+	  let r_strs = []
+	  let r_id = `${objid}_task`
+	  r_strs.push( `let ${r_id} = create_react({})`,
+	  	`let ${objid} = ${r_id}`, // внешние ссылаются по старому имени
+	  	//`${r_id}.action.set( () => { `,strs,bindings,`if (${objid}.output) CL2.create_binding( ${objid}.output, ${r_id}.output`,` })`,
+	  	`${r_id}.action.set( () => { `,strs,bindings,`return ${objid}.output`,` })`,
+	  	`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )` // todo once
+	   )
+
+	  //${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)}
+	  strs = r_strs
+	  bindings = []
+  }	
+
+	// и фичеры.. это у нас дети которые не дети	
+	// их важно делать после state.compute_mode
 	if (obj.features_list) {
 		strs.push( `// features_list of ${objid}`)
 		let mod_state = modify_parent(state,objid)
@@ -362,21 +405,10 @@ export function default_obj2js( obj,state ) {
 		//let f_code = objs2js( obj.features_list )
 		//strs.push( f_code )
 	}
-	
-	//let links_names = Object.keys(obj.links)
-		if (output_binding) {
-			let linkstr = `${objid}.release.subscribe( CL2.create_binding( ${objid}.output, ${output_binding} ).unsub )`
-			bindings.push( `// output binding of ${objid}`,linkstr )
-		}
 
-		for (let k in bindings_hash) {
-			//let link = obj.links[k]
-			let linkstr = `${objid}.release.subscribe( CL2.create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ) // hehe objid=${objid} prefix=${state.prefix}`
-			bindings.push( `//bindings from ${objid}`,linkstr )
-		}
-
-	if (state.next_obj_cb) { // F-CHAINS-V3
-		state.next_obj_cb( obj, objid, strs)		
+	if (output_binding) {
+		let linkstr = `${objid}.release.once( CL2.create_binding( ${objid}.output, ${output_binding} ).unsub )`
+		bindings.push( `// output binding of ${objid}`,linkstr )
 	}
 
 	return {main:strs,bindings}
@@ -415,6 +447,7 @@ export function paramEnvToFunc( value, state ) {
 
 export function value_to_arrow_func( code ) 
 {
+	// ссылки типа @funcname - резолвим прямо на funcname
 	code = code?.from ? code.from : code
 
 	// обработка формы {: :} но вообще это не так уж и ортогонально..

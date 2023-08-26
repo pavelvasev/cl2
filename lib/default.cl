@@ -1,10 +1,12 @@
 // F-DEFAULT-CL
 
+// таки мысли что надо сделать Cl2.create_reaction( comm, code )
 obj "react" {
   in {
     input: channel
     action: cell
     children_action&: cell
+    // вопрос - а как указать что чилдренов надо компилировать в вычислительном режиме?
   }
   output: channel
 
@@ -12,13 +14,21 @@ obj "react" {
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
     input.on( (value) => {
       let fn = action.get()      
-      CL2.schedule( () => {
+      CL2.schedule( () => { // принципиальный момент - чтобы реакция не срабатывала посреди другой реакции
         let result
         if (fn.is_block_function)
           result = fn( self, CL2.create_cell(value) )
         else  
           result = fn( value )
-        output.emit( result )
+
+        if (result instanceof CL2.Comm) {
+          // вернули канал? слушаем его дальше.. такое правило для реакций
+          let unsub = result.once( (val) => {
+            output.emit( val )  
+          })
+        }
+        else
+          output.emit( result )
       })
     })
   }"
@@ -207,3 +217,23 @@ obj "block" {
   }
 }
 
+/*
+obj "task" {
+  in {
+    basis_func: cell
+    bindings: cell
+    consts: cell
+  }
+  output: cell
+
+  incoming_vals: extract @bindings
+
+  react @incoming_vals.output {: vals |
+    // .. merge_vals_to_consts
+    let obj = basis_func( consts )
+    obj.output.subscribe( (result) => {
+      self.output.set( result )
+    })
+  :}
+}
+*/

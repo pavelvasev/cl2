@@ -31,6 +31,20 @@ export class Comm {
 	toString() {
 		return `${this.constructor.name}:${get_title( this )}`
 	}
+	// становится потребна
+	// subscribe на однократное срабатывание.
+	once( fn ) {
+		let unsub
+		let need_unsub
+		unsub = this.subscribe( (val) => {
+			if (unsub) 
+				  unsub() 
+			  else need_unsub = true
+			fn(val)
+		})
+		if (need_unsub) { unsub(); return () => {} }
+		return unsub
+	}
 }
 
 export class Channel extends Comm {
@@ -379,6 +393,8 @@ export function create_item(parent,children=[]) {
 // но чилдрен больше для визуальных объектов. ну стало быть можно ввести
 // вторую иерархию. по аналогии как .host было. либо сделать как в QML
 // что встраивается масса объектов, а некоторые из них еще и дети.
+// update ну вообще надо бы поменять порядок: target, embedded_obj, name
+// ну и сделать name необязательным мб
 export function attach( target_object, name, embedded_object )
 {
 	if (target_object.hasOwnProperty(name))
@@ -441,6 +457,8 @@ export function create_binding( src, tgt ) {
 // при изменении значения src или при срабатывании ячеек-каналов из src
 // вызывается tgt
 // итого any тут в смысле "любое из"
+// update странно это выглядит. нет чтоб создать нечто что вернет канал который сработает определенным образом
+// а проще даже не нечто а сам канал. но формально конечно это нечто.
 export function create_binding_any( src, tgt ) {
 	if (!(src instanceof Cell))
 		throw new Error(`create_binding_any: not cell! ${src+''}`)
@@ -483,6 +501,38 @@ export function create_binding_when_any( list, q ) {
 	}
 	return { destroy: unsub }
 	//return unsub
+}
+
+// возвращает канал который срабатывает когда все примитивы из list сработали
+export function when_all( list ) {
+	let q = create_channel()
+	//SSconsole.log("create_binding_when_any, list=",list)
+	let values = new Array( list )
+	let counter = list.length
+	let index = 0
+	for (let k of list) {
+		let my_index = index
+		let unsub
+		let need_unsub
+		if (!k.subscribe) {
+			console.error("when-all: list element have no subscribe method. index=",index,"k=", k+"","list=",list)
+		}
+		unsub = k.subscribe( (v) => {
+			if (unsub)
+			    unsub()
+			else need_unsub = true
+			counter--
+			values[ my_index ] = v
+		    if (counter == 0)
+		    	schedule( () => q.emit( values ) )
+		    // надо делать через шедуле.. а то там соединиться не успевают.. create_binding( when-all, ... )
+		    	
+		})
+		if (need_unsub) unsub() // в случае ячеек
+
+		index++
+	}
+	return q	
 }
 
 // по списку примитивов синхронизации выдает список из ячеек, привязанных к этому списку
@@ -632,5 +682,10 @@ export function monitor_rest_values( src,tgt ) {
 
 export function mark_block_function( fn ) {
 	fn.is_block_function = true
+	return fn
+}
+
+export function mark_task_function( fn ) {
+	fn.is_task_function = true
 	return fn
 }

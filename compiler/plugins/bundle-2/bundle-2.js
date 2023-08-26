@@ -12,6 +12,23 @@ export function setup( st ) {
 		strs.push(`/// type ${id}`,s,"{")
 		strs.push( strs2 )
 		strs.push("}")
+
+/*
+		s = `${export_flag}function task_${id}( initial_values )`
+		strs.push(`/// type ${id}`,s,"{")
+		let call_code = `
+			let all_params_cells = ....
+			let cell = CL2.wait_all_cells( all_params_cells )
+			let s = cell.subscribe( (values) => {
+				let k = create_${id}( initial_values )
+				for (let i of all_params_cells)
+					k[ i ].set( values[ i ])
+
+			})
+		`
+		strs.push("}")
+*/		
+
 		state.current.exported ||= []
 		state.current.exported.push( id )
 		return strs

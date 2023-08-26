@@ -104,18 +104,35 @@ obj "apply" {
   output: cell
 
     x: func {:
+      
       let f = action.get()
       let args = u.output.get()
+//      console.log("qq: x",f,args)
+
       if (f && args) {
+//        console.log("calling")
         let res = f( ...args )
-        output.set( res )
+        //console.log("res=",res)
+        //if (f.awaitable) res.then(val => output.set( val ))
+        if (f.is_task_function && res instanceof CL2.Comm) {
+//          console.log("branch!")
+          // вернули канал? слушаем его дальше..
+          let unsub = res.once( (val) => {
+            output.set( val )
+          })
+        }
+        else
+          output.set( res )
+
+      } else {
+
       }
     :}
 
   any: cell
   
   bind @action @any
-  bind @u @any
+  bind @u.output @any
 
   xx: react @any @x
 
@@ -196,4 +213,18 @@ form "if" {: record records index |
     return true // restart
 :}
 */
+
+/*
+react @x { |x|
+  let y = (add @x 2)
+  return (mul @y 10) => emit @somechannel @y
+}
+
+// ну неплохо же выглядит.
+react (x) { |x|
+  let y = add(x,2)
+  return mul(y,10) => emit(somechannel,y)
+}
+*/
+
 

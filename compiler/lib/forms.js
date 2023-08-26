@@ -14,6 +14,7 @@ export var tablica = {
 	attach: { make_code: attach, check_params: default_cp },
 	channel: { make_code: channel, check_params: default_cp },
 	func: { make_code: func, check_params: default_cp },
+	//func: { make_code: func, check_params: (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[], children_param: "body"} } },
 	cell: { make_code: cell, check_params: default_cp },
 	bind: { make_code: bind, check_params: default_cp },
 	init: { make_code: init, check_params: default_cp },
@@ -41,6 +42,9 @@ export function _let( obj, state )
 	//let base = C.default_obj2js( obj,state )
 	//let base = C.objs2js( obj,state )
 	let base = { main: [], bindings: [] }
+
+	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
+	base.main.push( `let ${C.obj_id(obj,state)} = CL2.create_item()`)
 
 	//  и фичеры.. это у нас дети которые не дети	
 	if (obj.features_list) {
@@ -179,7 +183,7 @@ export function _obj( obj, state )
 	//console.log("saving to statE:",id, state.current, state.env)
 	state.current[ id ] = {
 		make_code: (obj,state) => { 
-			let self_objid = `${state.prefix}${obj.$name}` // todd синхронизировать с default_obj2js
+			let self_objid = C.obj_id( obj, state )
 
 			let res = C.default_obj2js(obj,state) 
 
@@ -317,6 +321,16 @@ export function func( obj, state )
 	let name = obj.$name_modified || obj.$name
 
 	let fn_code = obj.params[0]
+
+  /*
+	if (Object.keys(obj.children).length > 0) { // встроенный адаптер F-COMPUTE
+		let b_state = {...state,compute_mode:true}
+		//b_state.space.beginComputeMode()
+		let c_state = modify_parent( state, 'arg_obj' )
+
+		let cstr = C.objs2js( Object.values(obj.children),c_state )
+	}
+	*/
 	//console.log(fn_code,obj.features_list)
 	
 	let strs = [`function ${name}(${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
@@ -325,6 +339,9 @@ export function func( obj, state )
 	//state.current[ name ] - а кстати идея.. зарегать так объект..
 	state.static_values[ name ] = true
 	// .static_values это тема, чтобы на функцию не биндиться а как есть передавать
+
+	//let strs = [`function task_${name}(args) {}`]
+	//strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	return {main:strs,bindings:[]}
 }
