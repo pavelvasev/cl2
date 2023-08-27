@@ -376,13 +376,13 @@ export function default_obj2js( obj,state ) {
 	  r_strs.push( `let ${r_id} = create_react({})`,
 	  	`let ${objid} = ${r_id}`, // внешние ссылаются по старому имени
 	  	//`${r_id}.action.set( () => { `,strs,bindings,`if (${objid}.output) CL2.create_binding( ${objid}.output, ${r_id}.output`,` })`,
-	  	`${r_id}.action.set( () => { `,strs,bindings,`return ${objid}.output`,` })`,
-	  	`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )` // todo once
+	  	`${r_id}.action.set( () => { `,strs,bindings,`return ${objid}.output`,` })`
 	   )
 
 	  //${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)}
 	  strs = r_strs
-	  bindings = []
+	  bindings = [`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )`]
+	  // todo once
   }	
 
 	// и фичеры.. это у нас дети которые не дети	

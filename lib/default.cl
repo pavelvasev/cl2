@@ -8,7 +8,9 @@ obj "react" {
     children_action&: cell
     // вопрос - а как указать что чилдренов надо компилировать в вычислительном режиме?
   }
-  output: channel
+  //output: channel
+  // нам надо биндится к результатам тасков.. таски выражаются react-ами.. поэтому надо ячейки
+  output: cell is_changed={: new old | return true :}
 
   init "(obj) => {
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
@@ -24,11 +26,11 @@ obj "react" {
         if (result instanceof CL2.Comm) {
           // вернули канал? слушаем его дальше.. такое правило для реакций
           let unsub = result.once( (val) => {
-            output.emit( val )  
+            output.submit( val )  
           })
         }
         else
-          output.emit( result )
+          output.submit( result )
       })
     })
   }"
