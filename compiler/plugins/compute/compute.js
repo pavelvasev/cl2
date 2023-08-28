@@ -53,11 +53,15 @@ export function cofunc( obj, state )
 	let s = C.objs2js( C.get_children( obj ),modified )
 	//console.log("in called. result=",base)
 	let self_objid = C.obj_id( obj, state )
-    let args = C.get_children_head( obj ).attrs.map(x => "__" + x).join(",")
-	//return { main: [`CL2.mark_task_function( (${args}) => {`,s,"})"], bindings:[] }
-    // поскольку мы выдаем функцию.. то на вход идут конкретные значения
-    // но в коде мы считаем их коммуникац. примитивами. и поэтому мы их оборачиваем в примитивы, эти значения.
-	let args_cells = C.get_children_head( obj ).attrs.map(x => `let ${x} = CL2.create_cell( __${x} )`)
+	let args, args_cells
+	let head = C.get_children_head( obj )
+	if (head) {
+    	args = head.attrs.map(x => "__" + x).join(",")
+		//return { main: [`CL2.mark_task_function( (${args}) => {`,s,"})"], bindings:[] }
+    	// поскольку мы выдаем функцию.. то на вход идут конкретные значения
+    	// но в коде мы считаем их коммуникац. примитивами. и поэтому мы их оборачиваем в примитивы, эти значения.
+		args_cells = head.attrs.map(x => `let ${x} = CL2.create_cell( __${x} )`)
+	}
 
 	let output_things = ["let self = {};","let output = CL2.create_cell();","CL2.attach( self,'output',output )"]
 

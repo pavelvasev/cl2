@@ -12,7 +12,11 @@ import * as P from "./lang-parser.js"
 
    по сути это три разных направления деятельности просто удобно оказалось их совместить.
 
-   static_values см F-STATIC-VALUES
+   поля:
+     dir - каталог в файловой системе текущего компилируемого модуля.
+     static_values см F-STATIC-VALUES
+     tree_parent_id  - используется для append/attach
+     struc_parent_id - используется для генерации исходящих ссылок для выражений
 */
 
 export function create_state( env={}, current={},dir="" ) {
@@ -27,7 +31,8 @@ export function modify_prefix( state={}, new_prefix )
 
 export function modify_parent( state={}, nv, nv2=nv )
 {	
-	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, static_values: {...state.static_values}, next_obj_cb: null }
+	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, static_values: {...state.static_values} 
+	    }
 	return ns
 }
 
@@ -298,37 +303,39 @@ export function default_obj2js( obj,state ) {
 
 	let bindings_hash_before_rest = {...bindings_hash} // надо для compute_mode
 
-	if (pos_rest.length > 0) {
-
+	if (pos_rest.name) {
 		let rest_name = `${objid}_${pos_rest.name}`
-
-		bindings_hash[ pos_rest.name ] = rest_name
-		let pos_cells = []
-		for (let j=0; j<pos_rest.length; j++) {
-			let name = pos_rest[j]		
-			if (!bindings_hash[ name ]) {
-				// константа
-				let pos_cell_name = `pos_cell_${objid}_${j}`
-				strs2.push( `let ${pos_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state) })`)
-				strs2.push( `${pos_cell_name}.$title="pos_cell_${j}"; ${pos_cell_name}.attached_to=${objid}` )
-				pos_cells.push(pos_cell_name)
-				delete init_consts[ name ]
-				//init_consts[ name ] = "CL2.NOVALUE"				
+		if (pos_rest.length > 0) {			
+			bindings_hash[ pos_rest.name ] = rest_name
+			let pos_cells = []
+			for (let j=0; j<pos_rest.length; j++) {
+				let name = pos_rest[j]		
+				if (!bindings_hash[ name ]) {
+					// константа
+					let pos_cell_name = `pos_cell_${objid}_${j}`
+					strs2.push( `let ${pos_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state) })`)
+					strs2.push( `${pos_cell_name}.$title="pos_cell_${j}"; ${pos_cell_name}.attached_to=${objid}` )
+					pos_cells.push(pos_cell_name)
+					delete init_consts[ name ]
+					//init_consts[ name ] = "CL2.NOVALUE"				
+				}
+				else
+				{
+					// ссылка
+					let to = bindings_hash[ name ]
+					delete bindings_hash[ name ]
+					pos_cells.push(to)
+				}
+				// стало быть это ссылки типа binding..
 			}
-			else
-			{
-				// ссылка
-				let to = bindings_hash[ name ]
-				delete bindings_hash[ name ]
-				pos_cells.push(to)
-			}
-			// стало быть это ссылки типа binding..
+			
+			bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
+			bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
+			//init_consts[ pos_rest.name ] = pos_cells
+		} else {
+			init_consts[ internal_name(pos_rest.name) ] = []
 		}
-		
-		bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
-		bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
-		//init_consts[ pos_rest.name ] = pos_cells
-	}
+  }
 
 	////////////
 

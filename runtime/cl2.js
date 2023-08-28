@@ -644,9 +644,18 @@ export function monitor_rest_values( src,tgt ) {
 		function f() {
 			unsub()
 
-			if (!src.is_set) return
+			if (!src.is_set) {
+				return
+			}
 
 			let comms = src.get()
+
+			if (comms == null || comms.length == 0) {
+				dtgt.emit( [] )
+				unsub = () => {}
+				return
+			}
+
 			let cells = create_bound_cells( comms )
 
 			let all = create_channel()
@@ -662,8 +671,9 @@ export function monitor_rest_values( src,tgt ) {
 					console.channel_verbose("monitor_rest_values: have non-setted values, exiting. src=",src+"","last non setted:",have_not_setted)
 					return
 				}
-				//console.log("monitor_rest_values: collected",values,"from",src.get())
+				console.log("monitor_rest_values: collected",values,"from",src.get(),"emitting to",dtgt+"")
 				console.channel_verbose("monitor_rest_values: collected values from",src+"","emitting to",tgt+"","values=",values,"cells was",src.get() + "")
+
 				dtgt.emit( values )
 			})
 

@@ -6,6 +6,7 @@ export function setup( st ) {
 
 	// добавляет "экпортируемую сущность" в текущий модуль (пока ток функции)
 	space.register_item = ( id, state, strs2 ) => {
+		//console.log('register_item: ',id,'state.tree_parent_id=',state.tree_parent_id, state.struc)
 		let strs = []
 		let export_flag = state.dir === "" ? "export " : ""
 		let s = `${export_flag}function create_${id}( initial_values )`
@@ -29,8 +30,11 @@ export function setup( st ) {
 		strs.push("}")
 */		
 
-		state.current.exported ||= []
-		state.current.exported.push( id )
+		
+		if (state.tree_parent_id == null) {
+			state.current.exported ||= []
+			state.current.exported.push( id )
+		}
 		return strs
 	}
 

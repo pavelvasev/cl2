@@ -44,6 +44,7 @@ export function _let( obj, state )
 	let base = { main: [], bindings: [] }
 
 	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
+	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
 	base.main.push( `let ${C.obj_id(obj,state)} = CL2.create_item()`)
 
 	//  и фичеры.. это у нас дети которые не дети	
@@ -130,6 +131,13 @@ export function _in( obj, state )
 	return { main: ["// input params",s,"// end input params"], bindings:[] }
 }
 
+/* 1 вводит в окружение новую форму с указанным именем xxx.
+   при обращении к форме - генерируется текст создания объекта 
+   (в котором вызывается функция создания объекта - create_xxx)
+   2 вводит в генерируемый текст текущего модуля исходный код 
+   функции создания объекта create_xxx
+   
+*/
 export function _obj( obj, state )
 {
 	// чет я не очень понял зачем вызывать one_obj2js...
@@ -184,8 +192,7 @@ export function _obj( obj, state )
 	state.current[ id ] = {
 		make_code: (obj,state) => { 
 			let self_objid = C.obj_id( obj, state )
-
-			let res = C.default_obj2js(obj,state) 
+			let res = C.default_obj2js(obj,state)
 
 			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {
@@ -344,8 +351,41 @@ export function func( obj, state )
 	state.static_values[ name ] = true
 	// .static_values это тема, чтобы на функцию не биндиться а как есть передавать
 
+	let code = `
+	 obj "${name}" {
+	 	  in {
+	 	  	rest*: cell
+	 	  }
+	 	  output: cell
+	 	  vals: extract @rest
+  	  r: react @vals.output {: args | return ${name}( ...args ) :}
+
+  	  bind @r.output @output
+	 }
+	`
+
+	let c_obj = C.code2obj( code )
+	strs.push( C.objs2js( c_obj,state ) )
+
 	//let strs = [`function task_${name}(args) {}`]
 	//strs.push( `CL2.attach( self,"${name}",${name} )` )
+
+/*
+	let reactive_object = {
+		$name: ${name},
+		children: {
+			first: { basis: "apply"}
+		}
+	}
+*/
+  // была идея свести к реактивному объекту типа apply. но apply сам func использует..
+  /*
+  state.current[ id ] = {
+		make_code: (obj,state) => {
+			 xxx
+		},
+		check_params: default_cp
+	}*/
 
 	return {main:strs,bindings:[]}
 }
