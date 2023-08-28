@@ -59,6 +59,10 @@ export function get_params(obj) {
 	return obj.params
 }
 
+export function get_nested( obj ) {
+	return obj.features_list
+}
+
 // basis? basis-path? feature-list? (как назвать то его правильно.. args children? expr?..)
 
 
@@ -406,12 +410,12 @@ export function default_obj2js( obj,state ) {
 
 	// и фичеры.. это у нас дети которые не дети	
 	// их важно делать после state.compute_mode
-	if (obj.features_list) {
-		strs.push( `// features_list of ${objid}`)
+	if (get_nested(obj)) {
+		strs.push( `// nested objs of ${objid}`)
 		let mod_state = modify_parent(state,objid)
 		//let mod_state = modify_prefix( modify_parent(state,obj), `${state.prefix}${obj.$name}` )
 		//strs.push("{") // нужна своя область видимости чтобы идентификаторы не путались..
-		let fl_objs = objs2obj( obj.features_list )
+		let fl_objs = objs2obj( get_nested(obj) )
 
 		for (let f of fl_objs) {
 			let o = one_obj2js_sp( f, mod_state )

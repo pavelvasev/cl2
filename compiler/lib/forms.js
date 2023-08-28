@@ -47,9 +47,9 @@ export function _let( obj, state )
 	base.main.push( `let ${C.obj_id(obj,state)} = CL2.create_item()`)
 
 	//  и фичеры.. это у нас дети которые не дети	
-	if (obj.features_list) {
+	if (C.get_nested(obj)) {
 		let mod_state = C.modify_parent(state,obj.$name)
-		for (let f of obj.features_list) {
+		for (let f of C.get_nested(obj)) {
 			let o = C.one_obj2js_sp( f, mod_state )
 			base.main.push( o.main )
 			//bindings.push("// bindings from feature-list")
@@ -376,9 +376,9 @@ export function react( obj, state )
 	let bindings = []
 
 	//  и фичеры.. это у нас дети которые не дети	а всякие выражения	
-	if (obj.features_list) {
+	if (C.get_nested(obj)) {
 		let mod_state = C.modify_parent(state,obj.$name,null)
-		for (let f of obj.features_list) {
+		for (let f of C.get_nested(obj)) {
 			let o = C.one_obj2js_sp( f, mod_state )
 			strs.push( o.main )
 			//bindings.push("// bindings from feature-list")
