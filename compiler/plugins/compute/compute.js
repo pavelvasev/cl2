@@ -26,8 +26,30 @@ export function cofunc( obj, state )
 {
 	// поменяем особые формы
 	// let modified = C.modify_env( state, tablica )
-	let modified = {...state,compute_mode:true}
-	let c_state = C.modify_parent( modified, `self` )
+	//let modified = {...state,compute_mode:true}
+	//let c_state = C.modify_parent( modified, `self` )
+	let modified = {...state}
+	modified.next_obj_cb = ( obj, objid, strs, bindings, bindings_hash_before_rest ) => {
+	  let source_comms = Object.values(bindings_hash_before_rest)
+
+	  if (source_comms.length == 0) return;
+	  // нет зависимостей - ну сразу делаем
+
+	  //strs.push( `let ${objid} = create_task( ${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)} )`)
+	  let r_strs = []
+	  let r_id = `${objid}_task`
+	  r_strs.push( `let ${r_id} = create_react({})`,
+	  	`let ${objid} = ${r_id}`, // внешние ссылаются по старому имени
+	  	//`${r_id}.action.set( () => { `,strs,bindings,`if (${objid}.output) CL2.create_binding( ${objid}.output, ${r_id}.output`,` })`,
+	  	`${r_id}.action.set( () => { `,[...strs],[...bindings],`return ${objid}.output`,` })`
+	   )
+
+	  // заменяем
+	  strs.splice( 0, strs.length, ...r_strs )
+	  console.log('strs replaced:',strs)
+	  bindings.splice( 0, bindings.length,`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )`)
+	}
+
 	let s = C.objs2js( Object.values(obj.children),modified )
 	//console.log("in called. result=",base)
 	let self_objid = C.obj_id( obj, state )

@@ -189,11 +189,14 @@ export function _obj( obj, state )
 
 			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {
-				state.next_obj_cb = (obj2,objid2,strs) => {
+				let prev = state.next_obj_cb
+				state.next_obj_cb = (obj2,objid2,strs,bindings,bindings_hash_before_rest) => {
 					if ("_" + obj2.basis == next_obj_param) {
 						strs.push( `${self_objid}.${next_obj_param}.set( ${objid2} )` )
 					}
-					state.next_obj_cb = null
+					state.next_obj_cb = prev
+					if (state.next_obj_cb)
+						state.next_obj_cb(obj2,objid2,strs,bindings,bindings_hash_before_rest)
 				}
 			}
 			

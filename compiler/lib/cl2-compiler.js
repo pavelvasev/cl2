@@ -358,9 +358,10 @@ export function default_obj2js( obj,state ) {
 	}
 
 	if (state.next_obj_cb) { // F-CHAINS-V3
-		state.next_obj_cb( obj, objid, strs)
+		state.next_obj_cb( obj, objid, strs, bindings, bindings_hash_before_rest )
 	}
 
+/*
 	if (state.compute_mode) {
 		// идея - делаем оболочку над объектом. 
 
@@ -383,7 +384,8 @@ export function default_obj2js( obj,state ) {
 	  strs = r_strs
 	  bindings = [`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )`]
 	  // todo once
-  }	
+  }
+*/  
 
 	// и фичеры.. это у нас дети которые не дети	
 	// их важно делать после state.compute_mode

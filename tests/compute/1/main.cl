@@ -12,9 +12,11 @@ print "hello" (std.apply (cofunc { |z|
 less: func {: a b | return a < b :}
 
 print "hello-2" (std.apply (cofunc { |z|
+  print "tick"
   let x = 5
   let y = (std.add @x 5 @z)
-  if (less @y 40) "to-small" else { return (std.add @y 10) }
+  return (if true { return "OK" })
+  //return (if false "to-small" else { return (std.add @y 10) })
   //return (std.add @y 10)
 }) (std.counter (std.timer)) )
 
