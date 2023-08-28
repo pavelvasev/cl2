@@ -44,6 +44,23 @@ export function modify_env( state={}, nv )
 	return ns
 }
 
+///////////////////// работа с obj
+
+export function get_children(obj) {
+	return Object.values( obj.children )
+}
+
+// children_env = children(т.е. body) + head
+export function get_children_head( obj ) {
+	return obj.children_env_args
+}
+
+export function get_params(obj) {
+	return obj.params
+}
+
+// basis? basis-path? feature-list? (как назвать то его правильно.. args children? expr?..)
+
 
 // вход 
 // строка код на cl2, базовый урль.. (зачем?)
@@ -57,7 +74,7 @@ export function code2obj( str, base_url="?" )
 	try {
 		let parsed = P.parse( str,{base_url,grammarSource} )
 		//console.log("parsed=",parsed)
-		return Object.values( parsed.children )
+		return get_children( parsed )
 	} catch (e) {
       console.log("parser err")
       //env.emit("error",e)
@@ -325,7 +342,7 @@ export function default_obj2js( obj,state ) {
 
 // теперь надо бы детей
 	let c_state = modify_parent( state, children_param ? 'arg_obj' : objid )
-	let children_code = objs2js( Object.values(obj.children),c_state )
+	let children_code = objs2js( get_children(obj),c_state )
 
 	if (children_code.length > 0)
 	{
@@ -335,8 +352,8 @@ export function default_obj2js( obj,state ) {
 
 			// F-CHILDREN-BLOCK-PARAMS
 			let xtra = ''
-			if (obj.children_env_args) {
-				xtra = ', ' + obj.children_env_args.attrs.join(",")
+			if (get_children_head(obj)) {
+				xtra = ', ' + get_children_head(obj).attrs.join(",")
 			}
 
 			strs.push( "// children param",`let ${objid}_children = CL2.mark_block_function( (arg_obj${xtra}) => {`,children_code," } )" )

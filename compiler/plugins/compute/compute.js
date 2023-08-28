@@ -50,14 +50,14 @@ export function cofunc( obj, state )
 	  bindings.splice( 0, bindings.length,`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )`)
 	}
 
-	let s = C.objs2js( Object.values(obj.children),modified )
+	let s = C.objs2js( C.get_children( obj ),modified )
 	//console.log("in called. result=",base)
 	let self_objid = C.obj_id( obj, state )
-	let args = obj.children_env_args.attrs.map(x => "__" + x).join(",")
+    let args = C.get_children_head( obj ).attrs.map(x => "__" + x).join(",")
 	//return { main: [`CL2.mark_task_function( (${args}) => {`,s,"})"], bindings:[] }
     // поскольку мы выдаем функцию.. то на вход идут конкретные значения
     // но в коде мы считаем их коммуникац. примитивами. и поэтому мы их оборачиваем в примитивы, эти значения.
-	let args_cells = obj.children_env_args.attrs.map(x => `let ${x} = CL2.create_cell( __${x} )`)
+	let args_cells = C.get_children_head( obj ).attrs.map(x => `let ${x} = CL2.create_cell( __${x} )`)
 
 	let output_things = ["let self = {};","let output = CL2.create_cell();","CL2.attach( self,'output',output )"]
 

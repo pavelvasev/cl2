@@ -11,10 +11,10 @@ let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: 
 export var tablica = {
 	let: { make_code: _let, check_params: default_cp },
 	obj: { make_code: _obj, check_params: default_cp },
-	attach: { make_code: attach, check_params: default_cp },
+//	attach: { make_code: attach, check_params: default_cp },
 	channel: { make_code: channel, check_params: default_cp },
 	func: { make_code: func, check_params: default_cp },
-	//func: { make_code: func, check_params: (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[], children_param: "body"} } },
+//func: { make_code: func, check_params: (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[], children_param: "body"} } },
 	cell: { make_code: cell, check_params: default_cp },
 	bind: { make_code: bind, check_params: default_cp },
 	init: { make_code: init, check_params: default_cp },
@@ -81,14 +81,14 @@ export function get_obj_params( obj ) {
 	let rest_param, named_rest_param, children_param, next_obj_param
 	// F-CHAINS-V3 next_obj_param
 
-	let in_p = Object.values(obj.children).find( c => c.basis == "in")
+	let in_p = C.get_children(obj).find( c => c.basis == "in")
 	if (!in_p) return {params}
 
   // вот этим шагом можно параметры будет отдельно рендерить
 	//obj.in_params = in_p
 	//delete obj.children[ in_p.$name ]
 	
-		for (let k of Object.values(in_p.children)) {
+		for (let k of C.get_children( in_p )) {
 			//console.log("checking k=",k.$name,k.basis)
 			if (k.basis == "cell" || k.basis == "channel" || k.basis == "func")
 			{
@@ -125,7 +125,7 @@ export function get_obj_params( obj ) {
 export function _in( obj, state )
 {
 	//let base = C.one_obj2js( obj,state )
-	let s = C.objs2js( Object.values(obj.children),state )
+	let s = C.objs2js( C.get_children(obj),state )
 	//console.log("in called. result=",base)
 	return { main: ["// input params",s,"// end input params"], bindings:[] }
 }
@@ -157,7 +157,7 @@ export function _obj( obj, state )
 ///////////////// тело указанное в init
 
 	let c_state = C.modify_parent( state, "self" )
-	let body = C.objs2js( Object.values(obj.children), c_state )
+	let body = C.objs2js( C.get_children( obj ), c_state )
 	//strs2.push( body )
 
 	strs2.push( "// inner children",body )
@@ -249,7 +249,7 @@ export function _obj( obj, state )
 	return base
 }
 
-
+/*
 export function attach( obj, state )
 {
 	let base = C.one_obj2js( obj,state )
@@ -266,6 +266,7 @@ export function attach( obj, state )
 
 	return base
 }
+*/
 
 
 export function cell( obj, state )
