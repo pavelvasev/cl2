@@ -15,8 +15,17 @@ print "hello-2" (std.apply (cofunc { |z|
   print "tick"
   let x = 5
   let y = (std.add @x 5 @z)
-  return (if true { return "OK" })
-  //return (if false "to-small" else { return (std.add @y 10) })
-  //return (std.add @y 10)
+  // return (if true { return (std.add @y 10) })
+  //return (if true { return "OK" })
+  return (if false "to-small" else { return (std.add @y 10) })
+  // return (std.add @y 50)
 }) (std.counter (std.timer)) )
 
+
+/*
+if true {
+  print "TRUE"
+} else {
+  print "FALSE"
+}
+*/

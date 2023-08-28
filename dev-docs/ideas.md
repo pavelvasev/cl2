@@ -45,3 +45,24 @@ reaction(in) {=
  ну глянем.
  
 https://www.youtube.com/watch?v=l-kctcbLnOQ&list=WL&index=1&t=22s
+
+-----------
+кстати было бы прикольно.. всяко соединять удобно функции..
+
+activate_branch
+cleanup_current_parent
+
+и вот сказать что перед activate_branch чтобы вызывалась cleanup_current_parent
+
+мысль - тут бы action задействовать ЛФ-овские.
+ну т.е. это передача сообщения как бы.. но выглядит как функция.. т.е. по сути - стройка башенки.
+
+activate_branch: action
+
+activate_branch -> cleanup_current_parent
+activate_branch -> {: a b c |
+ тут что-то делаем
+:}
+
+ну тут с аргументами некая история, с их распаковкой. и с доступом к этой action.
+но она на самом деле вот signal..

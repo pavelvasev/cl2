@@ -117,6 +117,9 @@ obj "if"
     then_block&: cell
 
     _else~: cell
+
+    //debuglog: cell {: :}
+    debug: cell false
   }
   output: cell
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
@@ -125,7 +128,28 @@ obj "if"
   // режим if @cond {}
   bind @then_block @then_value
 
-  //bind @_else.value @else_value
+  //bind @_else.value @else_value  
+  // _else является ячейкой, содержащей объект
+  // мы в выражениях пока не умеем обратиться к значению этой ячейки, увы
+  // да и bind является статической вещью. т.е. это не объект, который отслеживает свои аргументы
+  // но он мог бы быть таким, если ввести модификатор для параметра - что надо не связывать,
+  // а класть сам синхро-канал в значение
+  // но в целом получается что выражение типа cellname.a.b.c является процессом
+  // типа geta cellname a b c
+  /*
+  react @_else { |_else_obj|
+    bind @_else_obj.value @else_value
+  }
+  */
+
+  react @_else {: val |
+    //if (debug)
+    //console.log("r1")
+    let s1 = val.value.subscribe( (ev) => {
+      //console.log("r2",ev)
+      else_value.set( ev )
+    })
+  :}
 
   cleanup_current_parent: func {:
     //console.log("cleanup_current_parent",current_parent.get())
@@ -133,7 +157,7 @@ obj "if"
           let cp = current_parent.get()
           cp.destroy()
           current_parent.set( null )
-        }    
+        }
     :}
 
   activate_branch: func {: branch_value arg |
@@ -151,26 +175,41 @@ obj "if"
           let res = branch_value( cp, arg_cell )
           //output.set( res )
           // ну вроде как там теперь return должен срабатывать
+          // т.е это забота ветки - находить output
         } else {
           //console.log("activate-branch: not block-function",branch_value)
           output.set( branch_value )
         }
   :}
 
+  react @then_value {: value |
+    if (current_state.get() == 1) {
+      activate_branch( then_value.get(), condition.get() )
+    }
+  :}
+
+  react @else_value {: value |
+    //console.log("else_value changed:",else_value.get(),"current_state.get()=",current_state.get(),"condition=",condition.get())
+    if (current_state.get() == 2) {
+      //console.
+      activate_branch( else_value.get(), condition.get() )
+    }
+  :}
+
   react @condition {: value |
     //console.log("if react on condition",value)
     //console.trace()
     if (value) {
-      if (current_state.get() != 1) {        
-        //console.log("if activating branch then",value,"then-value=",then_value.get())
+      if (current_state.get() != 1) {
+        //console.log("if activating branch then",value,"then-value=",then_value.get(),"then-block=",then_block.get())
         activate_branch( then_value.get(), value )
         current_state.set( 1 )
       }
     } else {
       if (current_state.get() != 2) {
         // ну пока так..
-        let els_value = _else.get() ? _else.get().value.get() : else_value.get()
-        activate_branch( els_value, value )
+        //let els_value = _else.get() ? _else.get().value.get() : else_value.get()
+        activate_branch( else_value.get(), value )
         //activate_branch( else_value.get(), value )
         current_state.set( 2 )
       }

@@ -275,13 +275,13 @@ export function cell( obj, state )
 
   let initial_value = null
   let p0 = obj.params[0]
-  if (p0) {
+  if (p0 != null) {
   	if (p0.link)
   		initial_value = p0.from
   	else
-  	  initial_value = C.objToString(p0)	
+  	  initial_value = C.objToString(p0)
   } 
-	let value_str = `initial_values.${name} || ${initial_value || 'CL2.NOVALUE'}`
+	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value || 'CL2.NOVALUE'}`
 
 	let strs = [`let ${name} = CL2.create_cell(${value_str})`]
 	//let strs = [`let ${name} = CL2.create_cell(${obj.params[0] || ''})`]
