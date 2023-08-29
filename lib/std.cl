@@ -107,8 +107,8 @@ obj "apply" {
       
       let f = action.get()
       let args = u.output.get()
-      console.log("x-apply",f,args)
-      console.trace()
+      //console.log("x-apply",f,args)
+//      console.trace()
 //      console.log("qq: x",f,args)
 
       if (f && args) {
@@ -117,7 +117,7 @@ obj "apply" {
         //console.log("res=",res)
         //if (f.awaitable) res.then(val => output.set( val ))
         if (f.is_task_function && res instanceof CL2.Comm) {
-          console.log("branch!",res + "")
+          //console.log("branch!",res + "")
           // вернули канал? слушаем его дальше..
           let unsub = res.once( (val) => {
             console.log("once",val)

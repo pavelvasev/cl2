@@ -31,8 +31,8 @@ export function modify_prefix( state={}, new_prefix )
 
 export function modify_parent( state={}, nv, nv2=nv )
 {	
-	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, static_values: {...state.static_values} 
-	    }
+	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, static_values: {...state.static_values},
+	    next_obj_cb: null}
 	return ns
 }
 
@@ -343,7 +343,7 @@ export function default_obj2js( obj,state ) {
 	
   strs.push( `let ${objid} = ${obj.modul_prefix}create_${obj.basis}( ${objToString(init_consts,1,state)} )`)
 
-	strs.push( `${objid}.$title = "${objid}"`)
+	strs.push( `${objid}.$title = "${objid}[${obj.basis}]"`)
 	if (state.tree_parent_id) {
 		  // древовидная иерархия.. но там объекты у нас могут путешествовать туды сюды
 	    strs.push( `${state.tree_parent_id}.append(${objid})` )
@@ -388,6 +388,9 @@ export function default_obj2js( obj,state ) {
 	if (state.next_obj_cb) { // F-CHAINS-V3
 		state.next_obj_cb( obj, objid, strs, bindings, bindings_hash_before_rest )
 	}
+	if (state.next_obj_cb2) { // F-TASKS
+		state.next_obj_cb2( obj, objid, strs, bindings, bindings_hash_before_rest )
+	}	
 
 /*
 	if (state.compute_mode) {

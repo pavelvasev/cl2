@@ -20,7 +20,7 @@ export var tablica = {
 	init: { make_code: init, check_params: default_cp },
 	paste: { make_code: paste, check_params: default_cp },
 	in: { make_code: _in, check_params: default_cp},
-	react_orig: { make_code: react, check_params: default_cp},
+//	react_orig: { make_code: react, check_params: default_cp},
 	nop: { make_code: () => { return { main: [], bindings: [] } }, check_params: default_cp}
 }
 
@@ -197,11 +197,15 @@ export function _obj( obj, state )
 			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {
 				let prev = state.next_obj_cb
+				console.log("installin NEXT OBJ PARAM for",self_objid)
 				state.next_obj_cb = (obj2,objid2,strs,bindings,bindings_hash_before_rest) => {
+					console.log("NEXT OBJ PARAM check",objid2,next_obj_param)
 					if ("_" + obj2.basis == next_obj_param) {
+						console.log("NEXT OBJ PARAM",objid2)
 						strs.push( `${self_objid}.${next_obj_param}.set( ${objid2} )` )
 					}
 					state.next_obj_cb = prev
+					console.log('CASE, prev restored',prev+"","calling it, str=",strs)
 					if (state.next_obj_cb)
 						state.next_obj_cb(obj2,objid2,strs,bindings,bindings_hash_before_rest)
 				}
@@ -402,6 +406,7 @@ export function bind( obj, state )
 // bind @func @ch
 
 
+/*
 export function react( obj, state )
 {
 	let name = obj.$name
@@ -428,14 +433,6 @@ export function react( obj, state )
 
 	strs.push( `let ${name} = CL2.create_reaction(${code})`)
 
-/*
-	for (let k in Object.keys(obj.params).slice(0,-1)) {
-		let val = obj.params[k]
-		let val_str = val?.from ? "CL2.NOVALUE" : C.objToString(val)
-		let s = `let ${k} = CL2.create_cell( ${val_str} )`
-	}		
-*/
-
 	//let src_param = obj.params[ Object.keys( obj.params )[0] ]
 	let src_param = obj.params[0]
 	let srcname = src_param.from
@@ -444,3 +441,4 @@ export function react( obj, state )
 
 	return {main:strs,bindings:bindings}
 }
+*/

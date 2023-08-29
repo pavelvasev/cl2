@@ -7,7 +7,7 @@ obj "react" {
     action: cell
     children_action&: cell
     // вопрос - а как указать что чилдренов надо компилировать в вычислительном режиме?
-    
+
   }
   //output: channel
   // нам надо биндится к результатам тасков.. таски выражаются react-ами.. поэтому надо ячейки
@@ -17,7 +17,9 @@ obj "react" {
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
     input.on( (value) => {
       let fn = action.get()      
+      //console.log('react input changed. scheduling!!!!!!!!!!!!')
       CL2.schedule( () => { // принципиальный момент - чтобы реакция не срабатывала посреди другой реакции
+        //console.log('react scheduled call !!!!!!!!!!!!')
         let result
         if (fn.is_block_function)
           result = fn( self, CL2.create_cell(value) )
@@ -145,9 +147,9 @@ obj "if"
 
   react @_else {: val |
     //if (debug)
-    //console.log("r1")
+    console.log("r1")
     let s1 = val.value.subscribe( (ev) => {
-      //console.log("r2",ev)
+      console.log("r2",ev)
       else_value.set( ev )
     })
   :}
@@ -163,6 +165,8 @@ obj "if"
 
   activate_branch: func {: branch_value arg |
         cleanup_current_parent()
+
+        console.log("activate-branch: ",branch_value)
 
         if (branch_value?.is_block_function) {
           //console.log("activate-branch: is-block-function",branch_value)
@@ -198,7 +202,7 @@ obj "if"
   :}
 
   react @condition {: value |
-    //console.log("if react on condition",value)
+    console.log("if react on condition",value + "",current_state.get())
     //console.trace()
     if (value) {
       if (current_state.get() != 1) {

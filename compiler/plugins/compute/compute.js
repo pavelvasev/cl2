@@ -1,4 +1,4 @@
-// F-MODULE-PATHS
+// F-TASKS
 
 import * as C from "../../lib/cl2-compiler.js"
 import * as FORMS from "../../lib/forms.js"
@@ -29,11 +29,16 @@ export function cofunc( obj, state )
 	//let modified = {...state,compute_mode:true}
 	//let c_state = C.modify_parent( modified, `self` )
 	let modified = {...state}
-	modified.next_obj_cb = ( obj, objid, strs, bindings, bindings_hash_before_rest ) => {
+	modified.next_obj_cb2 = ( obj, objid, strs, bindings, bindings_hash_before_rest ) => {
 	  let source_comms = Object.values(bindings_hash_before_rest)
 
-	  if (source_comms.length == 0) return;
+	  if (source_comms.length == 0) return;	  
 	  // нет зависимостей - ну сразу делаем
+
+	  // пропустим также некоторые спец-процессы.. это хак..
+	  // if изза else надо тоже сразу делать (else пытается себя в if впихнуть)
+	  // return ну уж до кучи тож
+	  if (obj.basis == "if" || obj.basis == "return") return
 
 	  //strs.push( `let ${objid} = create_task( ${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)} )`)
 	  let r_strs = []

@@ -56,7 +56,8 @@ export class Channel extends Comm {
 	}
 	// провести сигнал
 	emit( value ) {
-		console.channel_verbose( "Channel emit:",this+"","value=",value+"" )
+		//console.channel_verbose( "Port submit:",this+"","value=",value instanceof Comm ? value + "" : value,typeof(value) )
+		console.channel_verbose( "Port submit:",this+"","value=",(value + "").length > 0 ? value + "" : value,typeof(value) )
 		//console.log(this.subscribers)
 		this.subscribers.forEach( fn => fn(value) )
 		//this.is_cell = true
@@ -196,7 +197,7 @@ export class Cell extends Comm {
 		attach( this,"changed",create_channel())
 		//this.changed = create_channel(`${title}.changed`)
 		// создает процесс передачи на следующий такт с поеданием дублей
-		create_binding_delayed( this.changed_emit, this.changed )
+		this.changed_emit_binding = create_binding_delayed( this.changed_emit, this.changed )
 		attach( this,"assign",create_channel())
 		attach( this,"assigned",create_channel())
 		//this.assign = create_channel(`${title}.assign`)
@@ -229,7 +230,7 @@ export class Cell extends Comm {
 		this.set( value )
 	}
 	subscribe( fn ) {
-	  if (this.is_set) 
+	  if (this.is_set && !this.changed_emit_binding.scheduled) 
 	  	 fn( this.get() )
 	  return this.changed.subscribe( fn )
 	}
@@ -592,7 +593,7 @@ export function create_binding_delayed( src, tgt ) {
 				res.scheduled = false; 
 				console.channel_verbose("delayed-binding real pass",src+""," ---> ",tgt+"")
 				//console.channel_verbose("delayed-binding real pass",src+""," ---> ",tgt+"","value",res.value+"")
-				tgt.emit( res.value ) 
+				tgt.emit( res.value )
 			})
 		} //else console.log("delayed-binding shield! not scheduling")
 		res.value = value
@@ -671,7 +672,7 @@ export function monitor_rest_values( src,tgt ) {
 					console.channel_verbose("monitor_rest_values: have non-setted values, exiting. src=",src+"","last non setted:",have_not_setted)
 					return
 				}
-				console.log("monitor_rest_values: collected",values,"from",src.get(),"emitting to",dtgt+"")
+				//console.log("monitor_rest_values: collected",values,"from",src.get(),"emitting to",dtgt+"")
 				console.channel_verbose("monitor_rest_values: collected values from",src+"","emitting to",tgt+"","values=",values,"cells was",src.get() + "")
 
 				dtgt.emit( values )
