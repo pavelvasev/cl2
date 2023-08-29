@@ -197,15 +197,15 @@ export function _obj( obj, state )
 			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {
 				let prev = state.next_obj_cb
-				console.log("installin NEXT OBJ PARAM for",self_objid)
+				//console.log("installin NEXT OBJ PARAM for",self_objid)
 				state.next_obj_cb = (obj2,objid2,strs,bindings,bindings_hash_before_rest) => {
-					console.log("NEXT OBJ PARAM check",objid2,next_obj_param)
+					//console.log("NEXT OBJ PARAM check",objid2,next_obj_param)
 					if ("_" + obj2.basis == next_obj_param) {
-						console.log("NEXT OBJ PARAM",objid2)
+						//console.log("NEXT OBJ PARAM",objid2)
 						strs.push( `${self_objid}.${next_obj_param}.set( ${objid2} )` )
 					}
 					state.next_obj_cb = prev
-					console.log('CASE, prev restored',prev+"","calling it, str=",strs)
+					//console.log('CASE, prev restored',prev+"","calling it, str=",strs)
 					if (state.next_obj_cb)
 						state.next_obj_cb(obj2,objid2,strs,bindings,bindings_hash_before_rest)
 				}

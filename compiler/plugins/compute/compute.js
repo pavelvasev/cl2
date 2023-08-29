@@ -51,7 +51,7 @@ export function cofunc( obj, state )
 
 	  // заменяем
 	  strs.splice( 0, strs.length, ...r_strs )
-	  console.log('strs replaced:',strs)
+	  //console.log('strs replaced:',strs)
 	  bindings.splice( 0, bindings.length,`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )`)
 	}
 
