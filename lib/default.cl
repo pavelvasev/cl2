@@ -9,13 +9,16 @@ obj "react" {
     // вопрос - а как указать что чилдренов надо компилировать в вычислительном режиме?
 
   }
-  //output: channel
+  // output: channel
   // нам надо биндится к результатам тасков.. таски выражаются react-ами.. поэтому надо ячейки
+  // потому что вот таска сработала, это вызывает другую таску, та создает процесс, а 
+  // технология такова что тот процесс начинает зачитывать output-ы вот реакций.. и ничего не прочитает
+  // хотя формально если нам надо таски, так и надо делать таски
   output: cell is_changed={: new old | return true :}
 
   init "(obj) => {
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
-    input.on( (value) => {
+    let unsub = input.on( (value) => {
       let fn = action.get()      
       //console.log('react input changed. scheduling!',self+'','value=',value)
       CL2.schedule( () => { // принципиальный момент - чтобы реакция не срабатывала посреди другой реакции
@@ -30,14 +33,34 @@ obj "react" {
         if (result instanceof CL2.Comm) {
           // вернули канал? слушаем его дальше.. такое правило для реакций
           let unsub = result.once( (val) => {
-            output.submit( val )  
+            output.submit( val )
           })
         }
         else
           output.submit( result )
       })
     })
+
+    self.release.on( () => unsub() )
   }"
+}
+
+obj "task" {
+  in {
+    input: channel
+    action: cell
+  }
+
+  output: cell  
+
+  b: react @input @action
+
+  bind @b.output @output
+
+  react @b.output {: b.destroy() :}
+  // мы не вызываем self.destroy т.к. у нас output, на него подписаны..
+  
+  // todo
 }
 
 /* // реакция в стиле ЛФ
@@ -313,16 +336,13 @@ obj "apply" {
   u: extract @rest
   output: cell
 
-    x: func {:
+  xx: react (when_all @action @u.output) {:
       
       let f = action.get()
       let args = u.output.get()
       //console.log("x-apply",f,args)
-//      console.trace()
-//      console.log("qq: x",f,args)
 
       if (f && args) {
-//        console.log("calling")
         let res = f( ...args )
         //console.log("res=",res)
         //if (f.awaitable) res.then(val => output.set( val ))
@@ -330,19 +350,15 @@ obj "apply" {
           //console.log("branch!",res + "")
           // вернули канал? слушаем его дальше..
           let unsub = res.once( (val) => {
-            console.log("once",val)
+            //console.log("once",val)
             output.set( val )
           })
         }
         else
           output.set( res )
 
-      } else {
-
-      }
+      } 
     :}
 
-  xx: react (when_all @action @u.output) @x
-
-  //bind @xx @output
+  bind @xx.output @output
 }
