@@ -26,16 +26,16 @@ print "hello-2" (std.apply (cofunc { |z|
 }) (std.counter (std.timer)) )
 */
 
-
-std.apply (cofunc { |z|
-  print "hello-3" (std.apply (cofunc {
+apply (cofunc { |z|
+  print "hello-3" (apply (cofunc {
+      print "tick, z=" @z
       let x = 5
       let y = (std.add @x 5 @z)
       //return (if (less @y 12) "to-small" else "big")
       return (if (less @y 12) "to-small" else { return (std.add @y 10) })
       //return (std.add @y 10)
     }))
-}) (std.counter (std.timer))
+}) (std.counter (std.timer interval=10))
 
 
 //std.apply {: console.log("hello") :}

@@ -17,19 +17,31 @@ console.log = (...args) => {
 */
 
 console.channel_verbose = (...args) => {}
+let fmtval = () => {}
 
-if (process.env.VERBOSE)
-console.channel_verbose = (...args) => {
-	console.log(...args)
-	//return true
+if (process.env.VERBOSE) {
+	console.channel_verbose = (...args) => {
+		console.log("\t",...args)
+		//return true
+	}
+	fmtval = ( value ) => {
+	  let s = (value + "")
+	  if (s.length > 0) {
+	  	if (s.length > 50) return "<<<" + s.substring(0,50) + "...>>>"
+	  	return s
+	  }
+	  return value			
+	}
 }
+
+
 
 export class Comm {
 	constructor() {
 		this.$cl_id = (global_thing_counter++)
 	}
 	toString() {
-		return `${this.constructor.name}:${get_title( this )}`
+		return `${this.constructor.name}:${get_title( this )}[${this.$cl_id}]`
 	}
 	// становится потребна
 	// subscribe на однократное срабатывание.
@@ -57,10 +69,15 @@ export class Channel extends Comm {
 	// провести сигнал
 	emit( value ) {
 		//console.channel_verbose( "Port submit:",this+"","value=",value instanceof Comm ? value + "" : value,typeof(value) )
-		console.channel_verbose( "Port submit:",this+"","value=",(value + "").length > 0 ? value + "" : value,typeof(value) )
+
+		console.channel_verbose( "Port submit:",this+"","value=",fmtval(value) )
 		//console.log(this.subscribers)
 		this.subscribers.forEach( fn => fn(value) )
 		//this.is_cell = true
+	}
+	destroy() {
+		this.subscribers.clear()
+		// todo хранить ссылку на источник и удалять себя из источника..
 	}
 	subscribers = new Set()
 	// подписаться к этому каналу. cb - код
@@ -218,6 +235,13 @@ export class Cell extends Comm {
 
 		// была идея сделать раздельно assign это для приема, и assigned для уведомлений
 	}
+	destroy() {
+		// отпишем все каналы
+		this.changed_emit.destroy()
+		this.changed.destroy()
+		this.assigned.destroy()
+		this.assign.destroy()
+	}
 	/* вопрос.. метод set как соотносится с каналом assigned?
 	   т.е запись в канал вызывает set
 	   или вызов set вызывает уведомление канала, что что-то было?
@@ -236,7 +260,7 @@ export class Cell extends Comm {
 	}
 
 	set( new_value ) {
-		console.channel_verbose( "Cell set:",this+"","value=",new_value+"" )
+		console.channel_verbose( "Cell set:",this+"","value=",fmtval(new_value) )
 		//console.trace()
 		this.is_set = (new_value !== NOVALUE)
 		if (new_value != this.value) {
@@ -504,8 +528,9 @@ export function create_binding_when_any( list, q ) {
 	//return unsub
 }
 
-// возвращает канал который срабатывает когда все примитивы из list сработали
-export function when_all( list ) {
+// возвращает канал который срабатывает 1 раз, когда все примитивы из list сработали
+
+export function when_all_once( list ) {
 	let q = create_channel()
 	//SSconsole.log("create_binding_when_any, list=",list)
 	let values = new Array( list )
@@ -518,10 +543,7 @@ export function when_all( list ) {
 		if (!k.subscribe) {
 			console.error("when-all: list element have no subscribe method. index=",index,"k=", k+"","list=",list)
 		}
-		unsub = k.subscribe( (v) => {
-			if (unsub)
-			    unsub()
-			else need_unsub = true
+		k.once( (v) => {
 			counter--
 			values[ my_index ] = v
 		    if (counter == 0)
@@ -529,11 +551,69 @@ export function when_all( list ) {
 		    // надо делать через шедуле.. а то там соединиться не успевают.. create_binding( when-all, ... )
 		    	
 		})
-		if (need_unsub) unsub() // в случае ячеек
 
 		index++
 	}
 	return q	
+}
+
+// возвращает канал который срабатывает, когда все примитивы из list сработали, и затем продолжает высылать
+// обновления их значений. все упаковывается в delayed-режим, поэтому если на такте несколько канало сработали
+// то это будет 1 сообщение. todo кол-во срабатываний можно сделать и параметром
+export function when_all( list ) {
+	let q = create_channel()
+	let q2 = create_channel()
+	let b = create_binding_delayed( q, q2 )
+	//SSconsole.log("create_binding_when_any, list=",list)
+	let values = new Array( list )
+	let unsubs = []
+
+	enter_mode_1()
+
+	function enter_mode_1() {
+		let counter = list.length
+		let index = 0
+		for (let k of list) {
+			let my_index = index
+			let unsub
+			let need_unsub
+			if (!k.subscribe) {
+				console.error("when-all: list element have no subscribe method. index=",index,"k=", k+"","list=",list)
+			}
+			k.once( (v) => {
+				counter--
+				values[ my_index ] = v
+			    if (counter == 0)
+			    	enter_mode_2()		    	
+			    // надо делать через шедуле.. а то там соединиться не успевают.. create_binding( when-all, ... )
+			})
+
+			index++
+		}
+	}
+
+	function enter_mode_2() {
+		q.emit( values )
+
+		unsubs = list.map( (s,index) => s.subscribe( (val) => ff(val,index)))
+
+		function ff( value, index) {
+			values[index] = value
+			q.emit( values )
+		}
+	}
+	let orig = q2.destroy.bind(q2)
+
+	q2.destroy = () => {
+		unsubs.map( x => x())
+		unsubs = []
+		b.destroy()
+		q.destroy()
+		// todo k.once еще отписаться
+		orig()
+	}
+
+	return q2	
 }
 
 // по списку примитивов синхронизации выдает список из ячеек, привязанных к этому списку

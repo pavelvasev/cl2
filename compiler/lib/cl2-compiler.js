@@ -343,7 +343,7 @@ export function default_obj2js( obj,state ) {
 	
   strs.push( `let ${objid} = ${obj.modul_prefix}create_${obj.basis}( ${objToString(init_consts,1,state)} )`)
 
-	strs.push( `${objid}.$title = "${objid}[${obj.basis}]"`)
+	strs.push( objid.indexOf( obj.basis ) < 0 ? `${objid}.$title = "${objid}[${obj.basis}]"` : `${objid}.$title = "${objid}"`)
 	if (state.tree_parent_id) {
 		  // древовидная иерархия.. но там объекты у нас могут путешествовать туды сюды
 	    strs.push( `${state.tree_parent_id}.append(${objid})` )
@@ -391,32 +391,6 @@ export function default_obj2js( obj,state ) {
 	if (state.next_obj_cb2) { // F-TASKS
 		state.next_obj_cb2( obj, objid, strs, bindings, bindings_hash_before_rest )
 	}	
-
-/*
-	if (state.compute_mode) {
-		// идея - делаем оболочку над объектом. 
-
-	  // нам не надо слушать рест - он всегда определен и он есть список примитивов (которые и надо слушать)
-	  // поэтому вместо него мы используем его значения
-
-		let source_comms = Object.values(bindings_hash_before_rest)
-		
-
-	  //strs.push( `let ${objid} = create_task( ${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)} )`)
-	  let r_strs = []
-	  let r_id = `${objid}_task`
-	  r_strs.push( `let ${r_id} = create_react({})`,
-	  	`let ${objid} = ${r_id}`, // внешние ссылаются по старому имени
-	  	//`${r_id}.action.set( () => { `,strs,bindings,`if (${objid}.output) CL2.create_binding( ${objid}.output, ${r_id}.output`,` })`,
-	  	`${r_id}.action.set( () => { `,strs,bindings,`return ${objid}.output`,` })`
-	   )
-
-	  //${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)}
-	  strs = r_strs
-	  bindings = [`CL2.create_binding( CL2.when_all( [${source_comms.join(',') }] ), ${r_id}.input )`]
-	  // todo once
-  }
-*/  
 
 	// и фичеры.. это у нас дети которые не дети	
 	// их важно делать после state.compute_mode

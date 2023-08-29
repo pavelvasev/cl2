@@ -17,8 +17,9 @@ obj "react" {
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
     input.on( (value) => {
       let fn = action.get()      
-      //console.log('react input changed. scheduling!!!!!!!!!!!!')
+      //console.log('react input changed. scheduling!',self+'','value=',value)
       CL2.schedule( () => { // принципиальный момент - чтобы реакция не срабатывала посреди другой реакции
+        //console.log('react invoking scheduled action.',self+'')
         //console.log('react scheduled call !!!!!!!!!!!!')
         let result
         if (fn.is_block_function)
@@ -147,9 +148,9 @@ obj "if"
 
   react @_else {: val |
     //if (debug)
-    console.log("r1")
+    //console.log("r1")
     let s1 = val.value.subscribe( (ev) => {
-      console.log("r2",ev)
+      //console.log("r2",ev)
       else_value.set( ev )
     })
   :}
@@ -166,7 +167,7 @@ obj "if"
   activate_branch: func {: branch_value arg |
         cleanup_current_parent()
 
-        console.log("activate-branch: ",branch_value)
+        //console.log("activate-branch: ",branch_value)
 
         if (branch_value?.is_block_function) {
           //console.log("activate-branch: is-block-function",branch_value)
@@ -202,7 +203,7 @@ obj "if"
   :}
 
   react @condition {: value |
-    console.log("if react on condition",value + "",current_state.get())
+    //console.log("if react on condition",value + "",current_state.get(),"self=",self+"")
     //console.trace()
     if (value) {
       if (current_state.get() != 1) {
@@ -284,3 +285,64 @@ obj "task" {
 }
 */
 
+obj "when_all" {
+  in {
+    rest*: cell
+  }
+  output: channel
+  init {: 
+    let unsub = () => {}
+    rest.subscribe( (list) => {      
+      unsub()
+      let q = CL2.when_all( list )
+      // вот все-таки порты LF и наши каналы это разное. 
+      // ибо порты их держат сооощение 1 такт. и это прикольно.
+      // а нас пока спасает что там внутри - delayed стоит.
+      let b = CL2.create_binding( q, output )
+      unsub = () => { q.destroy(); b.destroy() }
+    })
+    self.release.subscribe( () => unsub() )
+  :}
+}
+
+obj "apply" {
+  in {
+    action: cell
+    rest*: cell
+  }
+  u: extract @rest
+  output: cell
+
+    x: func {:
+      
+      let f = action.get()
+      let args = u.output.get()
+      //console.log("x-apply",f,args)
+//      console.trace()
+//      console.log("qq: x",f,args)
+
+      if (f && args) {
+//        console.log("calling")
+        let res = f( ...args )
+        //console.log("res=",res)
+        //if (f.awaitable) res.then(val => output.set( val ))
+        if (f.is_task_function && res instanceof CL2.Comm) {
+          //console.log("branch!",res + "")
+          // вернули канал? слушаем его дальше..
+          let unsub = res.once( (val) => {
+            console.log("once",val)
+            output.set( val )
+          })
+        }
+        else
+          output.set( res )
+
+      } else {
+
+      }
+    :}
+
+  xx: react (when_all @action @u.output) @x
+
+  //bind @xx @output
+}

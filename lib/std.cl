@@ -95,53 +95,6 @@ obj "add" {
     //bind @rest @output   
 }
 
-obj "apply" {
-  in {
-    action: cell
-    rest*: cell
-  }
-  u: extract @rest
-  output: cell
-
-    x: func {:
-      
-      let f = action.get()
-      let args = u.output.get()
-      //console.log("x-apply",f,args)
-//      console.trace()
-//      console.log("qq: x",f,args)
-
-      if (f && args) {
-//        console.log("calling")
-        let res = f( ...args )
-        //console.log("res=",res)
-        //if (f.awaitable) res.then(val => output.set( val ))
-        if (f.is_task_function && res instanceof CL2.Comm) {
-          //console.log("branch!",res + "")
-          // вернули канал? слушаем его дальше..
-          let unsub = res.once( (val) => {
-            console.log("once",val)
-            output.set( val )
-          })
-        }
-        else
-          output.set( res )
-
-      } else {
-
-      }
-    :}
-
-  any: cell
-  
-  bind @action @any
-  bind @u.output @any
-
-  xx: react @any @x
-
-  //bind @xx @output
-}
-
 
 
 /*
