@@ -44,7 +44,7 @@ export function cofunc( obj, state )
 	  //strs.push( `let ${objid} = create_task( ${objToString( {consts:init_consts,basis_func:obj.basis, bindings_hash},,1,state)} )`)
 	  let r_strs = []
 	  let r_id = `${objid}_task`
-	  r_strs.push( `let ${r_id} = create_react({})`,
+	  r_strs.push( `let ${r_id} = create_task({})`,
 	  	`let ${objid} = ${r_id}; ${r_id}.attached_to=self;`, // внешние ссылаются по старому имени
 	  	//`${r_id}.action.set( () => { `,strs,bindings,`if (${objid}.output) CL2.create_binding( ${objid}.output, ${r_id}.output`,` })`,
 	  	`${r_id}.action.set( () => { console.log('cofunc action started: ${r_id}',${r_id}+'')\n `,[...strs],[...bindings],`return ${objid}.output`,` })`

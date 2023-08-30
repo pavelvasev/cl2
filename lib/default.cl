@@ -57,7 +57,7 @@ obj "task" {
 
   bind @b.output @output
 
-  react @b.output {: b.destroy() :}
+  b2: react @b.output {: b.destroy(); b2.destroy(); :}
   // мы не вызываем self.destroy т.к. у нас output, на него подписаны..
   
   // todo

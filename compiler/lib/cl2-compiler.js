@@ -9,6 +9,7 @@ import * as P from "./lang-parser.js"
 	 - хранить текущий родительский объект
 	 - хранить точки сопряжения
    space - таблица передачи управления. плагины стыкуются сюда.
+   //tool - методы компиляции уровня tool
 
    по сути это три разных направления деятельности просто удобно оказалось их совместить.
 
@@ -19,8 +20,8 @@ import * as P from "./lang-parser.js"
      struc_parent_id - используется для генерации исходящих ссылок для выражений
 */
 
-export function create_state( env={}, current={},dir="" ) {
-	return { env, current, struc_parent_id:null, tree_parent_id: null, dir, prefix:'', space:{}, static_values: {} }
+export function create_state( env={}, current={},dir="", tool ) {
+	return { env, current, struc_parent_id:null, tree_parent_id: null, dir, prefix:'', space:{}, static_values: {}, tool }
 }
 
 export function modify_prefix( state={}, new_prefix )

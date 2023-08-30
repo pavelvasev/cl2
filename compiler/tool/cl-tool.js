@@ -8,40 +8,52 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as C from "../lib/cl2-compiler.js"
 
-function compile_string( str, state )
-{
-	let dump = C.code2obj( str )		
-	let jsarr = C.objs2js( dump,state )
-	let js = C.strarr2str( jsarr )
-	return js
+class Tool {
+
+	compile_string( str, state )
+	{
+		let dump = C.code2obj( str )		
+		let jsarr = C.objs2js( dump,state )
+		let js = C.strarr2str( jsarr )
+		return js
+	}
+
+	// file это путь к файлу
+	compile_file( file, state ) 
+	{
+			let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
+
+		  let module_state = C.modify_dir( state, path.dirname( file ) + "/")
+		  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
+			let code = this.compile_string( content, module_state )
+
+			return {code,state:module_state}
+	}
+
+	global_code = ""
+
+	add_global_code(str) {
+		this.global_code = this.global_code + str
+	}
 }
 
-// file это путь к файлу
-function compile_file( file, state ) 
-{
-		let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
-
-	  let module_state = C.modify_dir( state, path.dirname( file ) + "/")
-	  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
-		let code = compile_string( content, module_state )
-
-		return {code,state:module_state}
-}
-
+let tool = new Tool()
 let state = C.create_state()
 let global_prefix = []
 
 // плагины-фичи
 import * as F from "../lib/forms.js"
-F.setup( state )
+F.setup( state, tool )
 import * as FBUNDLE from "../plugins/bundle-2/bundle-2.js"
-FBUNDLE.setup( state )
+FBUNDLE.setup( state, tool )
 import * as FMPATH from "../plugins/module-path/module-path.js"
-FMPATH.setup( state )
+FMPATH.setup( state, tool )
 
 import * as FMCOMPUTE from "../plugins/compute/compute.js"
-FMCOMPUTE.setup( state )
+FMCOMPUTE.setup( state, tool )
 
+import * as FDEFAULTS from "../plugins/defaults/init.js"
+FDEFAULTS.setup( state, tool )
 
 // уже прочитанные модули
 let imported_modules = {} // abs-path => state
@@ -77,7 +89,7 @@ state.env["import"] = {
 
 				  module_state = C.modify_dir( state, path.dirname( file ) + "/")
 				  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
-					let code = compile_string( content, module_state )
+					let code = tool.compile_string( content, module_state )
 					
 					imported_modules[ file ] = module_state
 
@@ -94,30 +106,6 @@ state.env["import"] = {
 	check_params: () => {}
 }
 
-/*
-state.env["_import"] = {
-	make_code: function( obj, state ) {
-		let promarr = []
-		for (let tgt in obj.params) {
-			let src = obj.params[tgt]
-			console.log("importing",src,"to name",tgt)
-			let p = fetch( file ).then( r => r.text() ).then( content => {
-			  //console.log(content)
-			  let substate = C.modify_dir( state, "")
-				let code = compile_string( content, substate )
-				state.env["tgt"] = substate // пока так
-				// а что с code делать и вовсе неясно
-			})
-			promarr.push( p )
-		}
-		let res = Promise.all( promarr ).then( values => {
-			return { main: ["// qqq"], bindings: [] }
-		})
-		return res
-  },
-	check_params: () => {}
-}
-*/
 
 let file = process.argv[2] || "main.cl";
 // добавляя полный путь, мы обеспечиваем возможность внутрях вычислить текущий каталог из него и тогда хорошо отрабатывает загрузчики внутренние
@@ -132,20 +120,15 @@ function changeExtension(file, extension) {
 //let out_file = changeExtension(file,".js")
 let out_file = file.slice(7) + ".js"
 
-//state.current = state.env // нда уж
-let default_things = compile_file( state.space.resolve_module_path( "std/default.cl", state ), state)
-let global_code = default_things.code
-state = C.modify_env( state, default_things.state.current )
-// ну типа тут в current всем добавится.. ну хорошо..
-//state.env = {...state.env,  }
+//let k = tool.compile_file( file, state )
 
 fetch( file ).then( r => r.text() ).then( content => {
 	//console.log(content)
 
-	let code = compile_string( content, state )
+	let code = tool.compile_string( content, state )
 	let prefix = global_prefix.join("\n")
 
-	code = global_code + "\n" + code 
+	code = tool.global_code + "\n" + code 
 
 	code = `import * as CL2 from 'cl2'\n${prefix}\nlet self={}\n${code}`
 	//console.log("import * as CL2 from '../runtime/cl2.js'")
