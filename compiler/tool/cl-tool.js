@@ -131,9 +131,9 @@ fetch( file ).then( r => r.text() ).then( content => {
 
 	let code = tool.compile_string( content, state )
 
-	code = tool.get_global_code() + "\n" + code 
+	//code = tool.get_global_code() + "\n" + code 
 
-	code = `import * as CL2 from 'cl2'\nlet self={}\n${code}`
+	code = `import * as CL2 from 'cl2'\nlet self={}\n${tool.get_global_code()}\n${code}`
 	//console.log("import * as CL2 from '../runtime/cl2.js'")
   //console.log(code)
   fs.writeFile( out_file, code,(err) => {

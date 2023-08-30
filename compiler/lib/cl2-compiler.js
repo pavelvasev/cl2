@@ -32,7 +32,9 @@ export function modify_prefix( state={}, new_prefix )
 
 export function modify_parent( state={}, nv, nv2=nv )
 {	
-	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, static_values: {...state.static_values},
+	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, 
+	    static_values: {...state.static_values},
+      current: {...state.current}, // вложенные определения чтобы оставались внутри
 	    next_obj_cb: null}
 	return ns
 }
