@@ -30,16 +30,19 @@ class Tool {
 			return {code,state:module_state}
 	}
 
-	global_code = ""
+	global_code = []
 
-	add_global_code(str) {
-		this.global_code = this.global_code + str
+  // code - строчка, массив строчек, массив массивов..
+	add_global_code( code ) {
+		this.global_code.push( code )
+	}
+	get_global_code() {
+		return C.strarr2str( this.global_code )
 	}
 }
 
 let tool = new Tool()
 let state = C.create_state()
-let global_prefix = []
 
 // плагины-фичи
 import * as F from "../lib/forms.js"
@@ -80,7 +83,8 @@ state.env["import"] = {
 				//console.log("file->",src)
 				// жесточайший хак. 1 надо начинать это еще в resolve_module_path, 2 это вообще цепочка обработки импорта, надо ее формализовать
 				if (file.endsWith(".js")) { 
-					global_prefix.push( state.space.register_import_outer(src, file) )
+					//global_prefix.push( state.space.register_import_outer(src, file) )
+					tool.add_global_code( state.space.register_import_outer(src, file) )
 				}
 				else {
 
@@ -126,11 +130,10 @@ fetch( file ).then( r => r.text() ).then( content => {
 	//console.log(content)
 
 	let code = tool.compile_string( content, state )
-	let prefix = global_prefix.join("\n")
 
-	code = tool.global_code + "\n" + code 
+	code = tool.get_global_code() + "\n" + code 
 
-	code = `import * as CL2 from 'cl2'\n${prefix}\nlet self={}\n${code}`
+	code = `import * as CL2 from 'cl2'\nlet self={}\n${code}`
 	//console.log("import * as CL2 from '../runtime/cl2.js'")
   //console.log(code)
   fs.writeFile( out_file, code,(err) => {
