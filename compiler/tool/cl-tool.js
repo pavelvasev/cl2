@@ -8,7 +8,34 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as C from "../lib/cl2-compiler.js"
 
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 class Tool {
+
+	constructor( state ) {
+		//this.state = state
+		// будем запихивать?
+	}
+
+	load_modules( dir, state ) {
+		//console.log("load_modules: dir=",dir)
+		if (Array.isArray(dir)) {
+			if (dir.length == 0) return true
+			let next = this.load_modules( dir[0], state )
+			return next.then( () => {
+				return this.load_modules( dir.slice(1), state)
+			})
+		}
+
+		if (!dir.endsWith(".js"))
+			dir = path.join(dir,"init.js")
+
+		return import( dir ).then( m => {
+		  return m.init( state, this )			
+		})
+	}
 
 	compile_string( str, state )
 	{
@@ -30,6 +57,17 @@ class Tool {
 			return {code,state:module_state}
 	}
 
+	compile_file_p( file, state ) 
+	{
+		return fetch( file ).then( r => r.text() ).then( content => {
+			//console.log(333,"state.env=",state.env)
+		  let module_state = C.modify_dir( state, path.dirname( file ) + "/")
+		  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
+			let code = this.compile_string( content, module_state )
+			return {code,state:module_state}			
+		})
+	}	
+
 	global_code = []
 
   // каждый элемент code - строчка, массив строчек, массив массивов..
@@ -44,18 +82,16 @@ class Tool {
 let tool = new Tool()
 let state = C.create_state()
 
-// плагины-фичи
-import * as F from "../lib/forms.js"
-F.setup( state, tool )
-import * as FBUNDLE from "../plugins/bundle-2/bundle-2.js"
-FBUNDLE.setup( state, tool )
-import * as FMPATH from "../plugins/module-path/module-path.js"
-FMPATH.setup( state, tool )
-import * as FDEFAULTS from "../plugins/defaults/init.js"
-FDEFAULTS.setup( state, tool )
-
-import * as FMCOMPUTE from "../plugins/compute/compute.js"
-FMCOMPUTE.setup( state, tool )
+let DEFAULT_PLUGINS_DIR = path.resolve( path.join( __dirname,"..","plugins") )
+let default_modules = [
+	"forms/forms.js",
+	"bundle-2/bundle-2.js",
+	"module-path/module-path.js",
+	"defaults",
+	"compute/compute.js"
+	]
+let modules_to_import = default_modules // todo добавить из config.cl?
+let mmm = tool.load_modules( modules_to_import.map( x => path.join(DEFAULT_PLUGINS_DIR,x)), state)
 
 // уже прочитанные модули
 let imported_modules = {} // abs-path => state
@@ -123,8 +159,22 @@ function changeExtension(file, extension) {
 //let out_file = changeExtension(file,".js")
 let out_file = file.slice(7) + ".js"
 
-//let k = tool.compile_file( file, state )
+//console.log("starting compiling file. state.env=",state.env)
 
+mmm.then( () => tool.compile_file_p( file, state )).then( k => {
+	let code = k.code
+	code = `import * as CL2 from 'cl2'\nlet self={}\n${tool.get_global_code()}\n${code}`
+	//console.log("import * as CL2 from '../runtime/cl2.js'")
+  //console.log(code)
+  fs.writeFile( out_file, code,(err) => {
+  	if (err) console.log(err)
+  	console.log("done: ",file,"-->",out_file)
+  } )
+})	
+
+
+
+/*
 fetch( file ).then( r => r.text() ).then( content => {
 	//console.log(content)
 
@@ -140,3 +190,4 @@ fetch( file ).then( r => r.text() ).then( content => {
   	console.log("done: ",file,"-->",out_file)
   } )
 })
+*/

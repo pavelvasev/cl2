@@ -1,11 +1,11 @@
 // F-TASKS
 
 import * as C from "../../lib/cl2-compiler.js"
-import * as FORMS from "../../lib/forms.js"
+import * as FORMS from "../forms/forms.js"
 
 let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[]} }
 
-export function setup( state, tool )
+export function init( state, tool )
 {
 	
 	state.env.cofunc = { make_code: cofunc, check_params: default_cp}
@@ -17,7 +17,7 @@ obj "task" {
     action: cell
   }
 
-  output: cell  
+  output: cell
 
   b: react @input @action
 

@@ -1,6 +1,6 @@
 // F-MODULE-PATHS
 
-export function setup( state )
+export function init( state )
 {
 	state.space.resolve_module_path = resolve_module_path
 }

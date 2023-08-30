@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 
-export function setup( st ) {
+export function init( st ) {
 
 	let space = st.space
 
