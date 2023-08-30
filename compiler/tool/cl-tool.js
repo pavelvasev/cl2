@@ -100,7 +100,8 @@ let default_modules = [
 	"bundle-2/bundle-2.js",
 	"module-path/module-path.js",
 	"defaults",
-	"compute/compute.js"
+	"compute/compute.js",
+	"config"
 	]
 let modules_to_import = default_modules // todo добавить из config.cl?
 let mmm = tool.load_modules( modules_to_import.map( x => path.join(DEFAULT_PLUGINS_DIR,x)), state)
