@@ -368,6 +368,8 @@ export function func( obj, state )
 	 }
 	`
 
+	//state.tool.compile_string( code )
+
 	let c_obj = C.code2obj( code )
 	strs.push( C.objs2js( c_obj,state ) )
 

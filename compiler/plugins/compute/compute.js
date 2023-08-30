@@ -5,11 +5,31 @@ import * as FORMS from "../../lib/forms.js"
 
 let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[]} }
 
-export function setup( state )
+export function setup( state, tool )
 {
-	//console.log(333)
+	
 	state.env.cofunc = { make_code: cofunc, check_params: default_cp}
-	//state.env.fun = { make_code: fun, check_params: default_cp}
+
+	let task_code = `
+obj "task" {
+  in {
+    input: channel
+    action: cell
+  }
+
+  output: cell  
+
+  b: react @input @action
+
+  bind @b.output @output
+
+  b2: react @b.output {: b.destroy(); b2.destroy(); :}
+  // мы не вызываем self.destroy т.к. у нас output, на него подписаны..
+  
+  // todo
+  }`
+	let task_code_lang = tool.compile_string( task_code, state )
+	tool.add_global_code( "// from compute plugin",task_code_lang )
 }
 
 /*

@@ -32,9 +32,9 @@ class Tool {
 
 	global_code = []
 
-  // code - строчка, массив строчек, массив массивов..
-	add_global_code( code ) {
-		this.global_code.push( code )
+  // каждый элемент code - строчка, массив строчек, массив массивов..
+	add_global_code( ...code ) {
+		this.global_code.push( ...code )
 	}
 	get_global_code() {
 		return C.strarr2str( this.global_code )
@@ -51,12 +51,11 @@ import * as FBUNDLE from "../plugins/bundle-2/bundle-2.js"
 FBUNDLE.setup( state, tool )
 import * as FMPATH from "../plugins/module-path/module-path.js"
 FMPATH.setup( state, tool )
+import * as FDEFAULTS from "../plugins/defaults/init.js"
+FDEFAULTS.setup( state, tool )
 
 import * as FMCOMPUTE from "../plugins/compute/compute.js"
 FMCOMPUTE.setup( state, tool )
-
-import * as FDEFAULTS from "../plugins/defaults/init.js"
-FDEFAULTS.setup( state, tool )
 
 // уже прочитанные модули
 let imported_modules = {} // abs-path => state
