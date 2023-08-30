@@ -77,6 +77,18 @@ class Tool {
 	get_global_code() {
 		return C.strarr2str( this.global_code )
 	}
+
+	commands = {}
+
+	add_command( name, fn ) {
+		this.commands[name] = fn
+	}
+	get_command( name ) {
+		if (!this.commands[name])
+			throw new Error("tool: command not found! ",name)
+		return this.commands[name]
+	}
+
 }
 
 let tool = new Tool()
@@ -145,49 +157,38 @@ state.env["import"] = {
 	check_params: () => {}
 }
 
+tool.add_command( "compile", (file="main.cl") => {
+	//let file = process.argv[2] || "main.cl";
+	// добавляя полный путь, мы обеспечиваем возможность внутрях вычислить текущий каталог из него и тогда хорошо отрабатывает загрузчики внутренние
+	file = "file://" + file // Vrungel.add_dir_if( file, process.cwd() + "/" );
 
-let file = process.argv[2] || "main.cl";
-// добавляя полный путь, мы обеспечиваем возможность внутрях вычислить текущий каталог из него и тогда хорошо отрабатывает загрузчики внутренние
-file = "file://" + file // Vrungel.add_dir_if( file, process.cwd() + "/" );
+	// extension should include the dot, for example '.html'
 
-// extension should include the dot, for example '.html'
+	function changeExtension(file, extension) {
+	  const basename = path.basename(file, path.extname(file))
+	  return path.join(path.dirname(file), basename + extension)
+	}
+	//let out_file = changeExtension(file,".js")
+	let out_file = file.slice(7) + ".js"
 
-function changeExtension(file, extension) {
-  const basename = path.basename(file, path.extname(file))
-  return path.join(path.dirname(file), basename + extension)
-}
-//let out_file = changeExtension(file,".js")
-let out_file = file.slice(7) + ".js"
+	//console.log("starting compiling file. state.env=",state.env)
 
-//console.log("starting compiling file. state.env=",state.env)
+	mmm.then( () => tool.compile_file_p( file, state )).then( k => {
+		let code = k.code
+		code = `import * as CL2 from 'cl2'\nlet self={}\n${tool.get_global_code()}\n${code}`
+		//console.log("import * as CL2 from '../runtime/cl2.js'")
+	  //console.log(code)
+	  fs.writeFile( out_file, code,(err) => {
+	  	if (err) console.log(err)
+	  	console.log("done: ",file,"-->",out_file)
+	  } )
+	})
 
-mmm.then( () => tool.compile_file_p( file, state )).then( k => {
-	let code = k.code
-	code = `import * as CL2 from 'cl2'\nlet self={}\n${tool.get_global_code()}\n${code}`
-	//console.log("import * as CL2 from '../runtime/cl2.js'")
-  //console.log(code)
-  fs.writeFile( out_file, code,(err) => {
-  	if (err) console.log(err)
-  	console.log("done: ",file,"-->",out_file)
-  } )
-})	
+} )
+tool.add_command("c", tool.get_command("compile"))
 
+//////////////// ну поехали
 
+let command = process.argv[2] || "compile"
 
-/*
-fetch( file ).then( r => r.text() ).then( content => {
-	//console.log(content)
-
-	let code = tool.compile_string( content, state )
-
-	//code = tool.get_global_code() + "\n" + code 
-
-	code = `import * as CL2 from 'cl2'\nlet self={}\n${tool.get_global_code()}\n${code}`
-	//console.log("import * as CL2 from '../runtime/cl2.js'")
-  //console.log(code)
-  fs.writeFile( out_file, code,(err) => {
-  	if (err) console.log(err)
-  	console.log("done: ",file,"-->",out_file)
-  } )
-})
-*/
+tool.get_command(command).apply( this, [...process.argv].slice(3) )
