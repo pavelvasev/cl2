@@ -89,6 +89,12 @@ class Tool {
 		return this.commands[name]
 	}
 
+	config = {}
+
+	get_config_modules() {
+		return this.config?.modules || {}
+	}
+
 }
 
 let tool = new Tool()

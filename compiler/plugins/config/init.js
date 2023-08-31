@@ -5,12 +5,12 @@ export function init( state, tool ) {
 
 	return access(config_file, constants.R_OK).then( () => {
 		return import( config_file ).then( m => {
-			state.config = m
-			console.log("config.js is exist. thus state.config=",state.config)
+			tool.config = m
+			//console.log("config.js is exist. thus state.config=",tool.config)
 		})
-	}).catch( err => {		
-		console.log("config.js is missing. ok.")
-		state.config = {modules:{}}
+	}).catch( err => {
+		//console.log("config.js is missing. ok.")
+		tool.config = {}
 		return true
 	})
 }
