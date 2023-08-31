@@ -180,6 +180,11 @@ export function get_record(state,id,obj_info,allow_defaults=true) {
   return get_record( next_state, id_arr.slice(1), obj_info, false) // todo slice дорого, надо индекс передавать
 }
 
+// F-ALIAS
+function get_basis( record ) {
+	return record.basis
+}
+
 // вход obj-описание 
 // выход вложенный массив строк на javascript
 // objs - массив описаний
@@ -241,7 +246,6 @@ export function obj_id( obj, state ) {
 	return `${state.prefix}${obj.$name}`
 }
 
-
 export function default_obj2js( obj,state ) {
 	//console.log("default_obj2js",obj)
 	//let objid = varcoutner++
@@ -252,7 +256,7 @@ export function default_obj2js( obj,state ) {
 	if (!basis_record.check_params) {
 		console.error("env basis record have no check_params! for basis=",obj.basis_path,"obj=",obj,"basis_record=",basis_record)
 		throw new Error( "env basis have no check_params")
-	}	
+	}
 
 	let bindings_hash = {}
  	let output_binding
@@ -345,7 +349,7 @@ export function default_obj2js( obj,state ) {
 
 	// init_consts["parent"] = state.struc_parent?.$name || "self"
 	
-  strs.push( `let ${objid} = ${obj.modul_prefix}create_${obj.basis}( ${objToString(init_consts,1,state)} )`)
+  strs.push( `let ${objid} = ${obj.modul_prefix}create_${get_basis(basis_record)}( ${objToString(init_consts,1,state)} )`)
 
 	strs.push( objid.indexOf( obj.basis ) < 0 ? `${objid}.$title = "${objid}[${obj.basis}]"` : `${objid}.$title = "${objid}"`)
 	if (state.tree_parent_id) {

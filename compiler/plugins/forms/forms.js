@@ -21,7 +21,8 @@ export var tablica = {
 	paste: { make_code: paste, check_params: default_cp },
 	in: { make_code: _in, check_params: default_cp},
 //	react_orig: { make_code: react, check_params: default_cp},
-	nop: { make_code: () => { return { main: [], bindings: [] } }, check_params: default_cp}
+	nop: { make_code: () => { return { main: [], bindings: [] } }, check_params: default_cp},
+	alias: { make_code: alias, check_params: default_cp}
 }
 
 /*
@@ -131,6 +132,7 @@ export function _in( obj, state )
 	return { main: ["// input params",s,"// end input params"], bindings:[] }
 }
 
+
 /* 1 вводит в окружение новую форму с указанным именем xxx.
    при обращении к форме - генерируется текст создания объекта 
    (в котором вызывается функция создания объекта - create_xxx)
@@ -190,6 +192,7 @@ export function _obj( obj, state )
 	// состояние компилятора
 	//console.log("saving to statE:",id, state.current, state.env)
 	state.current[ id ] = {
+		basis: id,
 		make_code: (obj,state) => { 
 			let self_objid = C.obj_id( obj, state )
 			let res = C.default_obj2js(obj,state)
@@ -335,19 +338,15 @@ let ccc = 0
 export function func( obj, state )
 {
 	let name = obj.$name_modified || obj.$name
-
 	let fn_code = obj.params[0]
 
-  /*
-	if (Object.keys(obj.children).length > 0) { // встроенный адаптер F-COMPUTE
-		let b_state = {...state,compute_mode:true}
-		//b_state.space.beginComputeMode()
-		let c_state = modify_parent( state, 'arg_obj' )
-
-		let cstr = C.objs2js( Object.values(obj.children),c_state )
+	if (obj.params[1]) { // вариант func "name" code
+		name = obj.params[0]
+		fn_code = obj.params[1]
 	}
-	*/
-	//console.log(fn_code,obj.features_list)
+	// F-SAFE-NAME
+	//let original_name = name
+	//name = C.name_to_safe_name(name)
 	
 	let strs = [`function ${name}(${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
 	strs.push( `CL2.attach( self,"${name}",${name} )` )
@@ -356,7 +355,9 @@ export function func( obj, state )
 	state.static_values[ name ] = true
 	// .static_values это тема, чтобы на функцию не биндиться а как есть передавать
 
-	let code = `
+  // todo это надо как-то соптимизировать. по сути нам надо сгенерировать объект
+  // что-то типа define_obj_from_func "${name}" ${name}
+	let code = `	 
 	 obj "${name}" {
 	 	  in {
 	 	  	rest*: cell
@@ -445,3 +446,21 @@ export function react( obj, state )
 	return {main:strs,bindings:bindings}
 }
 */
+
+export function alias( obj, state )
+{
+	let original_name = obj.params[0]
+	let new_name = obj.params[1]
+
+	let q = state.current[ original_name ]
+
+	if (!q) {
+		console.error("alias: source name is not defined in state! name=",original_name)
+		console.error(obj.locinfo)
+	}
+  
+	state.current[ new_name ] = q
+	//console.log("created alias: ",new_name)
+	
+	return { main: [], bindings:[] }
+}

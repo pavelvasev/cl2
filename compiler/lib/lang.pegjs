@@ -26,6 +26,17 @@
 {{
   var env_counter=0;
 
+    // F-SAFE-NAME
+    // у нас в операциях могут быть символы всякие корявые типа +, < и т.п.
+    // и так функции в js нельзя называть да и в других языках иногда тоже
+    let g_regexp = /[^0-9a-zA-Z_\.]/g
+    function name_to_safe_name( name ) 
+    {
+      return name.replaceAll( g_regexp,(s) => {
+        return s.charCodeAt(0).toString()
+      })
+    }  
+
   // фунция вызывается первой формой и операторной формой
   function fill_env( env, env_modifiers, child_envs )
   {
@@ -177,11 +188,14 @@
         //env.$name = "_" + Object.keys( env.features )[0]; // лучше называть по первой фиче..
         
         //let basis = Object.keys( env.features )[0]
-        env.$name = `_${env.basis}_${env_counter++}`; 
+        //console.log('calling for env',env)
+        env.$name = `_${name_to_safe_name(env.basis)}_${env_counter++}`; 
         
         // F-FEATURE-OBJ-NAMES-UNIQ уникальный счетчик 
         // лучше называть по первой фиче.. 
     }
+
+    
 
   };
 
@@ -487,6 +501,13 @@ one_env_operator "environment operator record"
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
+
+/*  todo
+    let spl = first_feature_name.split(".")
+    env.basis = spl[ spl.length-1 ] // последняя компонента
+    env.basis_path = spl // весь путь
+*/    
+
     fill_env( env, [first_positional_attr].concat(env_modifiers), child_envs )
 
     if (env_modifiers.length == 0) {

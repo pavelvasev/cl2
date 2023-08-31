@@ -28,7 +28,7 @@ export function init( st ) {
 			})
 		`
 		strs.push("}")
-*/		
+*/
 
 		
 		if (state.tree_parent_id == null) {

@@ -226,8 +226,8 @@ export class Cell extends Comm {
 		// ну и промисы например - они тоже таковы.
 		// но пока это завязано на синтаксис..
 
-		if (initial_value !== NOVALUE) {
-			this.value = initial_value
+		this.value = initial_value
+		if (initial_value !== NOVALUE) {			
 			this.is_set = true
 		}
 		// вроде как нет смысла вызывать set - в ячейке все-равно еще никто не прицепился

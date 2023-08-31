@@ -17,7 +17,7 @@ obj "react" {
   //output: cell is_changed={: new old | return true :}
   // теперь можно и канал - т.к. таски сделаны отдельно
   // но вообще - в ЛФ вот порт хранит значение.. может и нам хранить? что такого.. (ну gc.. а ну и еще копии промежуточных данных в памяти.. ну посмотрим)
-  output: channel 
+  output: channel
 
   init "(obj) => {
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
@@ -357,3 +357,23 @@ obj "apply" {
 
   bind @xx.output @output
 }
+
+//// арифметика
+
+func "plus" {: ...values |    
+  let sum = values[0]
+  for (let i=1; i<values.length; i++)
+      sum = sum + values[i]      
+  return sum
+:}
+
+alias "plus" "+"
+
+func "minus" {: ...values |  
+  let sum = values[0]
+  for (let i=1; i<values.length; i++)
+      sum = sum - values[i]      
+  return sum
+:}
+
+alias "minus" "-"
