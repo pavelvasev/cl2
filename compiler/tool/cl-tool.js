@@ -78,6 +78,10 @@ class Tool {
 		return C.strarr2str( this.global_code )
 	}
 
+	gen_full_code( code ) {
+		return `import * as CL2 from 'cl2'\nlet self={}\n${this.get_global_code()}\n${code}`
+	}
+
 	commands = {}
 
 	add_command( name, fn ) {
@@ -97,6 +101,8 @@ class Tool {
 
 }
 
+///////////////////////////////////////////
+
 let tool = new Tool()
 let state = C.create_state()
 
@@ -107,7 +113,8 @@ let default_modules = [
 	"module-path/module-path.js",
 	"defaults",
 	"compute/compute.js",
-	"config"
+	"config",
+	"run"
 	]
 let modules_to_import = default_modules // todo добавить из config.cl?
 let mmm = tool.load_modules( modules_to_import.map( x => path.join(DEFAULT_PLUGINS_DIR,x)), state)
@@ -180,15 +187,16 @@ tool.add_command( "compile", (file="main.cl") => {
 
 	//console.log("starting compiling file. state.env=",state.env)
 
-	mmm.then( () => tool.compile_file_p( file, state )).then( k => {
-		let code = k.code
-		code = `import * as CL2 from 'cl2'\nlet self={}\n${tool.get_global_code()}\n${code}`
-		//console.log("import * as CL2 from '../runtime/cl2.js'")
-	  //console.log(code)
-	  fs.writeFile( out_file, code,(err) => {
-	  	if (err) console.log(err)
-	  	console.log("done: ",file,"-->",out_file)
-	  } )
+	return tool.compile_file_p( file, state ).then( k => {
+		let code = tool.gen_full_code( k.code )
+
+		return new Promise( (resolve,reject) => {
+			fs.writeFile( out_file, code,(err) => {
+		  	if (err) console.log(err)
+		  	console.log("done: ",file,"-->",out_file)
+		    resolve( out_file)
+		  } )		  
+		})	  
 	})
 
 } )
@@ -198,4 +206,7 @@ tool.add_command("c", tool.get_command("compile"))
 
 let command = process.argv[2] || "compile"
 
-tool.get_command(command).apply( this, [...process.argv].slice(3) )
+mmm.then( () => {
+	tool.get_command(command).apply( this, [...process.argv].slice(3) )	
+})
+

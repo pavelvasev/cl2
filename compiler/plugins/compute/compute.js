@@ -25,6 +25,9 @@ obj "task" {
 
   b2: react @b.output {: b.destroy(); b2.destroy(); :}
   // мы не вызываем self.destroy т.к. у нас output, на него подписаны..
+
+  //react @input {: console.log('cofunc started',self + "") :}
+  //react @b.output {: console.log('cofunc finished',self + "") :}
   
   // todo
   }`
@@ -65,10 +68,14 @@ export function cofunc( obj, state )
 	  let r_strs = []
 	  let r_id = `${objid}_task`
 	  r_strs.push( `let ${r_id} = create_task({})`,
-	  	`let ${objid} = ${r_id}; ${r_id}.attached_to=self;`, // внешние ссылаются по старому имени
+	  	`let ${objid} = ${r_id}; ${r_id}.attached_to=self; ${r_id}.$title='${r_id}';`, // внешние ссылаются по старому имени
 	  	//`${r_id}.action.set( () => { `,strs,bindings,`if (${objid}.output) CL2.create_binding( ${objid}.output, ${r_id}.output`,` })`,
-	  	`${r_id}.action.set( () => { console.log('cofunc action started: ${r_id}',${r_id}+'')\n `,[...strs],[...bindings],`return ${objid}.output`,` })`
+	  	`${r_id}.action.set( () => { `,[...strs],[...bindings],
+	  	`return ${objid}.output`,` })`
 	   )
+	   //console.log('cofunc action started: ${r_id}',${r_id}+'')\n 
+	   //,`${r_id}.output.once( () => console.log('cofunc action finished: ${r_id}',${r_id}+'') )\n`,
+
 
 	  // заменяем
 	  strs.splice( 0, strs.length, ...r_strs )

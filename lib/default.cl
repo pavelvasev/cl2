@@ -14,7 +14,10 @@ obj "react" {
   // потому что вот таска сработала, это вызывает другую таску, та создает процесс, а 
   // технология такова что тот процесс начинает зачитывать output-ы вот реакций.. и ничего не прочитает
   // хотя формально если нам надо таски, так и надо делать таски
-  output: cell is_changed={: new old | return true :}
+  //output: cell is_changed={: new old | return true :}
+  // теперь можно и канал - т.к. таски сделаны отдельно
+  // но вообще - в ЛФ вот порт хранит значение.. может и нам хранить? что такого.. (ну gc.. а ну и еще копии промежуточных данных в памяти.. ну посмотрим)
+  output: channel 
 
   init "(obj) => {
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
@@ -29,6 +32,7 @@ obj "react" {
           result = fn( self, CL2.create_cell(value) )
         else  
           result = fn( value )
+        //console.log('result=',result+'')  
 
         if (result instanceof CL2.Comm) {
           // вернули канал? слушаем его дальше.. такое правило для реакций
@@ -36,8 +40,10 @@ obj "react" {
             output.submit( val )
           })
         }
-        else
+        else {
+          //console.log('submitting result to output',output+'')
           output.submit( result )
+        }
       })
     })
 
@@ -95,9 +101,16 @@ obj "print" {
     rest* : cell
   }
 
+  /*
   x: func {: values | console.log(...values) :}
   print_vals: extract @rest
-  react @print_vals.output @x
+  b: react @print_vals.output @x
+  */
+  b: react (extract @rest) {: values | console.log(...values) :}
+
+  // ну типа.. напечатали.. пошлем об этом сообщение.. можно даже значения вернуть если что
+  output: channel
+  bind @b.output @output
 
   /*
   reaction (extract @rest) {: values |
