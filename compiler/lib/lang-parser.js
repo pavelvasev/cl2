@@ -167,6 +167,7 @@
         //env.$name = "_" + Object.keys( env.features )[0]; // лучше называть по первой фиче..
         
         //let basis = Object.keys( env.features )[0]
+        //console.log('calling for env',env)
         env.$name = `_${name_to_safe_name(env.basis)}_${env_counter++}`; 
         
         // F-FEATURE-OBJ-NAMES-UNIQ уникальный счетчик 
@@ -636,6 +637,15 @@ function peg$parse(input, options) {
   var peg$f12 = function(envid, first_positional_attr, env_modifiers, child_envs) {
       var env = new_env( envid );
       env.locinfo = getlocinfo();
+
+      let first_feature_name = env_modifiers[0].name
+        //console.log("QQQQ",first_feature_name)
+      let spl = first_feature_name.split(".") 
+      env.basis = spl[ spl.length-1 ] // последняя компонента
+      env.basis_path = spl // весь путь
+      env.modul_prefix = spl.slice(0,-1).join(".")
+      //console.log("EEEE",env.basis, env.basis_path)
+
       fill_env( env, [first_positional_attr].concat(env_modifiers), child_envs )
 
       if (env_modifiers.length == 0) {

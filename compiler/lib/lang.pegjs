@@ -491,6 +491,7 @@ one_env_obj "environment record"
   }
   //finalizer: (__ ";")*
 
+// F-MATH-OPERATOR
 // особый случай на предмет записи в стиле a + b
 one_env_operator "environment operator record"
   =
@@ -502,11 +503,13 @@ one_env_operator "environment operator record"
     var env = new_env( envid );
     env.locinfo = getlocinfo();
 
-/*  todo
-    let spl = first_feature_name.split(".")
+    let first_feature_name = env_modifiers[0].name
+      //console.log("QQQQ",first_feature_name)
+    let spl = first_feature_name.split(".") 
     env.basis = spl[ spl.length-1 ] // последняя компонента
     env.basis_path = spl // весь путь
-*/    
+    env.modul_prefix = spl.slice(0,-1).join(".")
+    //console.log("EEEE",env.basis, env.basis_path)
 
     fill_env( env, [first_positional_attr].concat(env_modifiers), child_envs )
 

@@ -1,3 +1,4 @@
 //func "alfa"
 
-print "hello" ( - (10 + 2) 4)
+let c=5
+print "hello" ((10 + 2) - @c)
