@@ -1,12 +1,11 @@
-map @config.modules (func { |name value|
+map @config.modules (cofunc { |name value|
   let dir = module_dir @value
   clone_sync @value.src @dir
 })
 
 func "module_dir_name" { |module_record|
   // https://github.com/pavelvasev/cl2threejs.git
-  // return (split module_record "/" | last | split "." | first )
-  return (first (str.split (last (str.split (get @module_record "src") "/")) "."))
+  return (split module_record "/" | last | split "." | first )
 }
 
 func "module_dir" { |module_record|
