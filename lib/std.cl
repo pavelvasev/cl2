@@ -32,7 +32,7 @@ obj "counter" {
     //output: cell
     output: channel
 
-    x: func {: 
+    func "x" {:
 	     self.value.set( self.value.get()+1 )
 	     return self.value.get()
     :}

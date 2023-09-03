@@ -32,8 +32,10 @@ export function modify_prefix( state={}, new_prefix )
 
 export function modify_parent( state={}, nv, nv2=nv )
 {	
-	let ns = {...state, struc_parent_id:nv, tree_parent_id: nv2, 
-	    static_values: {...state.static_values},
+	let ns = {...state, 
+	    struc_parent_id:nv, 
+	    tree_parent_id: nv2, 
+	    static_values: {...state.static_values}, // чтобы вложенные функции оставались внутри
       current: {...state.current}, // вложенные определения чтобы оставались внутри
 	    next_obj_cb: null}
 	return ns
@@ -354,9 +356,13 @@ export function default_obj2js( obj,state ) {
 	strs.push( objid.indexOf( obj.basis ) < 0 ? `${objid}.$title = "${objid}[${obj.basis}]"` : `${objid}.$title = "${objid}"`)
 	if (state.tree_parent_id) {
 		  // древовидная иерархия.. но там объекты у нас могут путешествовать туды сюды
-	    strs.push( `${state.tree_parent_id}.append(${objid})` )
-	    // вторая иерархия, статическая на момент создания
-	    strs.push( `CL2.attach_anonymous( ${state.tree_parent_id}, ${objid})` )
+	    strs.push( `${state.tree_parent_id}.append(${objid})` )	    
+  }
+  // оказалось что нам надо пропускать append но делать attach_anonymous
+  // используем для этого struc_parent_id (оно вроде как по смыслу то что надо)
+  if (state.struc_parent_id) {
+		  // вторая иерархия, статическая на момент создания
+	    strs.push( `CL2.attach_anonymous( ${state.struc_parent_id}, ${objid})` )
   }
 
 // теперь надо бы детей

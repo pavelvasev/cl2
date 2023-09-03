@@ -425,7 +425,7 @@ export function attach( target_object, name, embedded_object )
 	if (target_object.hasOwnProperty(name))
 		throw new Error(`target_object already has element name = '${name}'`)
 	target_object[name] = embedded_object
-	embedded_object.attached_to = target_object
+	
 	embedded_object.$title = name
 	//embedded_object.title = 
 	// todo: имя может тут кстати?
@@ -449,7 +449,8 @@ export function get_title( obj ) {
 export function attach_anonymous( target_object, embedded_object )
 {
 	target_object.subobjects ||= []
-	target_object.subobjects.push( embedded_object )	
+	target_object.subobjects.push( embedded_object )
+	embedded_object.attached_to = target_object	
 }
 
 // зачем нам объект связывания непонятно до конца

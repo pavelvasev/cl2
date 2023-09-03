@@ -26,13 +26,13 @@ obj "react" {
       //console.log('react input changed. scheduling!',self+'','value=',value)
       CL2.schedule( () => { // принципиальный момент - чтобы реакция не срабатывала посреди другой реакции
         //console.log('react invoking scheduled action.',self+'')
-        //console.log('react scheduled call !!!!!!!!!!!!')
+        //console.log('react scheduled call !!!!!!!!!!!!',fn,self+'')
         let result
         if (fn.is_block_function)
           result = fn( self, CL2.create_cell(value) )
         else  
           result = fn( value )
-        //console.log('result=',result+'')  
+        //console.log('react result=',result+'')  
 
         if (result instanceof CL2.Comm) {
           // вернули канал? слушаем его дальше.. такое правило для реакций
@@ -164,7 +164,7 @@ obj "if"
   }
   */
 
-  react @_else {: val |
+  r_else_obj: react @_else {: val |
     //if (debug)
     //console.log("r1")
     let s1 = val.value.subscribe( (ev) => {
@@ -206,13 +206,13 @@ obj "if"
         }
   :}
 
-  react @then_value {: value |
+  r_on_then_val: react @then_value {: value |
     if (current_state.get() == 1) {
       activate_branch( then_value.get(), condition.get() )
     }
   :}
 
-  react @else_value {: value |
+  r_on_else_val: react @else_value {: value |
     //console.log("else_value changed:",else_value.get(),"current_state.get()=",current_state.get(),"condition=",condition.get())
     if (current_state.get() == 2) {
       //console.
@@ -220,7 +220,7 @@ obj "if"
     }
   :}
 
-  react @condition {: value |
+  r_on_cond: react @condition {: value |
     //console.log("if react on condition",value + "",current_state.get(),"self=",self+"")
     //console.trace()
     if (value) {
@@ -241,13 +241,48 @@ obj "if"
   :}
 }
 
+// ну посмотреть на его поведение.. сейчас странная цепочка
+// мб вернуться к parent-у и реакцию на parent
+obj "return" {
+  in {
+    value: cell
+  }
+
+    // ну тут история что value сразу срабатывает. а может быть имеет смысл delayed сделать..
+    // тогда парент-а проверять не придется т.к. он как правило есть
+    // но вообще хорошо бы парента просто в обязательные параметры
+    react @value {: value |
+      // надо добраться до некотого блока возвращающего значения.. и передать его туда
+      //let p = self.attached_to
+      // спорная реализация.. я тут не проверяю parent на изменение
+      // но впрочем как и всю цепочку.. будем посмотреть
+      let p = self.parent && self.parent.is_set ? self.parent.get() : self.attached_to
+//      console.log('============ return acting',self+"",self)
+//      console.log("============ return reacting", p+"")
+//      console.trace()
+      while (p) {
+//        console.log("=========== return checking p=",p+"")
+        if (p.output) {
+//          console.log("================== return found output")
+          p.output.set( value )
+          return "return_found_output"
+        }
+//        console.log("it has no ouytput",JSON.stringify(p))
+        p = p.parent ? p.parent.get() : p.attached_to
+      }
+      console.error("return: failed to find output cell!",self+"")
+      return "return_not_found_output"
+    :}
+}
+
+/*
 obj "return" {
   in {
     value: cell
   }
 
   if @self.parent { 
-    //print "OK RETURN HAVE PARENT"
+    print "OK RETURN HAVE PARENT"
 
     // ну тут история что value сразу срабатывает. а может быть имеет смысл delayed сделать..
     // тогда парент-а проверять не придется т.к. он как правило есть
@@ -262,19 +297,21 @@ obj "return" {
         if (p.output) {
           //console.log("================== return found output")
           p.output.set( value )
-          return
+          return {return_found_output:true}
         }
         p = p.parent.get()
       }
+      return {return_found_output:false}
     :}
 
   } else {
     print "OK RETURN HAVE NO PARENT"
     react @value {: value |
       console.log("============ return reacting, no-parent mode")
-    :}    
+    :}
   }
 }
+*/
 
 obj "block" {
   in {
@@ -341,6 +378,7 @@ obj "apply" {
         let res = f( ...args )
         //console.log("res=",res)
         //if (f.awaitable) res.then(val => output.set( val ))
+        // console.log("CCC f.is_task_function=",f.is_task_function,"f=",f)
         if (f.is_task_function && res instanceof CL2.Comm) {
           //console.log("branch!",res + "")
           // вернули канал? слушаем его дальше..

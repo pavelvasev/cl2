@@ -3,6 +3,7 @@ import { access, constants } from 'node:fs/promises';
 import * as fs from 'node:fs';
 
 export function init( state, tool ) {
+return
 
 	tool.add_command( "compile", (file="main.cl") => {
 		//let file = process.argv[2] || "main.cl";
