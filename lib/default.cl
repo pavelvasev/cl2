@@ -15,7 +15,7 @@ obj "react" {
   // технология такова что тот процесс начинает зачитывать output-ы вот реакций.. и ничего не прочитает
   // хотя формально если нам надо таски, так и надо делать таски
   //output: cell is_changed={: new old | return true :}
-  // теперь можно и канал - т.к. таски сделаны отдельно
+  // теперь можно и канал - т.к. таски сделаны отдельно внешним образом
   // но вообще - в ЛФ вот порт хранит значение.. может и нам хранить? что такого.. (ну gc.. а ну и еще копии промежуточных данных в памяти.. ну посмотрим)
   output: channel
 
@@ -32,11 +32,15 @@ obj "react" {
           result = fn( self, CL2.create_cell(value) )
         else  
           result = fn( value )
-        //console.log('react result=',result+'')  
+        //console.log('react result=',result+'')
 
         if (result instanceof CL2.Comm) {
+          // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
+          // но вообще это странно.. получается мы не можем возвращать каналы..
+          // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
           let unsub = result.once( (val) => {
+            // console.log('once tick',val,output+'')
             output.submit( val )
           })
         }
@@ -175,7 +179,7 @@ obj "if"
 
   cleanup_current_parent: func {:
     //console.log("cleanup_current_parent",current_parent.get())
-        if (current_parent.get()) {
+      if (current_parent.is_set) {
           let cp = current_parent.get()
           cp.destroy()
           current_parent.set( null )
@@ -257,17 +261,17 @@ obj "return" {
       // спорная реализация.. я тут не проверяю parent на изменение
       // но впрочем как и всю цепочку.. будем посмотреть
       let p = self.parent && self.parent.is_set ? self.parent.get() : self.attached_to
-//      console.log('============ return acting',self+"",self)
-//      console.log("============ return reacting", p+"")
+      //console.log('============ return acting',self+"",self)
+      //console.log("============ return reacting", p+"")
 //      console.trace()
       while (p) {
-//        console.log("=========== return checking p=",p+"")
+        //console.log("=========== return checking p=",p+"")
         if (p.output) {
-//          console.log("================== return found output")
+          //console.log("================== return found output", value,p.output + "")
           p.output.set( value )
           return "return_found_output"
         }
-//        console.log("it has no ouytput",JSON.stringify(p))
+        //console.log("it has no ouytput",JSON.stringify(p))
         p = p.parent ? p.parent.get() : p.attached_to
       }
       console.error("return: failed to find output cell!",self+"")
@@ -376,19 +380,24 @@ obj "apply" {
 
       if (f && args) {
         let res = f( ...args )
-        //console.log("res=",res)
+        //console.log("apply res=",res,"f=",f)
+        // типа если вернули канал - то зацепку за его значение нам обеспечит react
+        return res
+        /*
+        
         //if (f.awaitable) res.then(val => output.set( val ))
         // console.log("CCC f.is_task_function=",f.is_task_function,"f=",f)
         if (f.is_task_function && res instanceof CL2.Comm) {
-          //console.log("branch!",res + "")
+          console.log("task fn!",res + "")
           // вернули канал? слушаем его дальше..
           let unsub = res.once( (val) => {
-            //console.log("once",val)
+            console.log("once",val)
             output.set( val )
           })
         }
         else
           output.set( res )
+        */  
 
       } 
     :}

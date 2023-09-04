@@ -1,7 +1,17 @@
-map @config.modules (func { |name value|
+func "process_module" { |rec cloned|
+  let dir = module_dir @rec
+  if (dir != ".") {
+    clone_sync @value.src @dir
+    let next_cloned = (list ...@cloned @dir)
+    let m = load_modules_list @dir
+    map @m { |rec| return process_module @rec @next_cloned }
+  }
+}
+
+map @tool.config.modules { |name value|
   let dir = module_dir @value
   clone_sync @value.src @dir
-})
+}
 
 func "module_dir_name" { |module_record|
   // https://github.com/pavelvasev/cl2threejs.git

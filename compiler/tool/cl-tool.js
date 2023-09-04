@@ -19,6 +19,8 @@ class Tool {
 		// будем запихивать?
 	}
 
+  // загружает init.js-файлы по списку
+  // dir - массив путей, где каждый путь это каталог или файл .js
 	load_modules( dir, state ) {
 		//console.log("load_modules: dir=",dir)
 		if (Array.isArray(dir)) {
@@ -33,7 +35,10 @@ class Tool {
 			dir = path.join(dir,"init.js")
 
 		return import( dir ).then( m => {
-		  return m.init( state, this )			
+			if (m.config?.modules)
+			   this.load_modules( m.config.modules )
+			//if (m.init)
+		      return m.init( state, this )
 		})
 	}
 
@@ -97,6 +102,13 @@ class Tool {
 
 	get_config_modules() {
 		return this.config?.modules || {}
+		// modules набор записей вида { "id" => record } 
+		// где record запись вида "dir" пока что а потом добавим например src для гита
+	}
+	get_module_dir( rec ) {
+		let dir = rec
+		// todo вычислять dir из имени каталога на github и т.п.
+		return dir
 	}
 
 }
@@ -117,8 +129,9 @@ let default_modules = [
 	"compile",
 	"run"
 	]
-let modules_to_import = default_modules // todo добавить из config.cl?
-let mmm = tool.load_modules( modules_to_import.map( x => path.join(DEFAULT_PLUGINS_DIR,x)), state)
+//let modules_to_import = default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x)
+let mmm = tool.load_modules( default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x) ), state)
+
 
 // уже прочитанные модули
 let imported_modules = {} // abs-path => state
@@ -154,6 +167,7 @@ state.env["import"] = {
 					let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
 
 				  module_state = C.modify_dir( state, path.dirname( file ) + "/")
+				  // и todo - надо карту импортов свою им подгрузить
 				  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
 					let code = tool.compile_string( content, module_state )
 					

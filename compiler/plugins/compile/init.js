@@ -20,7 +20,25 @@ export function init( state, tool ) {
 
 		//console.log("starting compiling file. state.env=",state.env)
 
-		return tool.compile_file_p( file, state ).then( k => {
+		// мы переходим в режим компиляции. надо загрузить модули проекта.
+		// project.cl?
+		/*
+		let mmm = tool.get_module_config(".").then ( conf => {
+			conf.modules ||= {}
+			let to_load = []
+			for (let key in conf.modules) {
+				let dir = tool.get_module_dir(x)
+				state.import_map[ key ] = dir
+				to_load.push( dir )
+			}
+			return tool.load_modules( to_load )
+			//let user_modules = Object.values( conf.modules || {} ).map( x => tool.get_module_dir(x) )
+			//return tool.load_modules( user_modules )
+		})		
+		*/
+		let mmm = tool.load_modules( ".",state )
+
+		return mmm.then( () => tool.compile_file_p( file, state )).then( k => {
 			let code = tool.gen_full_code( k.code )
 
 			return new Promise( (resolve,reject) => {
