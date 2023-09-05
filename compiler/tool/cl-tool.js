@@ -65,13 +65,12 @@ class Tool {
 		}
 
 		let dir = get_module_dir( record ) // тут dir, path, все вперемешку короче получилось
-		console.log("resolved dir for module:",dir)
-
-		//console.log("load_module: ",dir)
-		if (!dir.endsWith(".js"))
-			dir = path.join(dir,"init.js")
+		//console.log("resolved dir for module:",dir)
 
 		let init_file = dir
+		//console.log("load_module: ",dir)
+		if (!init_file.endsWith(".js"))
+			init_file = path.join(init_file,"init.js")
 
 		// если уже загружали то 2й раз не надо
 		if (this.loaded_modules[init_file]) return true
@@ -83,17 +82,16 @@ class Tool {
 
 			// функция 1 - запомнить пути для карты импорта
 			let import_map = {}
-			for (let key in inner_modules) {
-				import_map[key] = 
-				   { dir: get_module_dir( inner_modules[key] ), 
-				     import_map: {} }
-			}
+			for (let key in inner_modules) 
+				import_map[key] = get_module_dir( inner_modules[key] )
+
+			state.inner_import_maps[dir] = import_map
 
 			//console.log("loaded",dir,"inner_modules=",inner_modules)
 			// функция 2 - передать управление для внедрения в процесс компиляции
 
 		  return this.load_modules( Object.values(inner_modules), state, path.dirname( init_file ) ).then( (results) => {
-		  	for (let key in inner_modules) 
+		  	for (let key in inner_modules)
 		  		import_map[key].import_map = results.shift()
 
 		  	if (m.init) {
@@ -215,8 +213,7 @@ state.env["import"] = {
 				throw new Error(`import: cannot import to name '${tgt}', it already busy in current env`)
 
 			//let file = path.resolve( path.join(state.dir,src) )
-			let mp = state.space.resolve_module_path( src, state )
-			let file = mp.path
+			let file = state.space.resolve_module_path( src, state )
 
 			let module_state = imported_modules[ file ]
 
@@ -235,7 +232,7 @@ state.env["import"] = {
 
 				  module_state = C.modify_dir( state, path.dirname( file ) + "/")
 
-				  module_state.import_map = mp.import_map
+				  module_state.import_map = state.space.resolve_module_import_map( src, state )
 
 				  // и todo - надо карту импортов свою им подгрузить
 				  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода

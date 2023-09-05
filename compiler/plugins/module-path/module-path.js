@@ -35,9 +35,22 @@ function resolve_module_path( src_id, state ) {
 		let r2 = state.import_map[ first ]
 		if (!r2) 
 			throw new Error(`resolve_module: cannot find module for id ${src_id}`)
-		basedir_or_file = r2.dir
-		import_map = r2.import_map
+		basedir_or_file = r2.dir		
 	}
 
-	return { path: path.resolve( path.join(basedir_or_file, parts.join("/") ) ), import_map }
+	return  path.resolve( path.join(basedir_or_file, parts.join("/") ) )
+}
+
+function resolve_module_import_map( src_id, state ) {
+	let parts = src_id.split("/")
+	let first = parts.shift()
+	// F-IMPORT-RELATIVE
+	if (first == ".") // текущий каталог
+	{
+		return state.import_map
+	}
+	let found = state.import_map[ first ]
+	if (!found) 
+			throw new Error(`resolve_module: cannot find module for id ${src_id}`)
+	return found.import_map
 }
