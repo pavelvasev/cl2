@@ -1,1 +1,1 @@
-func "sigma" { return 10 }
+func "sigma" { return 15 }

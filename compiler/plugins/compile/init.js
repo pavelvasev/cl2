@@ -42,9 +42,9 @@ export function init( state, tool ) {
 
 		let mmm0 = access(config_file, constants.R_OK)
 		let mmm = mmm0.then( () => {
-			return tool.load_module( config_file,state ).then( m => {
-				tool.config = m
-				state.import_map = m.import_map
+			return tool.load_module( config_file,state ).then( conf => {
+				tool.config = conf
+				state.import_map = conf.import_map
 			}).catch( err => {
 				console.error("error during load config:",config_file)
 				throw err

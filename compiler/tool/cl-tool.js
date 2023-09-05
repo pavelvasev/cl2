@@ -12,6 +12,31 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+//////////////////////////////////////
+		function get_module_dir0(r) {
+			if (typeof(r) === "string") return r
+			if (r.dir) return r.dir
+			if (r.src) {
+				return r.src.split("/").slice(-1).split(".git").slice("-1")
+			}
+			return null
+		}
+		function get_module_dir1(r, current_dir) {
+			let dir0 = get_module_dir0( r )
+			if (dir0 [0] == ".") { // относительно файла
+				return path.join( current_dir, dir0 )
+			}
+			if (path.isAbsolute( dir0) ) // абсолютный путь
+				return dir0
+			// все остальные считаются от проекта
+			return path.join( state.dir, "modules",dir_0 )
+		}
+
+		function get_module_dir( r, current_dir ) {
+			return path.resolve( get_module_dir1( r, current_dir ))
+		}
+//////////////////////////////////////		
+
 class Tool {
 
 	constructor( state ) {
@@ -27,81 +52,67 @@ class Tool {
 		try {
 			let next = this.load_module( arr[0], state, current_dir )
 			return next.then( (result) => {
-				let others = this.load_modules( arr.slice(1), state, current_dir )
-				return others.then( others => [result].concat(others) )
+				return this.load_modules( arr.slice(1), state, current_dir )
 			})
 		} catch (err) {			
 			console.error("load_modules: error loading module",arr[0])
 			throw err
-		}	
+		}
 	}
 
+	// список промис
 	loaded_modules = {}
 	// загружает 1 модуль находящийся в указанной папке
 	load_module( record, state, current_dir="" ) {
-		console.log("load_module record=",record,"current_dir=",current_dir)
 
-		function get_module_dir0(r) {
-			if (typeof(r) === "string") return r
-			if (r.dir) return r.dir
-			if (r.src) {
-				return r.src.split("/").slice(-1).split(".git").slice("-1")
-			}
-			return null
-		}
-		function get_module_dir1(r) {
-			let dir0 = get_module_dir0( r )
-			if (dir0 [0] == ".") { // относительно файла
-				return path.join( current_dir, dir0 )
-			}
-			if (path.isAbsolute( dir0) ) // абсолютный путь
-				return dir0
-			// все остальные считаются от проекта
-			return path.join( state.dir, "modules",dir_0 )
-		}
+		let dir = get_module_dir( record, current_dir )
+		//console.log("\nload_module, path=",dir,"current_dir=",current_dir)
+		
+		this.loaded_modules[dir] ||= this.load_module_config( dir, state ).then( conf => {
+			// 1 загрузим под-модули этого модуля
+			// 2 передадим управление на инициализацию этого модуля
 
-		function get_module_dir( r ) {
-			return path.resolve( get_module_dir1( r ))
-		}
+			return this.load_modules( Object.values(conf.modules), state, conf.dir ).then( () => {
+				return Promise.resolve( conf.init ? conf.init( state, this ) : true ).then( () => conf)
+			})
+		})
 
-		let dir = get_module_dir( record ) // тут dir, path, все вперемешку короче получилось
-		//console.log("resolved dir for module:",dir)
+		return this.loaded_modules[dir]
+	}
+		
+	// загружает конфигурацию модуля по указанному пути (папка или файл)
+	// возвращает конфигурацию + ее доработку, плюс вносит эту конфигурацию в state
+	load_module_config( module_path, state ) {
+		//console.log("load_module_config module_path=",module_path)
 
-		let init_file = dir
+		// let dir = get_module_dir( record, current_dir ) // тут dir, path, все вперемешку короче получилось
+		// console.log("resolved dir for module:",dir)
+
+		let init_file, dir
 		//console.log("load_module: ",dir)
-		if (!init_file.endsWith(".js"))
-			init_file = path.join(init_file,"init.js")
+		if (module_path.endsWith(".js")) {			
+			init_file = module_path
+			dir = path.dirname( module_path )			
+		}
+		else {
+		  init_file = path.join(module_path,"init.js")
+			dir = module_path
+		}
 
-		// если уже загружали то 2й раз не надо
-		if (this.loaded_modules[init_file]) return true
-    this.loaded_modules[init_file] = true
-
-			//console.log("load_module: importing",dir)
+		//console.log("load_module_config: importing",init_file)
 		return import( init_file ).then( m => {
 			let inner_modules = m.modules || {}
 
 			// функция 1 - запомнить пути для карты импорта
 			let import_map = {}
 			for (let key in inner_modules) 
-				import_map[key] = get_module_dir( inner_modules[key] )
+				import_map[key] = get_module_dir( inner_modules[key], dir )
 
-			state.inner_import_maps[dir] = import_map
+			let conf = {...m, modules: inner_modules, import_map, dir}
 
-			//console.log("loaded",dir,"inner_modules=",inner_modules)
-			// функция 2 - передать управление для внедрения в процесс компиляции
+			state.modules_conf[ module_path ] = conf
 
-		  return this.load_modules( Object.values(inner_modules), state, path.dirname( init_file ) ).then( (results) => {
-		  	for (let key in inner_modules)
-		  		import_map[key].import_map = results.shift()
-
-		  	if (m.init) {
-		  		//console.log("initing",dir)
-		      return Promise.resolve( m.init( state, this ) ).then( () => {return ({...m,import_map})} )
-		      //return Promise.resolve( m.init( state, this ) ).then( () => m )
-		  	}
-		    return {import_map}
-		    //return true
-		  })
+			return conf
 		})
 	}
 
@@ -241,7 +252,9 @@ state.env["import"] = {
 					imported_modules[ file ] = module_state
 
 					//strs.push(`import * as ${tgt} from '${js_import_path}'`)
-					strs.push( state.space.register_import( tgt, file, module_state,code ) )
+					//strs.push( state.space.register_import( tgt, file, module_state,code ) )
+					// это выстраивает коды линейно
+					tool.add_global_code( state.space.register_import( tgt, file, module_state,code ) )
 			  }
 			}
 

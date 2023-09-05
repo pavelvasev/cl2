@@ -3,6 +3,7 @@
 export function init( state )
 {
 	state.space.resolve_module_path = resolve_module_path
+	state.space.resolve_module_import_map = resolve_module_import_map
 }
 
 
@@ -33,15 +34,18 @@ function resolve_module_path( src_id, state ) {
 	if (!basedir_or_file) {
 		// F-IMPORT-MAP
 		let r2 = state.import_map[ first ]
-		if (!r2) 
+		if (!r2) {
+			console.log("state.import_map=",state.import_map)
 			throw new Error(`resolve_module: cannot find module for id ${src_id}`)
-		basedir_or_file = r2.dir		
+		}
+		basedir_or_file = r2
 	}
 
-	return  path.resolve( path.join(basedir_or_file, parts.join("/") ) )
+	return path.resolve( path.join(basedir_or_file, parts.join("/") ) )
 }
 
 function resolve_module_import_map( src_id, state ) {
+	
 	let parts = src_id.split("/")
 	let first = parts.shift()
 	// F-IMPORT-RELATIVE
@@ -49,8 +53,11 @@ function resolve_module_import_map( src_id, state ) {
 	{
 		return state.import_map
 	}
-	let found = state.import_map[ first ]
-	if (!found) 
-			throw new Error(`resolve_module: cannot find module for id ${src_id}`)
-	return found.import_map
+	let found_dir = state.import_map[ first ]
+	if (!found_dir) 
+		throw new Error(`resolve_module_import_map: cannot find module for id ${src_id}`)
+	let module_conf = state.modules_conf[ found_dir ]
+	if (!module_conf)	
+		throw new Error(`resolve_module_import_map: cannot find dir info id ${src_id} dir ${found_dir}`)
+	return state.modules_conf[ found_dir ].import_map
 }

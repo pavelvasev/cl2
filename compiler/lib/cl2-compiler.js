@@ -18,11 +18,12 @@ import * as P from "./lang-parser.js"
      static_values см F-STATIC-VALUES
      tree_parent_id  - используется для append/attach
      struc_parent_id - используется для генерации исходящих ссылок для выражений
-     import_map - таблица преобразований вида id -> dir для работы инструкций import
+     import_map - таблица преобразований вида id -> dir для работы инструкций import в рамках текущего модуля
+     modules_conf - конфигурации загруженных модулей (init-файлы)
 */
 
 export function create_state( env={}, current={},dir="", tool ) {
-	return { env, current, struc_parent_id:null, tree_parent_id: null, dir, prefix:'', space:{}, static_values: {}, tool, import_map: {} }
+	return { env, current, struc_parent_id:null, tree_parent_id: null, dir, prefix:'', space:{}, static_values: {}, tool, import_map: {}, modules_conf: {} }
 }
 
 export function modify_prefix( state={}, new_prefix )
