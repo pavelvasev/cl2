@@ -7,7 +7,7 @@ export function init( state, tool ) {
 	tool.add_command( "compile", (file="main.cl") => {
 		//let file = process.argv[2] || "main.cl";
 		// добавляя полный путь, мы обеспечиваем возможность внутрях вычислить текущий каталог из него и тогда хорошо отрабатывает загрузчики внутренние
-		file = "file://" + file // Vrungel.add_dir_if( file, process.cwd() + "/" );
+		//file = "file://" + file // Vrungel.add_dir_if( file, process.cwd() + "/" );
 
 		// extension should include the dot, for example '.html'
 
@@ -16,7 +16,8 @@ export function init( state, tool ) {
 		  return path.join(path.dirname(file), basename + extension)
 		}
 		//let out_file = changeExtension(file,".js")
-		let out_file = file.slice(7) + ".js"
+		//let out_file = file.slice(7) + ".js"
+		let out_file = file + ".js"
 
 		//console.log("starting compiling file. state.env=",state.env)
 
@@ -36,7 +37,22 @@ export function init( state, tool ) {
 			//return tool.load_modules( user_modules )
 		})		
 		*/
-		let mmm = tool.load_modules( ".",state )
+		
+		let config_file = process.cwd() + "/init.js"
+
+		let mmm0 = access(config_file, constants.R_OK)
+		let mmm = mmm0.then( () => {
+			return tool.load_module( config_file,state ).then( m => {
+				tool.config = m
+				state.import_map = m.import_map
+			}).catch( err => {
+				console.error("error during load config:",config_file)
+				throw err
+			})
+		})
+
+		mmm0.catch( err => { tool.config = {} 
+			return true })
 
 		return mmm.then( () => tool.compile_file_p( file, state )).then( k => {
 			let code = tool.gen_full_code( k.code )

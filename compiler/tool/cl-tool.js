@@ -21,24 +21,89 @@ class Tool {
 
   // загружает init.js-файлы по списку
   // dir - массив путей, где каждый путь это каталог или файл .js
-	load_modules( dir, state ) {
-		//console.log("load_modules: dir=",dir)
-		if (Array.isArray(dir)) {
-			if (dir.length == 0) return true
-			let next = this.load_modules( dir[0], state )
-			return next.then( () => {
-				return this.load_modules( dir.slice(1), state)
+	load_modules( arr, state, current_dir="" ) {
+		//console.log("load_modules: ",arr)
+		if (arr.length == 0) return Promise.resolve(true)
+		try {
+			let next = this.load_module( arr[0], state, current_dir )
+			return next.then( (result) => {
+				let others = this.load_modules( arr.slice(1), state, current_dir )
+				return others.then( others => [result].concat(others) )
 			})
+		} catch (err) {			
+			console.error("load_modules: error loading module",arr[0])
+			throw err
+		}	
+	}
+
+	loaded_modules = {}
+	// загружает 1 модуль находящийся в указанной папке
+	load_module( record, state, current_dir="" ) {
+		console.log("load_module record=",record,"current_dir=",current_dir)
+
+		function get_module_dir0(r) {
+			if (typeof(r) === "string") return r
+			if (r.dir) return r.dir
+			if (r.src) {
+				return r.src.split("/").slice(-1).split(".git").slice("-1")
+			}
+			return null
+		}
+		function get_module_dir1(r) {
+			let dir0 = get_module_dir0( r )
+			if (dir0 [0] == ".") { // относительно файла
+				return path.join( current_dir, dir0 )
+			}
+			if (path.isAbsolute( dir0) ) // абсолютный путь
+				return dir0
+			// все остальные считаются от проекта
+			return path.join( state.dir, "modules",dir_0 )
 		}
 
+		function get_module_dir( r ) {
+			return path.resolve( get_module_dir1( r ))
+		}
+
+		let dir = get_module_dir( record ) // тут dir, path, все вперемешку короче получилось
+		console.log("resolved dir for module:",dir)
+
+		//console.log("load_module: ",dir)
 		if (!dir.endsWith(".js"))
 			dir = path.join(dir,"init.js")
 
-		return import( dir ).then( m => {
-			if (m.config?.modules)
-			   this.load_modules( m.config.modules )
-			//if (m.init)
-		      return m.init( state, this )
+		let init_file = dir
+
+		// если уже загружали то 2й раз не надо
+		if (this.loaded_modules[init_file]) return true
+    this.loaded_modules[init_file] = true
+
+			//console.log("load_module: importing",dir)
+		return import( init_file ).then( m => {
+			let inner_modules = m.modules || {}
+
+			// функция 1 - запомнить пути для карты импорта
+			let import_map = {}
+			for (let key in inner_modules) {
+				import_map[key] = 
+				   { dir: get_module_dir( inner_modules[key] ), 
+				     import_map: {} }
+			}
+
+			//console.log("loaded",dir,"inner_modules=",inner_modules)
+			// функция 2 - передать управление для внедрения в процесс компиляции
+
+		  return this.load_modules( Object.values(inner_modules), state, path.dirname( init_file ) ).then( (results) => {
+		  	for (let key in inner_modules) 
+		  		import_map[key].import_map = results.shift()
+
+		  	if (m.init) {
+		  		//console.log("initing",dir)
+		      return Promise.resolve( m.init( state, this ) ).then( () => {return ({...m,import_map})} )
+		      //return Promise.resolve( m.init( state, this ) ).then( () => m )
+		  	}
+		    return {import_map}
+		    //return true
+		  })
 		})
 	}
 
@@ -64,8 +129,10 @@ class Tool {
 
 	compile_file_p( file, state ) 
 	{
-		return fetch( file ).then( r => r.text() ).then( content => {
+		let file_p = "file://" + file
+		return fetch( file_p ).then( r => r.text() ).then( content => {
 			//console.log(333,"state.env=",state.env)
+			//console.log("compile_file_p", file,path.dirname( file ))
 		  let module_state = C.modify_dir( state, path.dirname( file ) + "/")
 		  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
 			let code = this.compile_string( content, module_state )
@@ -132,7 +199,6 @@ let default_modules = [
 //let modules_to_import = default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x)
 let mmm = tool.load_modules( default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x) ), state)
 
-
 // уже прочитанные модули
 let imported_modules = {} // abs-path => state
 
@@ -149,7 +215,8 @@ state.env["import"] = {
 				throw new Error(`import: cannot import to name '${tgt}', it already busy in current env`)
 
 			//let file = path.resolve( path.join(state.dir,src) )
-			let file = state.space.resolve_module_path( src, state )
+			let mp = state.space.resolve_module_path( src, state )
+			let file = mp.path
 
 			let module_state = imported_modules[ file ]
 
@@ -167,6 +234,9 @@ state.env["import"] = {
 					let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
 
 				  module_state = C.modify_dir( state, path.dirname( file ) + "/")
+
+				  module_state.import_map = mp.import_map
+
 				  // и todo - надо карту импортов свою им подгрузить
 				  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
 					let code = tool.compile_string( content, module_state )

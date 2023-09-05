@@ -1,0 +1,1 @@
+func "sigma" { return 10 }
