@@ -90,7 +90,7 @@ class Tool {
 
 		let init_file, dir
 		//console.log("load_module: ",dir)
-		if (module_path.endsWith(".js")) {			
+		if (module_path.endsWith(".js")) {
 			init_file = module_path
 			dir = path.dirname( module_path )			
 		}
@@ -199,9 +199,9 @@ let default_modules = [
 	"forms/forms.js",
 	"bundle-2/bundle-2.js",
 	"module-path/module-path.js",
+	"../../stdlib",
 	"defaults",
 	"compute/compute.js",
-	"config",
 	"compile",
 	"run"
 	]

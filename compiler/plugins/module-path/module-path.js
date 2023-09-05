@@ -1,21 +1,14 @@
 // F-MODULE-PATHS
 
-export function init( state )
+export function init( state, tool, options )
 {
 	state.space.resolve_module_path = resolve_module_path
 	state.space.resolve_module_import_map = resolve_module_import_map
-}
 
+	state.default_import_map = {}
+}
 
 import * as path from 'node:path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-let STDLIBS = path.resolve( path.join( __dirname,"..","..","..","lib" ))
-let import_mapa = {
-	"std" : STDLIBS	
-}
 
 // функция которая по айди модуля и состоянию выдает полный путь к файлу модуля который надо грузить
 // id, state -> full-path
@@ -29,7 +22,7 @@ function resolve_module_path( src_id, state ) {
 		//console.log("qqqq", state.dir, src_id)
 		return path.resolve( path.join(state.dir,src_id) )
 	}
-	let basedir_or_file = import_mapa[ first ]
+	let basedir_or_file = state.default_import_map[ first ]
 	let import_map = {}
 	if (!basedir_or_file) {
 		// F-IMPORT-MAP
@@ -40,6 +33,10 @@ function resolve_module_path( src_id, state ) {
 		}
 		basedir_or_file = r2
 	}
+
+	// F-MODULE-MAIN-CL если в импорте указать только имя модуля, то загружать main.cl этого модуля
+	if (parts.length == 0)
+		parts.push( "main.cl")
 
 	return path.resolve( path.join(basedir_or_file, parts.join("/") ) )
 }
@@ -55,9 +52,10 @@ function resolve_module_import_map( src_id, state ) {
 	}
 	let found_dir = state.import_map[ first ]
 	if (!found_dir) 
-		throw new Error(`resolve_module_import_map: cannot find module for id ${src_id}`)
+		return null
+		//throw new Error(`resolve_module_import_map: cannot find module for id ${src_id}`)
 	let module_conf = state.modules_conf[ found_dir ]
-	if (!module_conf)	
+	if (!module_conf)
 		throw new Error(`resolve_module_import_map: cannot find dir info id ${src_id} dir ${found_dir}`)
 	return state.modules_conf[ found_dir ].import_map
 }
