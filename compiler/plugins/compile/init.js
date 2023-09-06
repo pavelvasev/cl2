@@ -23,10 +23,12 @@ export function init( state, tool ) {
 				console.error("error during load config:",config_file)
 				throw err
 			})
-		})
+		}).catch( () => {})
 
-		mmm0.catch( err => { tool.config = {} 
-			return true })
+		mmm0.catch( err => { 
+			tool.config = {} 
+			return true 
+		})
 
 		return mmm.then( () => tool.compile_file_p( file, state )).then( k => {
 			let code = tool.gen_full_code( k.code )

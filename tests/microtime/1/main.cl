@@ -1,4 +1,4 @@
-import std="std/std.cl"
+import std="std"
 
 q: channel
 

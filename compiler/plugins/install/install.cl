@@ -1,34 +1,30 @@
-func "process_module" { |rec cloned|
-  let dir = module_dir @rec
-  if (dir != ".") {
-    clone_sync @value.src @dir
-    let next_cloned = (list ...@cloned @dir)
-    let m = load_modules_list @dir
-    map @m { |rec| return process_module @rec @next_cloned }
-  }
+// загружаем для проекта в текущем каталоге все гит-модули на которые он ссылается
+
+func "go" { |tool state|
+  let to_git_list = (process_module "." @tool @state)
+  return (map @to_git_list { |rec|
+    dir = apply @tool.get_module_dir @rec
+    return (clone_sync @rec.git @dir)
+  })
 }
 
-map @tool.config.modules { |name value|
-  let dir = module_dir @value
-  clone_sync @value.src @dir
-}
+func "process_module" { |dir tool state|
+  let conf = (apply @tool.load_module_config @dir @state)
 
-func "module_dir_name" { |module_record|
-  // https://github.com/pavelvasev/cl2threejs.git
-  // return (split module_record "/" | last | split "." | first )
-  return (first (str.split (last (str.split (get @module_record "src") "/")) "."))
-}
+  let to_git = filter @conf.modules { |m| return @m.git }
 
-func "module_dir" { |module_record|
-  let dirname = module_dir_name @module_record // вычисление имени каталога модуля
-  let dir = (+ "./cl-modules/" @dir)
-  return @dir
+  let to_git_them = (flatten (map @conf.modules { |rec|
+    let dir = (apply @tool.get_module_dir @rec )
+    return (process_module @dir @tool @state )
+  }))
+
+  return list(@to_git ...@to_git_them)
 }
 
 func "clone_sync" { |src dir|
-  if (fs.exist @dir) {
-    os.exec "git pull" cwd=@dir
+  if (fs.exist(@dir)) {
+    os.exec "git" "pull" cwd=@dir
   } else {
-    os.exec "git clone" @src @dir
+    os.exec "git" "clone" @src @dir
   }
 }

@@ -69,6 +69,7 @@ class Tool {
 		//console.log("\nload_module, path=",dir,"current_dir=",current_dir)
 		
 		this.loaded_modules[dir] ||= this.load_module_config( dir, state ).then( conf => {
+			state.modules_conf[ dir ] = conf
 			// 1 загрузим под-модули этого модуля
 			// 2 передадим управление на инициализацию этого модуля
 
@@ -81,7 +82,6 @@ class Tool {
 	}
 		
 	// загружает конфигурацию модуля по указанному пути (папка или файл)
-	// возвращает конфигурацию + ее доработку, плюс вносит эту конфигурацию в state
 	load_module_config( module_path, state ) {
 		//console.log("load_module_config module_path=",module_path)
 
@@ -109,8 +109,6 @@ class Tool {
 				import_map[key] = get_module_dir( inner_modules[key], dir )
 
 			let conf = {...m, modules: inner_modules, import_map, dir}
-
-			state.modules_conf[ module_path ] = conf
 
 			return conf
 		})
