@@ -4,6 +4,8 @@ a := 10 + 20
 b := @a * 2
 print @a @b (@b / 5)
 
+//============ test
+
 func "test" {: stdout |
   setTimeout( () => {
     let s = stdout()
