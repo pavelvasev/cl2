@@ -424,3 +424,21 @@ func "minus" {: ...values |
 :}
 
 alias "minus" "-"
+
+func "mul" {: ...values |  
+  let sum = values[0]
+  for (let i=1; i<values.length; i++)
+      sum = sum * values[i]      
+  return sum
+:}
+
+alias "mul" "*"
+
+func "div" {: ...values |  
+  let sum = values[0]
+  for (let i=1; i<values.length; i++)
+      sum = sum / values[i]      
+  return sum
+:}
+
+alias "div" "/"

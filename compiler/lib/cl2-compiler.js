@@ -166,8 +166,9 @@ export function get_record(state,id,obj_info,allow_defaults=true) {
 		let y = allow_defaults ? state.env[id_arr[0]] : false
 		if (!y) {
 			console.error("env have no basis record for basis=",id)
-			console.error("state.env=",state.env,"allow_defaults=",allow_defaults)
+			//console.error("state.env=",state.env,"allow_defaults=",allow_defaults)
 			console.error(obj_info?.locinfo)
+			console.error(obj_info)
 			//console.error("env=",state.env)
 			throw new Error( `env have no basis: ${id}`)
 		}

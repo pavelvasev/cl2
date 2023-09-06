@@ -37,6 +37,17 @@
       })
     }  
 
+  function set_basis( env, first_feature_name )
+  {
+    let spl = first_feature_name.split(".")
+    env.basis = spl[ spl.length-1 ] // последняя компонента
+    env.basis_path = spl // весь путь
+    env.modul_prefix = spl.slice(0,-1).join(".")
+    if (env.modul_prefix.length > 0) 
+        env.modul_prefix = env.modul_prefix + "." // todo optimize
+    // задача в итоге получить modul_prefix равное "somepackage."
+  }
+
   // фунция вызывается первой формой и операторной формой
   function fill_env( env, env_modifiers, child_envs )
   {
@@ -298,6 +309,9 @@ JSON_text
      return env;
   }
 
+env
+  = __ @env_let_shortcut
+
 begin_array     = ws "[" ws
 begin_object    = ws "{" ws
 end_array       = ws "]" ws
@@ -385,13 +399,6 @@ feature_addition_for_operator
   }
   / feature_addition
   
-
-/*
-extra_feature_addition
-  = "~" name:feature_name {
-    return { feature: true, name: name, params: {}, extra_feature: true }
-  }
-*/  
   
 // ------ A3. attr_name
 Word
@@ -446,25 +453,6 @@ one_env
   / one_env_obj
   / one_env_positional_attr
 
-//  / one_env_obj_no_features
-
-one_env_obj_no_features "environment empty record"
-  =
-  envid: (__ @(@attr_name ws ":")?)
-  env_modifiers:(__ @env_modifier)*
-  child_envs:(__ "{" __ @env_list __ "}" __)
-  {
-  
-      var env = new_env( envid );
-      env.locinfo = getlocinfo();
-      fill_env( env, env_modifiers, child_envs )
-      return env;
-  /*
-      console.error("compalang: no first feature");
-      console.log( getlocinfo() )
-      return new_env( envid );
-  */    
-  }
 
 // ------- A. envs
 one_env_obj "environment record"
@@ -478,12 +466,8 @@ one_env_obj "environment record"
     env.locinfo = getlocinfo();
     // этим мы застолбили что фича первая всегда идет и точка.
     env.features[ first_feature_name ] = {};
-    let spl = first_feature_name.split(".")
-    env.basis = spl[ spl.length-1 ] // последняя компонента
-    env.basis_path = spl // весь путь
-    env.modul_prefix = spl.slice(0,-1).join(".")
-    if (env.modul_prefix.length > 0) env.modul_prefix = env.modul_prefix + "." // todo optimize
-    // задача в итоге получить modul_prefix равное "somepackage."
+    
+    set_basis( env, first_feature_name )
 
     fill_env( env, env_modifiers, child_envs )
 
@@ -540,18 +524,24 @@ one_env_positional_attr "environment positional record"
     
     env.locinfo = getlocinfo();
 
-    env.features["read"] = {}; // ладно уж - пусть это будет read когда написали (@k)
+    //env.features["read"] = {}; // ладно уж - пусть это будет read когда написали (@k)
+    set_basis( env, "read" )
     fill_env( env, [first_positional_attr], [] )
 
     return env;
   }  
 
-env
-  = __ @env_pipe
-//  = one_env  
-//  / one_env
 
-// @stream_mark:("!")?  
+// F-LET-SHORTCUT-OPERATOR
+env_let_shortcut
+ = var_id:attr_name __ ":=" __ env:env_pipe
+ {
+   var let_env = new_env();
+   set_basis( let_env, "let")
+   fill_env( let_env, [ {param: true, name: var_id, value:{env_expression: [env], locinfo: getlocinfo() }}])   
+   return let_env
+ }
+ / env_pipe
 
 env_pipe
  = pipeid:(attr_name __ ":")? __ input_link:link tail:(__ "|" @one_env)+
@@ -610,12 +600,6 @@ env_pipe
      return head;
    }
  }
-
-/*
-env_modifier
-  = attr_assignment
-  / link_assignment 
-*/  
 
 // F-ENV-ARGS 
 env_args_list "environment args list"
