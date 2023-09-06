@@ -46,6 +46,13 @@ reaction(in) {=
  
 https://www.youtube.com/watch?v=l-kctcbLnOQ&list=WL&index=1&t=22s
 
+// идея переопределений.. но изза нашего синтаксиса func name вместо name:func эт не очень красивое стало
+with {
+  func "print" {: ... :}
+} do {
+
+}
+
 -----------
 кстати было бы прикольно.. всяко соединять удобно функции..
 

@@ -192,7 +192,9 @@ export function func( obj, state )
 		return generate_func_object( self_objid, code)
 	}
 	
-	let strs = [`function ${name}(${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
+	console.log('fn name=',name,'dir=',state.dir)
+	let export_flag = state.dir == '' || state.dir == './' ? 'export ' : '' // todo перенести это в bundle-2
+	let strs = [`${export_flag}function ${name}(${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
   strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	//state.current[ name ] - а кстати идея.. зарегать так объект..

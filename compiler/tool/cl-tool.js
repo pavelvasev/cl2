@@ -1,6 +1,18 @@
 #!/bin/env -S node --stack_trace_limit=200 
 
-// пример запуска: ./clc.js 1.cl
+// пример запуска: ./cl-tool.js 1.cl
+
+// модули загружаемые по умолчанию
+let default_modules = [
+	"forms/forms.js",
+	"bundle-2/bundle-2.js",
+	"module-path/module-path.js",
+	"../../stdlib",
+	"defaults",
+	"compute/compute.js",
+	"compile",
+	"run","test"
+	]
 
 // командной строки компилятор
 import './node-fetch-fix.js';
@@ -11,6 +23,7 @@ import * as C from "../lib/cl2-compiler.js"
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+let DEFAULT_PLUGINS_DIR = path.resolve( path.join( __dirname,"..","plugins") )
 
 //////////////////////////////////////
 		function get_module_dir0(r) {
@@ -192,17 +205,6 @@ class Tool {
 let tool = new Tool()
 let state = C.create_state()
 
-let DEFAULT_PLUGINS_DIR = path.resolve( path.join( __dirname,"..","plugins") )
-let default_modules = [
-	"forms/forms.js",
-	"bundle-2/bundle-2.js",
-	"module-path/module-path.js",
-	"../../stdlib",
-	"defaults",
-	"compute/compute.js",
-	"compile",
-	"run"
-	]
 //let modules_to_import = default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x)
 let mmm = tool.load_modules( default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x) ), state)
 

@@ -9,6 +9,7 @@ export function init( state, tool ) {
 		tool.get_command("compile")( file ).then( (out_file) => {
 			console.log("spawning")
 			let s = spawn( "node", [out_file],{ stdio: 'inherit' })
+			// также можно запускать через import...
 		})
 
 	})

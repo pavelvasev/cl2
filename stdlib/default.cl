@@ -100,28 +100,25 @@ obj "extract" {
     }"
 }
 
+// ну вроде как нам не надо прямо чтобы вот процесс.. функция тоже норм теперь 
+// когда мы из функций процессы делаем
+func "print" {: ...vals | console.log(...vals) :}
+
+
+/*
 obj "print" { 
   in {
     rest* : cell
   }
 
-  /*
-  x: func {: values | console.log(...values) :}
-  print_vals: extract @rest
-  b: react @print_vals.output @x
-  */
   b: react (extract @rest) {: values | console.log(...values) :}
 
   // ну типа.. напечатали.. пошлем об этом сообщение.. можно даже значения вернуть если что
   output: channel
   bind @b.output @output
 
-  /*
-  reaction (extract @rest) {: values |
-    console.log(values)
-  :}*/
-
 }
+*/
 
 // if @cond (block { }) (block { })
 
