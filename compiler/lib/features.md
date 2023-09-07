@@ -189,3 +189,22 @@ F-NODE-IMPORT F-JS-IMPORT
 import cp="node:child_process"
 import f="./file.js"
 ```
+
+*****************************
+F-LIST-COMM
+функция посылки всех элементов списка в канал
+и обратно - сборка элементов из канала в список.
+кажется универсально и удобно
+
+submit-list @list @channel
+gather-list @channel @list
+
+но кстати:
+(gather-list @channel) -> list
+(submit-list @list) -> channel
+т.е. оно не куда-то сабмитит, а создает свой канал и в него сабмитит.
+так почему-то лучше.
+
+как назвать?
+gather-list
+gather-events наверное лучше

@@ -440,6 +440,67 @@ func "div" {: ...values |
 
 alias "div" "/"
 
+// ----------------------- логика
+
+func "and" {: ...values |   
+   for (let i=0; i<values.length; i++)
+     if (!(values[i])) return false
+   return true
+:}
+alias "and" "&&"
+
+// нестандартное поведение.. мб для про-режима сойдет, но не для таск-режима..
+func "or" {: ...values |   
+   for (let i=0; i<values.length; i++)
+     if (values[i]) return true
+   return false
+:}
+alias "or" "||"
+
+///////////////////////
+
+func "equal" {: ...values |
+   // какое надо equals? строгое или нестрогое?
+   // сделал пока строгое
+   for (let i=1; i<values.length; i++)
+     if (!(values[i] === values[i-1])) return false
+   return true  
+:}
+alias "equal" "=="
+
+func "less" {: ...values |
+   // какое надо equals? строгое или нестрогое?
+   // сделал пока строгое
+   for (let i=1; i<values.length; i++)
+     if (!(values[i-1] < values[i])) return false
+   return true
+:}
+alias "less" "<"
+
+func "less_equal" {: ...values |
+   // какое надо equals? строгое или нестрогое?
+   // сделал пока строгое
+   for (let i=1; i<values.length; i++)
+     if (!(values[i-1] <= values[i])) return false
+   return true
+:}
+alias "less_equal" "<="
+
+func "more" {: ...values |
+   for (let i=1; i<values.length; i++)
+     if (!(values[i-1] >= values[i])) return false
+   return true
+:}
+alias "more" ">"
+
+func "more_equal" {: ...values |
+   for (let i=1; i<values.length; i++)
+     if (!(values[i-1] >= values[i])) return false
+   return true
+:}
+alias "more_equal" ">="
+
+
 // -----------------------
 // F-LIST-COMM
 // gather_events @channel -> list - собирает события из канала в список
@@ -484,3 +545,15 @@ obj "reduce_events" {
     acc.set( new_acc )
   :}
 }
+
+////////////////////////////////
+// идея - как-то автоматом передавать locinfo в assert..
+// идея - дампить доп объекты
+func "assert" {: cond message |
+  message ||= ''
+  if (!cond) {
+    console.error( 'assert FAILED',message )
+    throw message
+  }
+  console.log("assert OK",message )
+:}

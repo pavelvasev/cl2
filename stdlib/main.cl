@@ -1,4 +1,6 @@
 
+// todo добавить start время начала и count сколько раз сработать.
+// ну и можно сигнал restart
 obj "timer" {
 
   //cells interval=1000 output=0

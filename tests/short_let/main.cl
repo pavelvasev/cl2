@@ -6,7 +6,10 @@ print "hello"
 print @a @b (@b / 5)
 print "world"
 
+assert (and (@a == 30) (@b == 60) ((@b / 5) == 12))
+
 //============ test
+/*
 
 func "test" {: stdout |
   setTimeout( () => {
@@ -15,6 +18,7 @@ func "test" {: stdout |
     console.assert( s.indexOf("30 60 12") >= 0 )
   }, 100)
 :}
+*/
 
 /*
 obj "test" {

@@ -3,25 +3,6 @@
 `print *@arr`
 
 ----
-F-LIST-COMM
-функция посылки всех элементов списка в канал
-и обратно - сборка элементов из канала в список.
-кажется универсально и удобно
-
-submit-list @list @channel
-gather-list @channel @list
-
-но кстати:
-(gather-list @channel) -> list
-(submit-list @list) -> channel
-т.е. оно не куда-то сабмитит, а создает свой канал и в него сабмитит.
-так почему-то лучше.
-
-как назвать?
-gather-list
-gather-events
-
-----
 F-EVENTS-REDUCE
 получает сообщения и обрабатывает их накапливая, и выдавая результат
 reduce @channel '' {: val acc | acc + val :}
