@@ -314,6 +314,7 @@ obj "return" {
 }
 */
 
+// исп: block { some things } -> output_func где output_func функция создания содержимого блока
 obj "block" {
   in {
     output&: cell
@@ -502,16 +503,7 @@ alias "more_equal" ">="
 
 
 // -----------------------
-// F-LIST-COMM
-// gather_events @channel -> list - собирает события из канала в список
-obj "gather_events" {
-  in {
-    input: channel
-  }
-  output: cell []
-  react @input {: val | let arr = output.get(); arr.push( val ); output.set( arr ) :}
-  // тут кстати та же проблема - массив то тот же самый, и события changed не будет
-}
+// F-LIST-COMM преобразование списков в события и обратно
 
 // submit_events @list -> channel записывает все элементы списка в канал
 obj "submit_events" {
@@ -522,6 +514,23 @@ obj "submit_events" {
   react @input {: arr |
     arr.map( v => output.submit( v ) )
   :}
+}
+
+// gather_events @channel -> list - собирает события из канала в список
+obj "gather_events" {
+  in {
+    input: channel
+  }
+  output: cell []
+  react @input {: val |
+    let arr = output.get();
+    arr.push( val ); 
+    output.set( arr.slice(0) ) 
+    // slice(0) конечно это ваще.. но иначе change-проверка не поймет смены..
+    // а даже если здесь поймет то дальше не поймет.. это надо как-то особо обработать..
+    // мб идея - поле для массива с его версией.
+  :}
+  // тут кстати та же проблема - массив то тот же самый, и события changed не будет
 }
 
 // reduce_events @channel acc_init func -> acc
@@ -549,11 +558,59 @@ obj "reduce_events" {
 ////////////////////////////////
 // идея - как-то автоматом передавать locinfo в assert..
 // идея - дампить доп объекты
-func "assert" {: cond message |
+// перенесено в формы, чтобы locinfo по умолчанию в message выводить..
+/*
+func "assert1" {: cond message |
   message ||= ''
   if (!cond) {
     console.error( 'assert FAILED',message )
     throw message
   }
   console.log("assert OK",message )
+:}
+*/
+
+///////////////////////
+
+func "list" {: ...values | return values :}
+
+func "get" {: src field | return src[field] :}
+
+func "map" {: arr f |
+  if (!f.is_task_function)
+    return arr.map( f )
+
+  function process_elem(e) {
+    return new Promise( (resolve,reject) => {
+    let result = f( e )
+    if (result instanceof CL2.Comm) {
+          // console.log('see channel, subscribing once')
+          // вернули канал? слушаем его дальше.. такое правило для реакций
+          // но вообще это странно.. получается мы не можем возвращать каналы..
+          // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
+          let unsub = result.once( (val) => {
+            // console.log('once tick',val,output+'')
+            resolve( val )
+          })
+        }
+        else {
+          //console.log('submitting result to output',output+'')
+          resolve( result )
+        }
+    })
+  }
+
+  function process_arr( arr,i=0 ) {
+    if (i >= arr.length) return Promise.resolve([])
+
+    return process_elem( arr[i] ).then( (result) => {
+      return process_arr( arr,i+1 ).then( (rest_result) => {
+        return [result,...rest_result]
+      })      
+    })
+  }
+
+  let output = CL2.create_cell()
+  process_arr( arr ).then( values => output.submit( values ))
+  return output
 :}

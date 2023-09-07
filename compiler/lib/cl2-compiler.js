@@ -155,7 +155,7 @@ export function obj2obj( obj, objs, index )
 
 // возвращает запись из текущего окружения определения по идентификатору id
 export function get_record(state,id,obj_info,allow_defaults=true) {
-	//console.log("get_Record",id)
+	//console.log("get_Record",id,obj_info)
 
 	let id_arr = Array.isArray(id) ? id : id.split(".")
 

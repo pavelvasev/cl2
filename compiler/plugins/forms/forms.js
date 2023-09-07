@@ -22,7 +22,9 @@ export var tablica = {
 	in: { make_code: _in, check_params: default_cp},
 //	react_orig: { make_code: react, check_params: default_cp},
 	nop: { make_code: () => { return { main: [], bindings: [] } }, check_params: default_cp},
-	alias: { make_code: alias, check_params: default_cp}
+	alias: { make_code: alias, check_params: default_cp},
+	assert: { make_code: assert, check_params: default_cp},
+	locinfo: { make_code: locinfo, check_params: default_cp},
 }
 
 /*
@@ -463,4 +465,58 @@ export function alias( obj, state )
 	//console.log("created alias: ",new_name)
 	
 	return { main: [], bindings:[] }
+}
+
+export function assert( obj, state )
+{
+	let cond = obj.params[0]
+	let message = obj.params[1]
+	let timeout = obj.params[2] || 1000
+
+	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
+	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
+	//base.main.push( `let ${C.obj_id(obj,state)} = CL2.create_item()`)
+	let obj_id = C.obj_id(obj,state)
+
+	let base = { main: [`// assert ${obj_id}`], bindings: [] }
+
+	//  и фичеры.. это у нас дети которые не дети	
+	if (C.get_nested(obj)) 
+	{
+		//let mod_state = C.modify_parent(state,obj.$name)
+		for (let f of C.get_nested(obj)) {
+			let o = C.one_obj2js_sp( f, state )
+			base.main.push( o.main )			
+			base.bindings.push( o.bindings )
+		}
+	}
+
+	//let locinf = obj.locinfo.short
+	message ||= obj.locinfo.short
+
+  let clear_timeout = ''
+	if (timeout > 0) {
+		base.main.push(`let ${obj_id}_timeout = setTimeout( () => {
+	    console.error( 'assert TIMEOUT',\`${message || ''}\` )
+	    throw \`${message || ''}\`
+		}, ${timeout})`)
+		clear_timeout = `clearTimeout( ${obj_id}_timeout )`
+	}	
+	
+	base.main.push(`${cond.from}.subscribe( cond => {
+	  if (!cond) {
+	    console.error( 'assert FAILED',\`${message || ''}\` )
+	    throw \`${message || ''}\`
+	  }
+	  console.log("assert OK",\`${message || ''}\` )	  
+	  ${clear_timeout}
+	})	
+	`)
+	
+	return base
+}
+
+export function locinfo( obj, state )
+{
+	return { main: obj.locinfo.toString(), bindings: [] }
 }

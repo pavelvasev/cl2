@@ -247,7 +247,14 @@
 }}  
 {
 
-  function getlocinfo( name ) {
+class LocInfo {
+  constructor(s) { this.s=s }
+  toString() {
+     return this.s;
+  }
+}
+
+  function getlocinfo() {
     let s1 = location();
     let s2 = offset();
     let s3 = range();
@@ -263,7 +270,18 @@
     //let loc = `file: ${file}\nline: ${s1.start.line}\n...\n${lines.join('\n')}\n...`;
     let loc = `file: ${file}\n...\n${lines.join('\n')}\n...`;
 
-    return loc;  
+    loc = new LocInfo( loc )
+    loc.short = getlocinfo_short()
+
+    return loc;
+  }
+
+  // доп - короткая версия
+  function getlocinfo_short() {
+    let s1 = location();
+    let i = s1.start.line-1
+    let short = `${i+1}: ${s1.source.lines[i]}`
+    return short
   }
 
   function new_env( name ) {

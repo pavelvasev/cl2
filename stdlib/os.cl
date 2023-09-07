@@ -58,3 +58,22 @@ obj "spawn" {
 func "exec" {: ...args |
 :}
 */
+
+/*
+obj "spawn_stdout" {
+  in {
+    cmd_args*: cell
+  }
+  output: cell
+  
+  p: spawn *cmd_args
+
+  s := reduce_events @p.stdout '' {: val acc | 
+    process.stdout.write('>> ' + val); 
+    return acc+val :}
+    
+  react @p.exitcode {:
+    output.set( s.get() )
+  :}
+}
+*/

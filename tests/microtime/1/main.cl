@@ -10,3 +10,5 @@ react (std.timer) {:
 :}
 
 react @q {: console.log("q-react") :}
+
+//assert @stdout
