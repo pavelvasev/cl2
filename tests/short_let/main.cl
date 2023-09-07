@@ -2,7 +2,9 @@
 
 a := 10 + 20
 b := @a * 2
+print "hello"
 print @a @b (@b / 5)
+print "world"
 
 //============ test
 
@@ -16,9 +18,9 @@ func "test" {: stdout |
 
 /*
 obj "test" {
-  in {stdin:channel}
+  in {stdin:cell}
   timeout 1000 {
-    assert (includes @r "30 60 12")
+    assert (includes @stdin "30 60 12")
   }
 }
 */

@@ -439,3 +439,48 @@ func "div" {: ...values |
 :}
 
 alias "div" "/"
+
+// -----------------------
+// F-LIST-COMM
+// gather_events @channel -> list - собирает события из канала в список
+obj "gather_events" {
+  in {
+    input: channel
+  }
+  output: cell []
+  react @input {: val | let arr = output.get(); arr.push( val ); output.set( arr ) :}
+  // тут кстати та же проблема - массив то тот же самый, и события changed не будет
+}
+
+// submit_events @list -> channel записывает все элементы списка в канал
+obj "submit_events" {
+  in {
+    input: cell
+  }
+  output: channel
+  react @input {: arr |
+    arr.map( v => output.submit( v ) )
+  :}
+}
+
+// reduce_events @channel acc_init func -> acc
+// собирает значения из канала и применяет к ним функцию func(channel_val, acc).
+obj "reduce_events" {
+  in {
+    input: channel
+    init: cell
+    f: cell
+  }
+  // надо init сделать промисой. тогда все ок будет. или параметром даже лучше. и f параметром. т.е. требовать наличия.
+  // это кстати будет норм, т.к. в таск-режиме это обернется в промису
+  acc: cell
+  bind @init @acc
+
+  output: cell
+  bind @acc @output
+
+  react @input {: value |
+    let new_acc = f.get().call( this, value, acc.get() )
+    acc.set( new_acc )
+  :}
+}

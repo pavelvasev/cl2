@@ -224,7 +224,8 @@ state.env["import"] = {
 				throw new Error(`import: cannot import to name '${tgt}', it already busy in current env`)
 
 			//let file = path.resolve( path.join(state.dir,src) )
-			let file = state.space.resolve_module_path( src, state )
+			// F-NODE-IMPORT
+			let file = src.startsWith("node:") ? src : state.space.resolve_module_path( src, state )
 
 			let module_state = imported_modules[ file ]
 
@@ -232,7 +233,8 @@ state.env["import"] = {
 			if (!module_state) {
 				//console.log("file->",src)
 				// жесточайший хак. 1 надо начинать это еще в resolve_module_path, 2 это вообще цепочка обработки импорта, надо ее формализовать
-				if (file.endsWith(".js")) { 
+				// F-NODE-IMPORT F-JS-IMPORT
+				if (file.endsWith(".js") || file.startsWith("node:")) { 
 					//global_prefix.push( state.space.register_import_outer(src, file) )
 					tool.add_global_code( state.space.register_import_outer(src, file) )
 				}
