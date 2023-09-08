@@ -8,7 +8,7 @@ let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: 
 export function init( state, tool )
 {
 	
-	state.env.cofunc = { make_code: cofunc, check_params: default_cp}
+//	state.env.cofunc = { make_code: cofunc, check_params: default_cp}
 	state.env.func = { make_code: func, check_params: default_cp}
 
 /*
@@ -53,6 +53,7 @@ export var tablica = {
 // вычислительный режим
 // cofunc {} - на выходе даёт объект где output функция
 // cofunc "name" {} - на выходе регает функцию + регает объект вызыавющий эту функцию в режиме apply
+/*
 export function cofunc( obj, state )
 {
 	//console.log("EEEE2")
@@ -121,7 +122,6 @@ export function cofunc( obj, state )
 		args_cells = head.attrs.map(x => `let ${x} = CL2.create_cell( __${x} )`)
 	}
 
-
 	if (anonymous_mode) {
 		let output_things = [`let self = {attached_to:${self_objid}, $title: 'cofunc_action'};`,"let output = CL2.create_cell();","CL2.attach( self,'output',output )"]
 		let func_code = [`CL2.mark_task_function( (${args}) => {`,args_cells, output_things, s,"return output","})"]
@@ -146,6 +146,8 @@ export function cofunc( obj, state )
 	strs.push( caller.main )
 	return {main:strs,bindings:[]}
 }
+
+*/
 
 // создает объект, возвращающий в .output код функции
 function generate_func_object( self_objid, func_code ) {
@@ -192,6 +194,7 @@ function generate_func_caller(name, state) {
 	return {main:strs,bindings:[]}	
 }
 
+
 let ccc = 0
 // действие типа "функция"
 // func {: :} - на выходе даёт объект где output функция
@@ -201,7 +204,8 @@ export function func( obj, state )
 	//console.log("EEEE")
 	if (C.get_children( obj ).length > 0) {
 		//console.log("func obj have ch", obj)
-		return cofunc( obj, state)
+		//return cofunc( obj, state)
+		throw "func cannot have children"
 	}
 
 	let name = obj.$name_modified || obj.$name
@@ -211,11 +215,12 @@ export function func( obj, state )
 
 	if (obj.params[1]) { // вариант func "name" code
 		name = obj.params[0]
-		fn_code = obj.params[1]
+		fn_code = cocode_to_code( obj.params[1],state )
 		anonymous_mode = false
 	}
 
 	if (anonymous_mode) {
+		console.log("func: anonymous_mode is prohibited")
 		let self_objid = C.obj_id( obj, state )
 		let code = [`function (${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
 		return generate_func_object( self_objid, code)
@@ -236,4 +241,37 @@ export function func( obj, state )
   let caller = generate_func_caller( name, state )
 	strs.push( caller.main )
 	return {main:strs,bindings:[]}
+}
+
+export function cocode_to_code( v,state ) {
+	if (!state) {
+		console.trace()
+		 throw "cocode_to_code no state!"
+		}
+	if (!v.cofunc) return v
+
+			// поменяем особые формы
+	let modified = C.modify_parent( state, "self",null )
+
+	modified.next_obj_cb2 = ( obj, objid, strs, bindings, bindings_hash_before_rest, basis_record ) => {
+		strs.push(`${objid}.task_mode = true`)
+		return
+	}
+
+	//console.log("iii",v.code)
+	let s = C.objs2js( v.code,modified )
+
+	//s = C.strarr2str( s )
+
+  // let args = v.pos_args.map(x => "__" + x).join(",")
+ 	// поскольку мы выдаем функцию.. то на вход идут конкретные значения
+ 	// но в коде мы считаем их коммуникац. примитивами. и поэтому мы их оборачиваем в примитивы, эти значения.
+	let args_cells = v.pos_args.map(x => `let ${x} = CL2.create_cell( __${x} )`)	
+
+	let output_things = [`let self = {$title: 'cofunc_action'};`,"let output = CL2.create_cell();","CL2.attach( self,'output',output )"]
+	let strs = [args_cells, output_things, s,"return output"]
+
+	let txt = C.strarr2str( strs )
+
+	return { code: txt, pos_args: v.pos_args.map(x => "__" + x) }
 }

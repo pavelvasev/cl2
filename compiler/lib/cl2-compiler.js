@@ -163,6 +163,7 @@ export function get_record(state,id,obj_info,allow_defaults=true) {
 		let x = state.current[id_arr[0]] // временный тупняк
 		if (x)
 			return x
+
 		let y = allow_defaults ? state.env[id_arr[0]] : false
 		if (!y) {
 			console.error("env have no basis record for basis=",id)
@@ -190,7 +191,7 @@ function get_basis( record ) {
 	return record.basis
 }
 
-// вход obj-описание 
+// вход obj-описание  т.е. массив записей от парсера
 // выход вложенный массив строк на javascript
 // objs - массив описаний
 // state - состояние компилятора. в него записываются прочитанные определения новых типов
@@ -441,7 +442,7 @@ export function default_obj2js( obj,state ) {
 export function objToString(obj, ndeep, state ) {
   if(obj == null) { return String(obj); }
   if (obj.this_is_env_list) return paramEnvToFunc( obj, state)
-  if (obj.code && obj.pos_args) return value_to_arrow_func( obj )
+  if (obj.code && obj.pos_args) return value_to_arrow_func( obj,state )
   if (obj.link && obj.from) return obj.from // F-STATIC-VALUES
 
   switch(typeof obj){
@@ -469,10 +470,13 @@ export function paramEnvToFunc( value, state ) {
 	return s
 }
 
-export function value_to_arrow_func( code ) 
+import * as COMPUTE from "../plugins/compute/compute.js"
+export function value_to_arrow_func( code,state ) 
 {
 	// ссылки типа @funcname - резолвим прямо на funcname
 	code = code?.from ? code.from : code
+
+  code = COMPUTE.cocode_to_code( code,state )
 
 	// обработка формы {: :} но вообще это не так уж и ортогонально..
 	if (code.code && code.pos_args)

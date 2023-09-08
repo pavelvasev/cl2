@@ -577,8 +577,9 @@ func "list" {: ...values | return values :}
 func "get" {: src field | return src[field] :}
 
 func "map" {: arr f |
-  if (!f.is_task_function)
-    return arr.map( f )
+  // is_task_function стало тяжко назначать..
+  //if (!f.is_task_function)
+  //  return arr.map( f )
 
   function process_elem(e) {
     return new Promise( (resolve,reject) => {

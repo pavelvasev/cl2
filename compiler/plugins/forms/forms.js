@@ -324,7 +324,7 @@ export function _init( obj, state )
 {
 	let strs = []
 	
-	strs.push( `let init = `,C.value_to_arrow_func(obj.params[0]),`init(${state.tree_parent_id})` )
+	strs.push( `let init = `,C.value_to_arrow_func(obj.params[0],state),`init(${state.tree_parent_id})` )
 
 	return {main:strs,bindings:[]}
 }
