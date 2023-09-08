@@ -269,8 +269,9 @@ export function cocode_to_code( v,state ) {
 	let args_cells = v.pos_args.map(x => `let ${x} = CL2.create_cell( __${x} )`)	
 
 	let output_things = [`let self = {$title: 'cofunc_action'};`,"let output = CL2.create_cell();","CL2.attach( self,'output',output )"]
-	let strs = [args_cells, output_things, s,"return output"]
+	let strs = [`// cofunc from ${v.locinfo?.short}`,args_cells, output_things, s,"return output"]
 
+	// некрасиво получается. подумать чтобы код мог быть массивом, тогда будут отступы.
 	let txt = C.strarr2str( strs )
 
 	return { code: txt, pos_args: v.pos_args.map(x => "__" + x) }

@@ -616,24 +616,36 @@ func "map" {: arr f |
   return output
 :}
 
-/////////////// кусочек из compute.js
-obj "task" {
+// получается это мы делаем динамический пайп, в него можно будет в рантайме добавлять объекты
+// но в целом это так-то очень редко надо.. плюс проблема - обработка input-позиционных аргументов..
+/*
+obj "dynamic_pipe" {
   in {
-    input: channel
-    action: cell
+    input: cell
   }
-
+  rebuild: channel
+  subscriptions: cell []
   output: cell
 
-  b: react @input @action
+  func "clear_subscriptions" {:
+    subscriptions.get().map( x => x.destroy() )
+    subscriptions.set( [] )
+  :}
 
-  bind @b.output @output
+  // bind @self.release @clear_subscriptions
 
-  b2: react @b.output {: b.destroy(); b2.destroy(); :}
-  // мы не вызываем self.destroy т.к. у нас output, на него подписаны..
+  init {:
+    CL2.create_binding_delayed( self.children.changed, self.rebuild)
+    self.release.subscribe( clear_subscriptions )
 
-  //react @input {: console.log('cofunc started',self + "") :}
-  //react @b.output {: console.log('cofunc finished',self + "") :}
+    self.rebuild.subscribe( () => {
+      //console.log('bbb', self.children.get())
+      console.log('bbb', [...self.children.get().values()].map( x => x+''))
+
+      clear_subscriptions()
+
+      for (let i=0;)
+    })
   
-  // todo
-  }
+}
+*/

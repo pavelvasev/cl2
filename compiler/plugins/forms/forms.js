@@ -25,6 +25,7 @@ export var tablica = {
 	alias: { make_code: alias, check_params: default_cp},
 	assert: { make_code: assert, check_params: default_cp},
 	locinfo: { make_code: locinfo, check_params: default_cp},
+	pipe: { make_code: pipe, check_params: default_cp},
 }
 
 /*
@@ -410,11 +411,57 @@ export function bind( obj, state )
 	let name = obj.$name
 
 	let strs = [`let ${name} = CL2.create_binding(${obj.params[0].from},${obj.params[1].from})`]
-	//strs.push( `CL2.attach( self,"${name}",${name} )` )
+	strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	return {main:strs,bindings:[]}
 }
 // bind @func @ch
+
+
+/* пайп статический. потому что тогда он успешно подставляет input-параметры.
+   а динамически это провернуть увы невозможно. для динамического пайпа отдельная наработка, dynamic_pipe
+*/
+export function pipe( obj, state )
+{
+	let base = { main: [], bindings: [] }
+
+	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
+	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
+	let objid = C.obj_id(obj,state)
+	base.main.push( `let ${objid} = CL2.create_item() // pipe`)
+	base.main.push( `CL2.attach( ${objid},'input',CL2.create_cell())`)
+	base.main.push( `CL2.attach( ${objid},'output',CL2.create_cell())`)
+
+	//  и фичеры.. это у нас дети которые не дети	
+	let counter = 0
+	let prev_objid = objid
+	let prev_from = `${objid}.input`
+	let ch = C.get_children(obj)
+	if (ch) {
+		let mod_state = C.modify_parent(state,objid)
+		for (let f of ch) {
+
+			// правило такое:
+			// если у объекта есть параметр input то ставим его. 
+			// но тока инупт должен быть первым в списке, иначе ошибка (запутаемся если в середину списка будем вставлять или в конец.)
+			// если инпута нет - то ставим первым позиционным.
+			let r = C.get_record( state, f.basis_path, f )
+			console.log('see record',r)
+
+			f.params.input = {link:true}
+			f.links.input = {to:'input',from:`${prev_from}`}
+			let o = C.one_obj2js_sp( f, mod_state )
+			base.main.push( o.main )
+			//bindings.push("// bindings from feature-list")
+			base.bindings.push( o.bindings )
+			prev_objid = C.obj_id( f, mod_state )
+			prev_from = `${prev_objid}.output`
+		}
+		base.bindings.push(`let ${objid}_p = CL2.create_binding(${prev_objid}.output,${objid}.output)`)
+	}
+
+	return base
+}
 
 
 /*

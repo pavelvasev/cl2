@@ -384,9 +384,12 @@ export class Item extends ClObject {
 		//console.log("append this=",this+"","child=",child+"")
 		if (!(child instanceof Item)) return
 
-		this.children.get().add( child )
+		let cs = this.children.get()
+	    if (cs.has( child )) return; // уже есть
+
+		cs.add( child )
 		if (child.parent.get() != this)
-			child.parent.set( this )		
+			child.parent.set( this )
 		this.children.changed.emit( this.children.get() )
 		this.appended.emit( child ) 
 	}
