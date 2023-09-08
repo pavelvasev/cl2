@@ -11,6 +11,9 @@ export function init( state, tool ) {
 			let node_path = process.execPath // "node"
 			let s = spawn( node_path, [out_file],{ stdio: 'inherit' })
 			// также можно запускать через import...
+			s.on('exit',(code) => {
+				process.exit(code)
+			})
 		})
 
 	})

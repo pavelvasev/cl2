@@ -1,6 +1,10 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 SCRIPT="$(readlink --canonicalize-existing "$0")"
 SCRIPTPATH="$(dirname "$SCRIPT")"
 
 PATH="$PATH:$SCRIPTPATH" $(dirname $0)/compiler/tool/cl-tool.js $*
+#echo 111
+
+#echo "cl finish" $?
+#exit $?
