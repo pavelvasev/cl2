@@ -1,4 +1,6 @@
 #!./cl-tool r
+# можно добавить в git-hook строка ./run-tests.cl || (echo "commit failed!"; exit 1)
+
 import os = "std/os.cl" std="std"
 
 #print "running tests"
@@ -27,7 +29,7 @@ react @k.exitcode (func {
     react @r.stdout {: msg | process.stdout.write(msg) :}
     react @r.stderr {: msg | process.stdout.write('stderr:'+msg) :}
     k: react @r.exitcode (func { |code|
-      print "============= finished test" @test "exitcode" @code
+      print "------------- finished test" @test "exitcode" @code
       //if (@code > 0) { apply {: process.exit(1) :} }//{ apply {: console.log('throwing error'); throw "error" :} }
     })
     return (list @test @r.exitcode )// @k.output)

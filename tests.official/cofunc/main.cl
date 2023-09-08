@@ -1,3 +1,5 @@
+# проверяем работу cofunc
+
 obj "test1" {
   in {
     a1: cell

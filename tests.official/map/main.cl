@@ -1,3 +1,5 @@
+# проверяем работу map в режиме функций и ко-функций
+
 k := list 1 2 3
 result1 := map @k {: val | return val * val :}
 print "result = " @result1
