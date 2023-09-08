@@ -21,17 +21,17 @@ react @k.exitcode (func {
   t2 := std.sort @tests
   summary := map @t2 (func { |test|
     print "============= running test" @test
-    r: os.spawn 'cl-tool' 'r' @test // stdio='inherit'
+    r: os.spawn 'cl-tool' 'r' @test  // stdio='inherit'
     //react @r.stdout (func { |msg| print @msg })
 
     react @r.stdout {: msg | process.stdout.write(msg) :}
     react @r.stderr {: msg | process.stdout.write('stderr:'+msg) :}
-    react @r.exitcode (func { |code|
+    k: react @r.exitcode (func { |code|
       print "============= finished test" @test "exitcode" @code
-      //if (@code > 0) { apply {: console.log('throwing error'); throw "error" :} }
+      //if (@code > 0) { apply {: process.exit(1) :} }//{ apply {: console.log('throwing error'); throw "error" :} }
     })
-    return (list @test @r.exitcode)
+    return (list @test @r.exitcode )// @k.output)
   })
-  print ("summary is\\n" + (format_summary @summary))
+  printed: print ("summary is\\n" + (format_summary @summary))
+  apply {: code | console.log('finished, code',code); process.exit( code ) :} (apply {: s | return s.find( r => r[1] != 0 ) ? 1 : 0 :} @summary) @printed.output
 })
-
