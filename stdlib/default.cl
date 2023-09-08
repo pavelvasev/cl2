@@ -614,3 +614,25 @@ func "map" {: arr f |
   process_arr( arr ).then( values => output.submit( values ))
   return output
 :}
+
+/////////////// кусочек из compute.js
+obj "task" {
+  in {
+    input: channel
+    action: cell
+  }
+
+  output: cell
+
+  b: react @input @action
+
+  bind @b.output @output
+
+  b2: react @b.output {: b.destroy(); b2.destroy(); :}
+  // мы не вызываем self.destroy т.к. у нас output, на него подписаны..
+
+  //react @input {: console.log('cofunc started',self + "") :}
+  //react @b.output {: console.log('cofunc finished',self + "") :}
+  
+  // todo
+  }

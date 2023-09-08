@@ -403,10 +403,10 @@ export function default_obj2js( obj,state ) {
 	}
 
 	if (state.next_obj_cb) { // F-CHAINS-V3
-		state.next_obj_cb( obj, objid, strs, bindings, bindings_hash_before_rest )
+		state.next_obj_cb( obj, objid, strs, bindings, bindings_hash_before_rest, basis_record )
 	}
 	if (state.next_obj_cb2) { // F-TASKS
-		state.next_obj_cb2( obj, objid, strs, bindings, bindings_hash_before_rest )
+		state.next_obj_cb2( obj, objid, strs, bindings, bindings_hash_before_rest, basis_record )
 	}	
 
 	// и фичеры.. это у нас дети которые не дети	

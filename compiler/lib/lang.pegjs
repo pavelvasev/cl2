@@ -506,7 +506,7 @@ one_env_operator "environment operator record"
     env.locinfo = getlocinfo();
 
     let first_feature_name = env_modifiers[0].name
-      //console.log("QQQQ",first_feature_name)
+      //console.log("QQQQ",first_feature_name,getlocinfo())
     let spl = first_feature_name.split(".") 
     env.basis = spl[ spl.length-1 ] // последняя компонента
     env.basis_path = spl // весь путь

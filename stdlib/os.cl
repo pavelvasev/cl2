@@ -16,6 +16,7 @@ import path="node:path"
 obj "spawn" {
   in {
     cmd_args*: cell
+    stdio: cell 'pipe'
   }
   output: channel
   stderr: channel
@@ -30,11 +31,18 @@ obj "spawn" {
     rr.destroy() // больше чтобы не запускать
     
      // фича - добавить путь к cl-tool
-     let tool_dir = path.resolve( path.dirname( process.argv[1] ),"../.." )
-     //console.log("computed tool_dir",tool_dir )
-     let s_env = {...process.env}
-     s_env.PATH = s_env.PATH + ":" + tool_dir
-    let child = cp.spawn( args[0], args.slice(1), {env: s_env} )
+     // но выяснилось что это не работает если cl-tool r
+     // поэтому модифицируем PATH из скрипта cl-tool
+     //let tool_dir = path.resolve( path.dirname( process.argv[1] ),"../.." )
+     //console.log("computed tool_dir",tool_dir, "due to", process.argv)
+     //let s_env = {...process.env}
+     //s_env.PATH = s_env.PATH + ":" + tool_dir
+    //let child = cp.spawn( args[0], args.slice(1), {env: s_env} )
+    let opts = { stdio: self.stdio.get()}
+    // todo мб лучше прямо опции передать да и все. но тогда это несовместимость с др платформами ;-)
+    
+    let child = cp.spawn( args[0], args.slice(1),opts )
+
     // https://stackoverflow.com/questions/14332721/node-js-spawn-child-process-and-get-terminal-output-live
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', function(data) {

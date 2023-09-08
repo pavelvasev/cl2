@@ -5,11 +5,11 @@
 // модули загружаемые по умолчанию
 let default_modules = [
 	"forms/forms.js",
+	"compute/compute.js",
 	"bundle-2/bundle-2.js",
 	"module-path/module-path.js",
 	"../../stdlib",
-	"defaults",
-	"compute/compute.js",
+	"defaults",	
 	"compile",
 	"run","test"
 	]

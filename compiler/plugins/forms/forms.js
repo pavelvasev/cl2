@@ -13,7 +13,7 @@ export var tablica = {
 	obj: { make_code: _obj, check_params: default_cp },
 //	attach: { make_code: attach, check_params: default_cp },
 	channel: { make_code: channel, check_params: default_cp },
-	func: { make_code: func, check_params: default_cp },
+//	func: { make_code: func, check_params: default_cp },
 //func: { make_code: func, check_params: (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[], children_param: "body"} } },
 	cell: { make_code: cell, check_params: default_cp },
 	bind: { make_code: bind, check_params: default_cp },
@@ -195,6 +195,8 @@ export function _obj( obj, state )
 	//console.log("saving to statE:",id, state.current, state.env)
 	state.current[ id ] = {
 		basis: id,
+		is_obj: true,
+		obj_record: obj,
 		make_code: (obj,state) => { 
 			let self_objid = C.obj_id( obj, state )
 			let res = C.default_obj2js(obj,state)
@@ -289,15 +291,18 @@ export function cell( obj, state )
 {
 	let name = obj.$name_modified || obj.$name
 
-  let initial_value = null
+  let initial_value = 'CL2.NOVALUE'
   let p0 = obj.params[0]
   if (p0 != null) {
-  	if (p0.link)
+  	if (typeof(p0) == 'object' && p0.link) {
   		initial_value = p0.from
-  	else
-  	  initial_value = C.objToString(p0)
+  	}
+  	else {  		
+  	  initial_value = C.objToString(p0)  	
+  	}
   } 
-	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value || 'CL2.NOVALUE'}`
+
+	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 
 	let strs = [`let ${name} = CL2.create_cell(${value_str})`]
 	//let strs = [`let ${name} = CL2.create_cell(${obj.params[0] || ''})`]
