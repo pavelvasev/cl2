@@ -28,6 +28,6 @@ react @k.exitcode (func {
     })
     return (list @test @r.exitcode)
   })
-  print "summary is\\n" (format_summary @summary)
+  print ("summary is\\n" + (format_summary @summary))
 })
 
