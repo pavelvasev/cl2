@@ -8,8 +8,6 @@ obj "test1" {
   bind @r @output
 }
 
-sss
-
 print "result is " @res
 
 res := apply (cofunc { |a b|
