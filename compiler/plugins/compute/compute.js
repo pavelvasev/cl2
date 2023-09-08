@@ -68,6 +68,10 @@ export function cofunc( obj, state )
 	let modified = C.modify_parent( state, "self",null )
 
 	modified.next_obj_cb2 = ( obj, objid, strs, bindings, bindings_hash_before_rest, basis_record ) => {
+
+		strs.push(`${objid}.task_mode = true`)
+		return
+
 	  let source_comms = Object.values(bindings_hash_before_rest)
 
 	  if (source_comms.length == 0) return;	  
@@ -154,15 +158,29 @@ function generate_func_object( self_objid, func_code ) {
 // создает объект name, который вызывает указанную функцию при смене параметров
 // идея - чтобы можно было говорить func "x" а потом писать (x 1 2 3)
 // по сути тело то это apply, не знаю зачем я это дублирую?
+// todo тут надо параметры перечислить функции.. тогда появится проверка типов уровня obj - красота
 function generate_func_caller(name, state) {
-	let code = `	 
+	// todo это просто apply, надо только *rest передать и все.
+	// хотя не совсем.. еще сигнатуру соблюсти надо.
+	// но тогда это и не rest
+	let code = `
 	 obj "${name}" func_caller=true {
 	 	  in {
 	 	  	rest*: cell
 	 	  }
 	 	  output: cell
 	 	  vals: extract @rest
-  	  r: react @vals.output {: args | return ${name}( ...args ) :}
+  	  r: react @vals.output {: args |
+  	    if (self.task_mode) {
+  	    	// console.log('ok taskj')
+  	    	// r.destroy() xxxx
+  	    	if (self.started)
+  	    		 console.log('FUNC duplicate call!!')
+  	    	self.started = true
+  	    }
+
+  	    return ${name}( ...args ) 
+  	  :}
 
   	  bind @r.output @output
 	 }
