@@ -125,31 +125,21 @@ obj "print" {
 obj "else" {
   in {
     value: cell
-    else_block&:cell
-  }
-  bind @else_block @value
+  }  
 }
 
+// if cond then-func [else] else-func
 obj "if"
   {
   in {
     condition: cell // если канал то тогда константы не получается подставлять..
-    then_value: cell
-    else_value: cell
-
-    then_block&: cell
-
+    then_branch: cell
+    else_branch: cell
     _else~: cell
-
-    //debuglog: cell {: :}
-    debug: cell false
   }
   output: cell
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
   current_parent: cell
-
-  // режим if @cond {}
-  bind @then_block @then_value
 
   //bind @_else.value @else_value  
   // _else является ячейкой, содержащей объект
@@ -170,7 +160,7 @@ obj "if"
     //console.log("r1")
     let s1 = val.value.subscribe( (ev) => {
       //console.log("r2",ev)
-      else_value.set( ev )
+      else_branch.set( ev )
     })
   :}
 
@@ -184,40 +174,36 @@ obj "if"
     :}
 
   activate_branch: func {: branch_value arg |
-        cleanup_current_parent()
+      cleanup_current_parent()
 
-        //console.log("activate-branch: ",branch_value)
+      //console.log("activate-branch: ",branch_value)
+      let cp = CL2.create_item()
+      self.append( cp )
+      current_parent.set( cp )
 
-        if (branch_value?.is_block_function) {
-          //console.log("activate-branch: is-block-function",branch_value)
-          let cp = CL2.create_item()
-          self.append( cp )
-          current_parent.set( cp )
+      //let arg_cell = CL2.create_cell( arg )
+      //CL2.attach_anonymous( cp, arg_cell )
 
-          let arg_cell = CL2.create_cell( arg )
-          CL2.attach_anonymous( cp, arg_cell )
-
-          let res = branch_value( cp, arg_cell )
-          //output.set( res )
-          // ну вроде как там теперь return должен срабатывать
-          // т.е это забота ветки - находить output
-        } else {
-          //console.log("activate-branch: not block-function",branch_value)
-          output.set( branch_value )
-        }
+      let res = branch_value( cp, arg )
+      // cp то надо или нет уже
+      if (res instanceof CL2.Comm) {
+        let b = CL2.create_binding( res, self.output )
+        CL2.attach_anonymous( cp, b )
+        // по идее при удалении биндинг удалится
+      }
   :}
 
-  r_on_then_val: react @then_value {: value |
+  r_on_then_val: react @then_branch {: value |
     if (current_state.get() == 1) {
-      activate_branch( then_value.get(), condition.get() )
+      activate_branch( then_branch.get(), condition.get() )
     }
   :}
 
-  r_on_else_val: react @else_value {: value |
+  r_on_else_val: react @else_branch {: value |
     //console.log("else_value changed:",else_value.get(),"current_state.get()=",current_state.get(),"condition=",condition.get())
     if (current_state.get() == 2) {
       //console.
-      activate_branch( else_value.get(), condition.get() )
+      activate_branch( else_branch.get(), condition.get() )
     }
   :}
 
@@ -227,14 +213,14 @@ obj "if"
     if (value) {
       if (current_state.get() != 1) {
         //console.log("if activating branch then",value,"then-value=",then_value.get(),"then-block=",then_block.get())
-        activate_branch( then_value.get(), value )
+        activate_branch( then_branch.get(), value )
         current_state.set( 1 )
       }
     } else {
       if (current_state.get() != 2) {
         // ну пока так..
         //let els_value = _else.get() ? _else.get().value.get() : else_value.get()
-        activate_branch( else_value.get(), value )
+        activate_branch( else_branch.get(), value )
         //activate_branch( else_value.get(), value )
         current_state.set( 2 )
       }
