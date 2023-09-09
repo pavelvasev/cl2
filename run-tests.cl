@@ -9,11 +9,11 @@ tests := reduce_events (k: os.spawn "find" "tests.official" "-name" "main.cl") [
 func "join" {: arr sep | return arr.join(sep) :}
 
 func "format_summary" {{ s |
-  return (join (map @s {{ line |
+  return (map @s {{ line |
     code := get @line 1
     name := get @line 0
     return (+ (if (@code == 0) "  OK" "FAIL") " : " @name)
-  }}) "\\n")
+  }} | join "\\n")
 }}
 
 react @k.exitcode {{
