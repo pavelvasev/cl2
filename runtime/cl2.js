@@ -207,6 +207,8 @@ export function create_reaction(x) {
 export class Cell extends Comm {
 	value = null
 	constructor( initial_value=NOVALUE ) {
+		// оказывается если послать сюда undefined то оно бодро превращается в NOVALUE..
+		//console.log('cell constructor',initial_value)
 		super()
 		attach( this,"changed_emit",create_channel())
 		// idea: this.changed_emit = attach( create_channel(),this )

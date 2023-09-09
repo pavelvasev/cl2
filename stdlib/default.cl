@@ -362,6 +362,9 @@ obj "when_all" {
   :}
 }
 
+// read нам нужна.. чтобы работало f := 10
+func "read" {: x | return x :}
+
 obj "apply" {
   in {
     action: cell
@@ -569,6 +572,18 @@ func "assert1" {: cond message |
   console.log("assert OK",message )
 :}
 */
+
+// todo вынести в assert.cl и научиться ре-экспортировать имена
+// а также там-же ввести форму для assert (вынести из forms.js в cl-язык)
+func "arrays_equal" {: a b |
+  if (Array.isArray(a) && Array.isArray(b) && a.length == b.length) {
+    for (let i=0; i<a.length; i++)
+      if (a[i] != b[i]) return false
+    return true
+  }
+  return false
+:}
+
 
 ///////////////////////
 

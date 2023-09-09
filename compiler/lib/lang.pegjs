@@ -419,8 +419,8 @@ feature_addition_for_operator
   
   
 // ------ A3. attr_name
-Word
-  = [a-zA-Zа-яА-Я0-9_\-*&~]+ { return text(); } // убрали точку из имени.. будем делать аксессоры из них
+Word 
+  = [a-zA-Zа-яА-Я_][a-zA-Zа-яА-Я0-9_\-*&~]* { return text(); } // убрали точку из имени.. будем делать аксессоры из них
   // = [a-zA-Zа-яА-Я0-9_\-\.]+ { return text(); } // разрешили точку в имени.. хм... ну пока так..
   //= [a-zA-Zа-яА-Я0-9_-]+ { return text(); }
 
@@ -432,7 +432,7 @@ attr_name
 
 // разрешим еще больше в имени чтобы фичи могли называться как угодно < || && + и т.д.
 feature_name "feature name"
-  = [a-zA-Zа-яА-Я0-9_\-\.!]+ { return text(); } 
+  = [a-zA-Zа-яА-Я_][a-zA-Zа-яА-Я0-9_\-\.!]* { return text(); } 
   / feature_operator_name // оставим возможность фичам вида + a b c
 
 feature_operator_name  // разрешим еще больше в имени чтобы фичи могли называться как угодно < || && + и т.д.
@@ -468,7 +468,7 @@ obj_path
 
 one_env
   = one_env_operator
-  / one_env_obj
+  / one_env_obj  
   / one_env_positional_attr
 
 
@@ -504,6 +504,7 @@ one_env_operator "environment operator record"
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
+
 
     let first_feature_name = env_modifiers[0].name
       //console.log("QQQQ",first_feature_name,getlocinfo())

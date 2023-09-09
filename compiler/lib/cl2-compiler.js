@@ -451,6 +451,7 @@ export function objToString(obj, ndeep, state ) {
     case "object":
       var indent = Array(ndeep||1).join('\t'), isArray = Array.isArray(obj);
       return '{['[+isArray] + Object.keys(obj).map(function(key){
+      	   if (isArray) return objToString(obj[key], (ndeep||1)+1,state)
            return indent + key + ': ' + objToString(obj[key], (ndeep||1)+1,state);
          }).join(',') + '}]'[+isArray];
     default: return obj.toString();

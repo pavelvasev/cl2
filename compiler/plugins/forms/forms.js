@@ -66,7 +66,7 @@ export function _let( obj, state )
 	for (let k in obj.params) {
 		let val = obj.params[k]
 		//let s = `let ${k} = ${val.toString()}`
-		let val_str = val?.from ? "CL2.NOVALUE" : C.objToString(val)
+		let val_str = val?.from ? "CL2.NOVALUE" : C.objToString(val,0,state)
 		let s = `let ${k} = CL2.create_cell( ${val_str} )`
 		strs.push( s )
 		if (val?.from) {
@@ -435,21 +435,31 @@ export function pipe( obj, state )
 	//  и фичеры.. это у нас дети которые не дети	
 	let counter = 0
 	let prev_objid = objid
-	let prev_from = `${objid}.input`
+	let prev_from = null // `${objid}.input`
 	let ch = C.get_children(obj)
 	if (ch) {
 		let mod_state = C.modify_parent(state,objid)
 		for (let f of ch) {
 
 			// правило такое:
-			// если у объекта есть параметр input то ставим его. 
-			// но тока инупт должен быть первым в списке, иначе ошибка (запутаемся если в середину списка будем вставлять или в конец.)
-			// если инпута нет - то ставим первым позиционным.
-			let r = C.get_record( state, f.basis_path, f )
-			console.log('see record',r)
+			// сдвигаем параметры заданные позиционно вправо 
+			// и output левого элемента ставим первым таким параметром.
+			// ну если там был input и не совпало.. посмотрим, может ошибка.
 
-			f.params.input = {link:true}
-			f.links.input = {to:'input',from:`${prev_from}`}
+			//let r = C.get_record( state, f.basis_path, f )
+			//console.log('see record',r)
+			if (prev_from) {
+				let i = f.positional_params_count
+				while (i > 0) {
+					f.params[i] = f.params[i-1]
+					i = i-1
+				}
+				f.params[0] = {link:true}
+				f.links[0] = {to:0,from:`${prev_from}`}
+
+				//// вставка готова
+		  }
+
 			let o = C.one_obj2js_sp( f, mod_state )
 			base.main.push( o.main )
 			//bindings.push("// bindings from feature-list")
