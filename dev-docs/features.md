@@ -218,3 +218,12 @@ F-EVENTS-REDUCE
 reduce @channel '' {: val acc | acc + val :}
 - в целом это реакция, такая форма
 - gather-list можно выразить через reduce
+
+*************************
+F-PIPES
+F-PIPES-INPUT-ARG
+pipe-ы вернуть
+при этом проверить что идет позиционная подстановка input-аргумента.
+т.е. если сигнатура foo (input alfa beta) то тогда
+some | foo alfa beta
+а input подставляется пайпой.

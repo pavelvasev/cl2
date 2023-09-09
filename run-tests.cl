@@ -1,5 +1,5 @@
 #!./cl-tool r
-# можно добавить в git-hook строка ./run-tests.cl || (echo "commit failed!"; exit 1)
+# можно добавить в файл .git/hooks/pre-commit строку ./run-tests.cl || (echo "commit failed!"; exit 1)
 
 import os = "std/os.cl" std="std"
 
