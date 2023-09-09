@@ -1,6 +1,6 @@
 coef := 10
 
-r2 := list 1 2 3 | map {: x | return x+1 :} | map {{ y | return (@y * @coef) }}
+r2 := list 1 2 3 | map {: x | return x+1 :} | map { y | return (@y * @coef) }
 
 print "r2 is " @r2
 

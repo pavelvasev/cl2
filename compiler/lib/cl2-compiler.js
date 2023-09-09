@@ -58,8 +58,14 @@ export function modify_env( state={}, nv )
 
 ///////////////////// работа с obj
 
-export function get_children(obj) {
-	return Object.values( obj.children )
+export function get_children(obj,children_param) {
+	if (children_param == null) return []
+	let v = obj.params[ children_param ]
+	if (v?.cofunc)
+		return v.code 
+	return []
+	
+	//return Object.values( obj.children )
 }
 
 // children_env = children(т.е. body) + head
@@ -90,7 +96,8 @@ export function code2obj( str, base_url="?" )
 	try {
 		let parsed = P.parse( str,{base_url,grammarSource} )
 		//console.log("parsed=",parsed)
-		return get_children( parsed )
+		//return get_children( parsed )
+		return Object.values(parsed.children)
 	} catch (e) {
       console.log("parser err")
       //env.emit("error",e)
@@ -152,6 +159,7 @@ export function obj2obj( obj, objs, index )
 	}
 	*/
 }
+
 
 // возвращает запись из текущего окружения определения по идентификатору id
 export function get_record(state,id,obj_info,allow_defaults=true) {

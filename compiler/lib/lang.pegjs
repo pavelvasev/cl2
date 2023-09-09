@@ -243,6 +243,15 @@
     }
     if (envs.env_args)
       env.children_env_args = envs.env_args;
+
+    // todo нам вовсе надо будет убрать env.children
+    let ch = Object.values(env.children)
+    if (ch.length > 0)
+    env.params.children = {
+      code: ch,
+      cofunc: true,
+      pos_args: envs.env_args?.attrs
+    }
   }
 }}  
 {
@@ -478,7 +487,7 @@ one_env_obj "environment record"
   envid: (__ @(@attr_name ws ":")?)
   __ first_feature_name:feature_name
   env_modifiers:(__ @env_modifier)*
-  child_envs:(__ "{" __ @env_list? __ "}" __)?
+  child_envs:(__ "{{{" __ @env_list? __ "}}}" __)?
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
@@ -616,6 +625,7 @@ env_pipe
      fix_env_name( head )
 
      append_children_envs( pipe, [head,...tail] );
+     //console.log("pipe formed",pipe)
      
      return pipe;
    }
@@ -777,7 +787,7 @@ value
   / array
   / number
   / string  
-  / "{" __ env_list:env_list? __ "}" {
+  / "{{{" __ env_list:env_list? __ "}}}" {
     return { param_value_env_list: env_list || [] }
   }
   / "(" ws env_list:env_list ws ")" {
@@ -836,7 +846,7 @@ js_inline "js inline code"
   }
 
 cl_cofunc "cl-cofunc code"
-  = "{{" __ env_list:env_list? __ "}}" {
+  = "{" __ env_list:env_list? __ "}" {
     // F-CL-COFUNC
     //console.log("cocode", env_list)
     //let env = new_env()    

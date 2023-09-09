@@ -10,7 +10,9 @@ let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: 
 
 export var tablica = {
 	let: { make_code: _let, check_params: default_cp },
-	obj: { make_code: _obj, check_params: default_cp },
+	obj: { make_code: _obj, check_params: (assigned_names) => { 
+		 return {normal: assigned_names, renamed: {'1': 'children'}, pos_rest: [],named_rest:[]} 
+		} },
 //	attach: { make_code: attach, check_params: default_cp },
 	channel: { make_code: channel, check_params: default_cp },
 //	func: { make_code: func, check_params: default_cp },
@@ -31,8 +33,17 @@ export var tablica = {
 /*
   таблица env составляется из записей вида
   _id:
-    check_params: ( names-list ) -> {params,rest,named_rest}
-    где names-list массив имен а params,rest,named-rest массивы тоже имен.
+    check_params: ( names-list ) -> {normal, renamed,rest,named_rest, children}
+    где names-list массив имен присвоенных внешним описанием,
+    где в частности позиционные имена это числа, а прочие - имена.
+    normal, renamed,rest,named-rest массивы тоже имен 
+    - это есть указание в какие разделы кого следует отправлять.
+      normal - список имен параметров которые следует передать поштучно
+      renamed - 
+         дополнительная таблица переименования (используется для присвоения позиционных в имена)
+         вида external-name -> internal-name
+      rest - список имен которые записать в rest
+      named-rest - список имен которые записать в named-rest
     либо выкинуть исключение если с параметрами что-то не так.
 
     make_code: ( obj, env ) -> {main:arr, bindings: arr}
@@ -86,14 +97,14 @@ export function get_obj_params( obj ) {
 	let rest_param, named_rest_param, children_param, next_obj_param
 	// F-CHAINS-V3 next_obj_param
 
-	let in_p = C.get_children(obj).find( c => c.basis == "in")
+	let in_p = C.get_children(obj,1).find( c => c.basis == "in")
 	if (!in_p) return {params}
 
   // вот этим шагом можно параметры будет отдельно рендерить
 	//obj.in_params = in_p
 	//delete obj.children[ in_p.$name ]
 	
-		for (let k of C.get_children( in_p )) {
+		for (let k of C.get_children( in_p, 0 )) {
 			//console.log("checking k=",k.$name,k.basis)
 			if (k.basis == "cell" || k.basis == "channel" || k.basis == "func")
 			{
@@ -130,7 +141,7 @@ export function get_obj_params( obj ) {
 export function _in( obj, state )
 {
 	//let base = C.one_obj2js( obj,state )
-	let s = C.objs2js( C.get_children(obj),state )
+	let s = C.objs2js( C.get_children(obj,0),state )
 	//console.log("in called. result=",base)
 	return { main: ["// input params",s,"// end input params"], bindings:[] }
 }
@@ -145,6 +156,7 @@ export function _in( obj, state )
 */
 export function _obj( obj, state )
 {
+	//console.log("obj=",obj)
 	// чет я не очень понял зачем вызывать one_obj2js...
 	//let base = C.one_obj2js( obj,state )
 	let base = { bindings: []	}
@@ -160,7 +172,7 @@ export function _obj( obj, state )
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
 	let {params,rest_param,named_rest_param, children_param,next_obj_param} = get_obj_params( obj )
-	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
+	// console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
 	let starting_rest = positional_names.findIndex( id => id.endsWith("*"))
@@ -170,7 +182,7 @@ export function _obj( obj, state )
 ///////////////// тело указанное в init
 
 	let c_state = C.modify_parent( state, "self" )
-	let body = C.objs2js( C.get_children( obj ), c_state )
+	let body = C.objs2js( C.get_children( obj,1 ), c_state )
 	//strs2.push( body )
 
 	strs2.push( "// inner children",body )
@@ -437,7 +449,8 @@ export function pipe( obj, state )
 	let counter = 0
 	let prev_objid = objid
 	let prev_from = null // `${objid}.input`
-	let ch = C.get_children(obj)
+	let ch = C.get_children(obj,'children')
+	//console.log("pipe children is",ch, obj)
 	if (ch) {
 		let mod_state = C.modify_parent(state,objid)
 		for (let f of ch) {

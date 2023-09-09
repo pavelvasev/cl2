@@ -1,4 +1,4 @@
-# проверяем работу cofunc в синтаксисе {{ }}
+# проверяем работу cofunc в синтаксисе { }
 # 1 для func 2 инлайн
 
 obj "test1" {
@@ -11,19 +11,19 @@ obj "test1" {
   bind @r @output
 }
 
-func "foo" {{ alfa beta |
+func "foo" { alfa beta |
   t := + "hello from foo " @alfa "~" @beta
   print @t
   return @t
   #print "hello from foo" @alfa @beta
-}}
+}
 
 print "result is " @res
 
-res := apply {{ a b|
+res := apply { a b|
   c := test1 (@a + 1)
   return (+ @a @b @c)
-}} 10 20
+} 10 20
 
 assert (@res == 42)
 
