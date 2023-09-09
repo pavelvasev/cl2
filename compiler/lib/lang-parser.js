@@ -640,18 +640,32 @@ function peg$parse(input, options) {
       var env = new_env( envid );
       env.locinfo = getlocinfo();
 
+      let desired_operator = env_modifiers[0]
+      let first_feature_name = desired_operator.name
 
-      let first_feature_name = env_modifiers[0].name
+      if (!first_feature_name) {
+        if (desired_operator.positional_param && desired_operator.value < 0)
+        {
+          // F-OPERATOR-MINUS
+          // особый случай там отрицательное число а мы не поняли
+          first_feature_name = "plus"
+          // добавим кое что, потому что скоро удалят
+          env_modifiers.unshift( {} )
+        }
+        else {
+          console.error( "parser: operator not detected",getlocinfo(),env_modifiers )
+          throw "operator not detected"
+        }
+      }
         //console.log("QQQQ",first_feature_name,getlocinfo())
-      let spl = first_feature_name.split(".") 
-      env.basis = spl[ spl.length-1 ] // последняя компонента
-      env.basis_path = spl // весь путь
-      env.modul_prefix = spl.slice(0,-1).join(".")
-      //console.log("EEEE",env.basis, env.basis_path)
+      
+      set_basis( env, first_feature_name )
 
-      fill_env( env, [first_positional_attr].concat(env_modifiers), child_envs )
 
-      if (env_modifiers.length == 0) {
+      let rest_args = env_modifiers.slice(1) // уберем обнаруженный оператор, собственно
+      fill_env( env, [first_positional_attr].concat(rest_args), child_envs )
+
+      if (env_modifiers.length == 0 || rest_args.length == 0) {
          console.error("operator record, no feature!",env_modifiers);
          console.log( env.locinfo );
       };

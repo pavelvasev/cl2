@@ -538,6 +538,8 @@ obj "gather_events" {
 
 // reduce_events @channel acc_init func -> acc
 // собирает значения из канала и применяет к ним функцию func(channel_val, acc).
+// но вообще странно, надо ли это.. это же типа как реакция в целом то получается,
+// просто особой формы.. да и просто reduce нам тоже надо..
 obj "reduce_events" {
   in {
     input: channel
@@ -554,7 +556,16 @@ obj "reduce_events" {
 
   react @input {: value |
     let new_acc = f.get().call( this, value, acc.get() )
-    acc.set( new_acc )
+    // привет, тут промиса будет от кофункций. и что делать?
+    if (new_acc instanceof CL2.Comm) {
+      new_acc.once( val => {
+        acc.set( new_acc )
+        // надо какой-то режим буферизации.. чтобы может быть react функцию просто не вызывал
+        // пока мы тут не закончим.. а буферизировал скажем.. todo
+      })
+    }
+    else
+      acc.set( new_acc )
   :}
 }
 
@@ -629,6 +640,98 @@ func "map" {: arr f |
   let output = CL2.create_cell()
   process_arr( arr ).then( values => output.submit( values ))
   return output
+:}
+
+func "filter" {: arr f |
+  // is_task_function стало тяжко назначать..
+  //if (!f.is_task_function)
+  //  return arr.map( f )
+
+  function process_elem(e) {
+    return new Promise( (resolve,reject) => {
+    let result = f( e )
+    if (result instanceof CL2.Comm) {
+          // console.log('see channel, subscribing once')
+          // вернули канал? слушаем его дальше.. такое правило для реакций
+          // но вообще это странно.. получается мы не можем возвращать каналы..
+          // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
+          let unsub = result.once( (val) => {
+            // console.log('once tick',val,output+'')
+            resolve( val )
+          })
+        }
+        else {
+          //console.log('submitting result to output',output+'')
+          resolve( result )
+        }
+    })
+  }
+
+  function process_arr( arr,i=0 ) {
+    if (i >= arr.length) return Promise.resolve([])
+
+    return process_elem( arr[i] ).then( (result) => {
+      return process_arr( arr,i+1 ).then( (rest_result) => {
+        if (result)
+          return [arr[i], ...rest_result]
+        return rest_result
+      })      
+    })
+  }
+
+  let output = CL2.create_cell()
+  process_arr( arr ).then( values => output.submit( values ))
+  return output
+:}
+
+func "reduce" {: arr acc_init f |
+  // is_task_function стало тяжко назначать..
+  //if (!f.is_task_function)
+  //  return arr.map( f )
+
+  function process_elem(e,acc) {
+    return new Promise( (resolve,reject) => {
+
+    let result = f( e, acc )
+    if (result instanceof CL2.Comm) {
+          // console.log('see channel, subscribing once')
+          // вернули канал? слушаем его дальше.. такое правило для реакций
+          // но вообще это странно.. получается мы не можем возвращать каналы..
+          // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
+          let unsub = result.once( (val) => {
+            // console.log('once tick',val,output+'')
+            resolve( val )
+          })
+        }
+        else {
+          //console.log('submitting result to output',output+'')
+          resolve( result )
+        }
+    })
+  }
+
+  function process_arr( arr,i=0,acc ) {
+    if (i >= arr.length) return Promise.resolve(acc)
+
+    return process_elem( arr[i],acc ).then( (result) => {
+      return process_arr( arr,i+1,result )
+    })
+  }
+
+  let output = CL2.create_cell()
+  process_arr( arr,0,acc_init ).then( values => output.submit( values ))
+  return output
+:}
+
+// ну пока такое
+func "range" {: max |
+  let arr = new Array(max)
+  for (let i=0; i<max; i++) arr[i] = i
+  return arr
+:}
+
+func "len" {: obj |
+    return obj.length
 :}
 
 // получается это мы делаем динамический пайп, в него можно будет в рантайме добавлять объекты
