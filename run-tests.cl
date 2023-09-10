@@ -1,4 +1,4 @@
-#!./cl-tool r
+#!./clon r
 # можно добавить в файл .git/hooks/pre-commit строку ./run-tests.cl || (echo "commit failed!"; exit 1)
 
 import os = "std/os.cl" std="std"
@@ -23,7 +23,7 @@ react @k.exitcode {
   t2 := std.sort @tests
   summary := map @t2 { test|
     print "============= running test" @test
-    r: os.spawn 'cl-tool' 'r' @test  // stdio='inherit'
+    r: os.spawn 'clon' 'r' @test  // stdio='inherit'
     //react @r.stdout (func { |msg| print @msg })
 
     react @r.stdout {: msg | process.stdout.write(msg) :}
