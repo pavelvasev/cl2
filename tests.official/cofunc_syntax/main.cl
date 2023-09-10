@@ -73,3 +73,10 @@ y := apply @u "%"
 print "y is" @y
 
 assert ((len @y) == 8)
+
+#######################
+# тестируем вызов через apply по ссылке
+
+func "foo4" { return 10 }
+print "foo4=" (apply @foo4)
+assert ((apply @foo4) == 10)

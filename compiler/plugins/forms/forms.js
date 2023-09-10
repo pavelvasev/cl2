@@ -168,6 +168,8 @@ export function _obj( obj, state )
 
 	let strs2 = []
 	strs2.push(`let self=CL2.create_item()`)
+	// чтобы можно было давать ссылки на self
+	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
@@ -179,7 +181,7 @@ export function _obj( obj, state )
 	if (starting_rest >= 0)
 		positional_names = positional_names.slice( 0, starting_rest )
 
-///////////////// тело указанное в init
+  ///////////////// генерируем тело указанное в 1-м аргументе
 
 	let c_state = C.modify_parent( state, "self" )
 	let body = C.objs2js( C.get_children( obj,1 ), c_state )
@@ -239,17 +241,31 @@ export function _obj( obj, state )
 			// как его следует подавать
 			// - как именованный (и как именно - это касается позиционной подачи)
 			// - в рест позиционный - в рест именованный (и какое имя)
+
+			/* возвращает словарь: 
+			   named - список имен которые следует передать обычным образом
+			   renamed - словарь преобразования имен
+			   pos_rest_names - список имен которые следуте записать в rest-параметр
+			   named_rest_names - список имен которые следуте записать в named-rest-параметр
+				 children_param - имя параметра для записи функции добавки детей 
+			*/
 			let named = [], pos_rest_names = [], named_rest_names=[]
 			let renamed = {}
 			pos_rest_names.name = rest_param
 			named_rest_names.name = named_rest_param
+			// obj_params это словарь параметров из описания объекта (типа то бишь)
+			// positional_names - массив имен позиционных параметров из описания
 			for (let k of param_names) {
+				// k - имя очередного параметра указанное внешне. может быть числом, для позционных.				
 				if (obj_params.hasOwnProperty( k )) {
+					// k встречается в списке параметров объекта - значит это именованный
 					named.push( k )
 					continue
-				}
+				}				
+				
 				let qq = positional_names[k] // F-POSITIONAL-RENAME
 				if (obj_params.hasOwnProperty( qq )) {
+					// k есть позиционный параметр. запомним как его надо переименовать при присвоении
 					named.push( k )
 					renamed[k] = qq
 					continue
@@ -355,6 +371,7 @@ export function paste( obj, state )
 
 let ccc = 0
 // действие типа "функция"
+/*
 export function func( obj, state )
 {
 	let name = obj.$name_modified || obj.$name
@@ -377,7 +394,7 @@ export function func( obj, state )
 
   // todo это надо как-то соптимизировать. по сути нам надо сгенерировать объект
   // что-то типа define_obj_from_func "${name}" ${name}
-	let code = `	 
+	let code = `
 	 obj "${name}" {
 	 	  in {
 	 	  	rest*: cell
@@ -398,25 +415,10 @@ export function func( obj, state )
 	//let strs = [`function task_${name}(args) {}`]
 	//strs.push( `CL2.attach( self,"${name}",${name} )` )
 
-/*
-	let reactive_object = {
-		$name: ${name},
-		children: {
-			first: { basis: "apply"}
-		}
-	}
-*/
-  // была идея свести к реактивному объекту типа apply. но apply сам func использует..
-  /*
-  state.current[ id ] = {
-		make_code: (obj,state) => {
-			 xxx
-		},
-		check_params: default_cp
-	}*/
 
 	return {main:strs,bindings:[]}
 }
+*/
 
 export function bind( obj, state )
 {

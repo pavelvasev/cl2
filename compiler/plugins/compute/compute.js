@@ -215,8 +215,13 @@ export function func( obj, state )
 
 	if (obj.params[1]) { // вариант func "name" code
 		name = obj.params[0]
+		state.static_values[ name ] = true // надо сделать до cocode_to_code чтобы там уже могли тоже ссылаться
 		fn_code = cocode_to_code( obj.params[1],state )
 		anonymous_mode = false
+	}
+	else
+	{  
+		state.static_values[ name ] = true
 	}
 
 	if (anonymous_mode) {
@@ -226,13 +231,13 @@ export function func( obj, state )
 		return generate_func_object( self_objid, code)
 	}
 	
-	//console.log('fn name=',name,'dir=',state.dir)
-	let export_flag = state.dir == '' || state.dir == './' ? 'export ' : '' // todo перенести это в bundle-2
+	//console.log('fn name=',name,'dir=',state.dir,state)
+	let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? 'export ' : '' // todo перенести это в bundle-2
 	let strs = [`${export_flag}function ${name}(${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
   strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	//state.current[ name ] - а кстати идея.. зарегать так объект..
-	state.static_values[ name ] = true
+	
 	// .static_values это тема, чтобы на функцию не биндиться а как есть передавать
 
   // todo это надо как-то соптимизировать. по сути нам надо сгенерировать объект
@@ -243,6 +248,17 @@ export function func( obj, state )
 	return {main:strs,bindings:[]}
 }
 
+/* cocode это код {} и его преобразуем в платформенный.
+   есть отличия между обычным кодом и кодом, который будет генерировать children:
+   - передается первый дополнительный аргумент, arg_obj
+   - сообразно tree-parent у объектов идет на этот arg_obj
+   - output у func наоборот, не нужен. равно как и func_self тоже.
+   отличать эти два случая мы будем по особой метке в значении аргумента.
+   попытаемся сделать это как для статики elem { ..} так и для динамики elem childr=@some
+
+   но с другой стороны, так то прикольно было бы чтобы эта функция продолжала возвращать какие-то
+   значения в output.. ну или просто какие-то значения
+*/
 export function cocode_to_code( v,state ) {
 	if (!state) {
 		console.trace()
@@ -250,13 +266,29 @@ export function cocode_to_code( v,state ) {
 		}
 	if (!v.cofunc) return v
 
-			// поменяем особые формы
-	let modified = C.modify_parent( state, "self",null )
+	if (v.children_mode) { // F-CHILDREN-PARAM
+		let modified = C.modify_parent( state, "arg_obj" )	
+		v.pos_args.map(x => modified.static_values[x] = true )
+		let s = C.objs2js( v.code,modified )
+		let strs = [`// children from ${v.locinfo?.short}`, s, "return true" ]
+	  let txt = C.strarr2str( strs )
+   	return { code: txt, pos_args: ["arg_obj",...v.pos_args] }
+	}
+
+	// поменяем особые формы
+	// func_self а не self потому, чтобы можно было через self все еще ссылаться на родительский объект
+	// если функция определена внутри объекта
+
+	// вот тут надо не null а arg_obj
+	let modified = C.modify_parent( state, "func_self",null )
 
 	modified.next_obj_cb2 = ( obj, objid, strs, bindings, bindings_hash_before_rest, basis_record ) => {
 		strs.push(`${objid}.task_mode = true`)
 		return
 	}
+	
+	// ссылки на параметры идут по значению а не по ссылкам типа binding
+	v.pos_args.map(x => modified.static_values[x] = true )
 
 	//console.log("iii",v.code)
 	let s = C.objs2js( v.code,modified )
@@ -266,13 +298,13 @@ export function cocode_to_code( v,state ) {
   // let args = v.pos_args.map(x => "__" + x).join(",")
  	// поскольку мы выдаем функцию.. то на вход идут конкретные значения
  	// но в коде мы считаем их коммуникац. примитивами. и поэтому мы их оборачиваем в примитивы, эти значения.
-	let args_cells = v.pos_args.map(x => `let ${x} = CL2.create_cell( __${x} )`)	
+	//let args_cells = v.pos_args.map(x => `let ${x} = CL2.create_cell( __${x} )`)	
 
-	let output_things = [`let self = {$title: 'cofunc_action'};`,"let output = CL2.create_cell();","CL2.attach( self,'output',output )"]
-	let strs = [`// cofunc from ${v.locinfo?.short}`,args_cells, output_things, s,"return output"]
+	let output_things = [`let func_self = {$title: 'cofunc_action'};`,"let output = CL2.create_cell();","CL2.attach( func_self,'output',output )"]
+	let strs = [`// cofunc from ${v.locinfo?.short}`, output_things, s,"return output"]
 
 	// некрасиво получается. подумать чтобы код мог быть массивом, тогда будут отступы.
 	let txt = C.strarr2str( strs )
 
-	return { code: txt, pos_args: v.pos_args.map(x => "__" + x) }
+	return { code: txt, pos_args: v.pos_args.map(x => x) }
 }

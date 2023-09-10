@@ -5,9 +5,6 @@ obj "react" {
   in {
     input: channel
     action: cell
-    children_action&: cell
-    // вопрос - а как указать что чилдренов надо компилировать в вычислительном режиме?
-
   }
   // output: channel
   // нам надо биндится к результатам тасков.. таски выражаются react-ами.. поэтому надо ячейки
@@ -624,6 +621,8 @@ func "map" {: arr f |
   }
 
   let output = CL2.create_cell()
+  // [...arr] переводит в массив принудительно, если там было Set например
+  if (!Array.isArray(arr)) arr = [...arr]
   process_arr( arr ).then( values => output.submit( values ))
   return output
 :}
@@ -666,6 +665,7 @@ func "filter" {: arr f |
   }
 
   let output = CL2.create_cell()
+  if (!Array.isArray(arr)) arr = [...arr]
   process_arr( arr ).then( values => output.submit( values ))
   return output
 :}
@@ -705,6 +705,7 @@ func "reduce" {: arr acc_init f |
   }
 
   let output = CL2.create_cell()
+  if (!Array.isArray(arr)) arr = [...arr]
   process_arr( arr,0,acc_init ).then( values => output.submit( values ))
   return output
 :}
@@ -718,6 +719,14 @@ func "range" {: max |
 
 func "len" {: obj |
     return obj.length
+:}
+
+func "join" {: obj sep |
+    return obj.join(sep)
+:}
+
+func "flatten" {: obj |
+    return obj.flatten()
 :}
 
 // получается это мы делаем динамический пайп, в него можно будет в рантайме добавлять объекты

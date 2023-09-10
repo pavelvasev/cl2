@@ -30,7 +30,7 @@ if (process.env.VERBOSE) {
 	  	if (s.length > 50) return "<<<" + s.substring(0,50) + "...>>>"
 	  	return s
 	  }
-	  return value			
+	  return value
 	}
 }
 
@@ -41,7 +41,7 @@ export class Comm {
 		this.$cl_id = (global_thing_counter++)
 	}
 	toString() {
-		return `${this.constructor.name}:${get_title( this )}[${this.$cl_id}]`
+		return `${this.constructor.name}:${get_title( this )}[id:${this.$cl_id}]`
 	}
 	// становится потребна
 	// subscribe на однократное срабатывание.
@@ -446,7 +446,7 @@ export function get_title( obj ) {
 	}
 	if (obj.attached_to)
 		return get_title( obj.attached_to ) + "." + (obj.$title || "unknown")
-	if (obj.parent && obj.parent.get())
+	if (obj.parent && obj.parent.is_set)
 		return get_title( obj.parent.get() ) + "." + (obj.$title || "unknown")	
 	return obj.$title || "unknown"
 }
@@ -464,8 +464,10 @@ export function attach_anonymous( target_object, embedded_object )
 export class Binding {
 	constructor( src,tgt ) {
 		//if (tgt instanceof Function)
+		if (!src)
+			console.error("binding src is null! tgt=", tgt + "")
 		if (!src.subscribe)
-			console.error("binding src have no subscribe method", src + "")
+			console.error("binding src have no subscribe method. src=", src + "","tgt=", tgt + "")
 
 		this.unsub = src.subscribe( tgt.submit.bind(tgt) )
 

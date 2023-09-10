@@ -6,7 +6,7 @@ import os = "std/os.cl" std="std"
 #print "running tests"
 tests := reduce_events (k: os.spawn "find" "tests.official" "-name" "main.cl") [] {: s acc| return acc.concat(s.split("\n").filter(q => q != '')) :}
 
-func "join" {: arr sep | return arr.join(sep) :}
+#func "join" {: arr sep | return arr.join(sep) :}
 
 func "format_summary" { s |
   return (map @s { line |
