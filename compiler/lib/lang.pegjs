@@ -243,6 +243,15 @@
     }
     if (envs.env_args)
       env.children_env_args = envs.env_args;
+
+    // todo нам вовсе надо будет убрать env.children
+    let ch = Object.values(env.children)
+    if (ch.length > 0)
+    env.params.children = {
+      code: ch,
+      cofunc: true,
+      pos_args: envs.env_args?.attrs
+    }
   }
 }}  
 {
@@ -419,8 +428,8 @@ feature_addition_for_operator
   
   
 // ------ A3. attr_name
-Word
-  = [a-zA-Zа-яА-Я0-9_\-*&~]+ { return text(); } // убрали точку из имени.. будем делать аксессоры из них
+Word 
+  = [a-zA-Zа-яА-Я_][a-zA-Zа-яА-Я0-9_\-*&~]* { return text(); } // убрали точку из имени.. будем делать аксессоры из них
   // = [a-zA-Zа-яА-Я0-9_\-\.]+ { return text(); } // разрешили точку в имени.. хм... ну пока так..
   //= [a-zA-Zа-яА-Я0-9_-]+ { return text(); }
 
@@ -432,7 +441,7 @@ attr_name
 
 // разрешим еще больше в имени чтобы фичи могли называться как угодно < || && + и т.д.
 feature_name "feature name"
-  = [a-zA-Zа-яА-Я0-9_\-\.!]+ { return text(); } 
+  = [a-zA-Zа-яА-Я_][a-zA-Zа-яА-Я0-9_\-\.!]* { return text(); } 
   / feature_operator_name // оставим возможность фичам вида + a b c
 
 feature_operator_name  // разрешим еще больше в имени чтобы фичи могли называться как угодно < || && + и т.д.
@@ -468,7 +477,7 @@ obj_path
 
 one_env
   = one_env_operator
-  / one_env_obj
+  / one_env_obj  
   / one_env_positional_attr
 
 
@@ -478,7 +487,7 @@ one_env_obj "environment record"
   envid: (__ @(@attr_name ws ":")?)
   __ first_feature_name:feature_name
   env_modifiers:(__ @env_modifier)*
-  child_envs:(__ "{" __ @env_list? __ "}" __)?
+  child_envs:(__ "{{{" __ @env_list? __ "}}}" __)?
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
@@ -505,17 +514,32 @@ one_env_operator "environment operator record"
     var env = new_env( envid );
     env.locinfo = getlocinfo();
 
-    let first_feature_name = env_modifiers[0].name
+    let desired_operator = env_modifiers[0]
+    let first_feature_name = desired_operator.name
+
+    if (!first_feature_name) {
+      if (desired_operator.positional_param && desired_operator.value < 0)
+      {
+        // F-OPERATOR-MINUS
+        // особый случай там отрицательное число а мы не поняли
+        first_feature_name = "plus"
+        // добавим кое что, потому что скоро удалят
+        env_modifiers.unshift( {} )
+      }
+      else {
+        console.error( "parser: operator not detected",getlocinfo(),env_modifiers )
+        throw "operator not detected"
+      }
+    }
       //console.log("QQQQ",first_feature_name,getlocinfo())
-    let spl = first_feature_name.split(".") 
-    env.basis = spl[ spl.length-1 ] // последняя компонента
-    env.basis_path = spl // весь путь
-    env.modul_prefix = spl.slice(0,-1).join(".")
-    //console.log("EEEE",env.basis, env.basis_path)
+    
+    set_basis( env, first_feature_name )
 
-    fill_env( env, [first_positional_attr].concat(env_modifiers), child_envs )
 
-    if (env_modifiers.length == 0) {
+    let rest_args = env_modifiers.slice(1) // уберем обнаруженный оператор, собственно
+    fill_env( env, [first_positional_attr].concat(rest_args), child_envs )
+
+    if (env_modifiers.length == 0 || rest_args.length == 0) {
        console.error("operator record, no feature!",env_modifiers);
        console.log( env.locinfo );
     };
@@ -615,6 +639,7 @@ env_pipe
      fix_env_name( head )
 
      append_children_envs( pipe, [head,...tail] );
+     //console.log("pipe formed",pipe)
      
      return pipe;
    }
@@ -776,7 +801,7 @@ value
   / array
   / number
   / string  
-  / "{" __ env_list:env_list? __ "}" {
+  / "{{{" __ env_list:env_list? __ "}}}" {
     return { param_value_env_list: env_list || [] }
   }
   / "(" ws env_list:env_list ws ")" {
@@ -835,7 +860,7 @@ js_inline "js inline code"
   }
 
 cl_cofunc "cl-cofunc code"
-  = "{{" __ env_list:env_list? __ "}}" {
+  = "{" __ env_list:env_list? __ "}" {
     // F-CL-COFUNC
     //console.log("cocode", env_list)
     //let env = new_env()    

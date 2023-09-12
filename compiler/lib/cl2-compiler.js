@@ -58,8 +58,14 @@ export function modify_env( state={}, nv )
 
 ///////////////////// работа с obj
 
-export function get_children(obj) {
-	return Object.values( obj.children )
+export function get_children(obj,children_param) {
+	if (children_param == null) return []
+	let v = obj.params[ children_param ]
+	if (v?.cofunc)
+		return v.code 
+	return []
+	
+	//return Object.values( obj.children )
 }
 
 // children_env = children(т.е. body) + head
@@ -90,7 +96,8 @@ export function code2obj( str, base_url="?" )
 	try {
 		let parsed = P.parse( str,{base_url,grammarSource} )
 		//console.log("parsed=",parsed)
-		return get_children( parsed )
+		//return get_children( parsed )
+		return Object.values(parsed.children)
 	} catch (e) {
       console.log("parser err")
       //env.emit("error",e)
@@ -152,6 +159,7 @@ export function obj2obj( obj, objs, index )
 	}
 	*/
 }
+
 
 // возвращает запись из текущего окружения определения по идентификатору id
 export function get_record(state,id,obj_info,allow_defaults=true) {
@@ -264,6 +272,8 @@ export function default_obj2js( obj,state ) {
 		throw new Error( "env basis have no check_params")
 	}
 
+	//console.log("working on objid",obj_id( obj, state ), obj.locinfo)
+
 	let bindings_hash = {}
  	let output_binding
  	if (obj.links.output_link?.to) {
@@ -274,6 +284,7 @@ export function default_obj2js( obj,state ) {
 		for (let k of links_names) {
 			if (k == "output_link")	continue; // медленно
 			let link = obj.links[k]
+			//console.log("checking link",link.from,"is static=",state.static_values[ link.from ])
 			if (state.static_values[ link.from ]) // F-STATIC-VALUES
 				continue
 			bindings_hash[ link.to ] = link.from
@@ -286,7 +297,7 @@ export function default_obj2js( obj,state ) {
 
 	//console.log("obj.$name=",obj.$name,"assigned_names=",assigned_names,"bindings_hash=",bindings_hash)//obj=",obj)
 	let {normal, renamed, pos_rest,named_rest,children_param} = basis_record.check_params( assigned_names, obj.locinfo )
-	//let renamings = basis_record.get_positional_names()
+	
 	// renamings - преобразует старое имя в имя, которое надо подавать
 	// используется для преобразования имен позиционных параметров
 	// строится тривиально -
@@ -304,7 +315,40 @@ export function default_obj2js( obj,state ) {
 	let init_consts = {}
 	let bindings = []
 
+	// F-CHILDREN-PARAM
+  // если объект готов принимать чилдрен-параметра
+  if (children_param) {
+  	if (obj.params[ children_param ]) {
+  		// если задан явно чилдрен-параметр то это отдельный случай
+  		let v = obj.params[ children_param ]
+  		if (v.cofunc)
+  			v.children_mode = true
+  		// но кстати.. а если это ссылка. то мы приплыли.
+  		// потому что - там уже код сгенерирован и сгенерирован не так. а как обычная кофункция.
+  		// там можно будет сделать, но обходкой типа block { ... }
+  		// но кстати и ладно.. но с другой стороны нюанс - получается как нам писать some gui={ button button }?
+  		// они же по умолчанию тоже в функциональном режиме будут работать..
+  		// итого, получается, это как-то на уровне динамики надо разруливать?
+  		// ну или писать gui=(block {}) в принципе тоже вариант но это просто получается я перетащил что
+  		// раньше надо было писать префикс-{} для вычислений, а теперь для чилдрен-блоков. смешное.
+  	}
+  	else
+  	// и в вызове объекта присутствуют позиционные
+  	if (obj.positional_params_count >= 0) {
+			//let last_param_name = normal[ normal.length-1 ]			
+			let v = obj.params[ obj.positional_params_count-1 ]
+	   	if (v.cofunc)
+			{
+				// и значение последнего позиционного есть кофункция
+				// то скажем, что этот позиционный надо посылать в имя, в котором принимают children_param
+				renamed[ obj.positional_params_count-1 ] = children_param
+				v.children_mode = true // подсказка для генератора
+			}	
+		}	
+	}
+
 	for (let name of normal) {
+
 		if (bindings_hash[ name ])
 			init_consts[ internal_name(name) ] = "CL2.NOVALUE"
 		else
@@ -356,6 +400,8 @@ export function default_obj2js( obj,state ) {
 	// init_consts["parent"] = state.struc_parent?.$name || "self"
 	
   strs.push( `let ${objid} = ${obj.modul_prefix}create_${get_basis(basis_record)}( ${objToString(init_consts,1,state)} )`)
+  // тоже чтобы можно было на него ссылаться напрямую, по значению
+  state.static_values[ objid ] = true
 
 	strs.push( objid.indexOf( obj.basis ) < 0 ? `${objid}.$title = "${objid}[${obj.basis}]"` : `${objid}.$title = "${objid}"`)
 	if (state.tree_parent_id) {
@@ -369,7 +415,9 @@ export function default_obj2js( obj,state ) {
 	    strs.push( `CL2.attach_anonymous( ${state.struc_parent_id}, ${objid})` )
   }
 
-// теперь надо бы детей
+  // теперь надо бы детей
+  // это теперь не актуально, т.к. чилдрен идет обычным параметром
+  /*
 	let c_state = modify_parent( state, children_param ? 'arg_obj' : objid )
 	let children_code = objs2js( get_children(obj),c_state )
 
@@ -394,6 +442,7 @@ export function default_obj2js( obj,state ) {
 			strs.push( "// outer children",children_code )
 	  }
 	}
+	*/
 
 	strs.push( strs2 ) // rest-накопления
 	
@@ -451,6 +500,7 @@ export function objToString(obj, ndeep, state ) {
     case "object":
       var indent = Array(ndeep||1).join('\t'), isArray = Array.isArray(obj);
       return '{['[+isArray] + Object.keys(obj).map(function(key){
+      	   if (isArray) return objToString(obj[key], (ndeep||1)+1,state)
            return indent + key + ': ' + objToString(obj[key], (ndeep||1)+1,state);
          }).join(',') + '}]'[+isArray];
     default: return obj.toString();

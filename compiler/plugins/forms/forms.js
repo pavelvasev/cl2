@@ -10,7 +10,9 @@ let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: 
 
 export var tablica = {
 	let: { make_code: _let, check_params: default_cp },
-	obj: { make_code: _obj, check_params: default_cp },
+	obj: { make_code: _obj, check_params: (assigned_names) => { 
+		 return {normal: assigned_names, renamed: {'1': 'children'}, pos_rest: [],named_rest:[]} 
+		} },
 //	attach: { make_code: attach, check_params: default_cp },
 	channel: { make_code: channel, check_params: default_cp },
 //	func: { make_code: func, check_params: default_cp },
@@ -31,8 +33,17 @@ export var tablica = {
 /*
   таблица env составляется из записей вида
   _id:
-    check_params: ( names-list ) -> {params,rest,named_rest}
-    где names-list массив имен а params,rest,named-rest массивы тоже имен.
+    check_params: ( names-list ) -> {normal, renamed,rest,named_rest, children}
+    где names-list массив имен присвоенных внешним описанием,
+    где в частности позиционные имена это числа, а прочие - имена.
+    normal, renamed,rest,named-rest массивы тоже имен 
+    - это есть указание в какие разделы кого следует отправлять.
+      normal - список имен параметров которые следует передать поштучно
+      renamed - 
+         дополнительная таблица переименования (используется для присвоения позиционных в имена)
+         вида external-name -> internal-name
+      rest - список имен которые записать в rest
+      named-rest - список имен которые записать в named-rest
     либо выкинуть исключение если с параметрами что-то не так.
 
     make_code: ( obj, env ) -> {main:arr, bindings: arr}
@@ -66,7 +77,7 @@ export function _let( obj, state )
 	for (let k in obj.params) {
 		let val = obj.params[k]
 		//let s = `let ${k} = ${val.toString()}`
-		let val_str = val?.from ? "CL2.NOVALUE" : C.objToString(val)
+		let val_str = val?.from ? "CL2.NOVALUE" : C.objToString(val,0,state)
 		let s = `let ${k} = CL2.create_cell( ${val_str} )`
 		strs.push( s )
 		if (val?.from) {
@@ -86,14 +97,14 @@ export function get_obj_params( obj ) {
 	let rest_param, named_rest_param, children_param, next_obj_param
 	// F-CHAINS-V3 next_obj_param
 
-	let in_p = C.get_children(obj).find( c => c.basis == "in")
+	let in_p = C.get_children(obj,1).find( c => c.basis == "in")
 	if (!in_p) return {params}
 
   // вот этим шагом можно параметры будет отдельно рендерить
 	//obj.in_params = in_p
 	//delete obj.children[ in_p.$name ]
 	
-		for (let k of C.get_children( in_p )) {
+		for (let k of C.get_children( in_p, 0 )) {
 			//console.log("checking k=",k.$name,k.basis)
 			if (k.basis == "cell" || k.basis == "channel" || k.basis == "func")
 			{
@@ -130,7 +141,7 @@ export function get_obj_params( obj ) {
 export function _in( obj, state )
 {
 	//let base = C.one_obj2js( obj,state )
-	let s = C.objs2js( C.get_children(obj),state )
+	let s = C.objs2js( C.get_children(obj,0),state )
 	//console.log("in called. result=",base)
 	return { main: ["// input params",s,"// end input params"], bindings:[] }
 }
@@ -145,6 +156,7 @@ export function _in( obj, state )
 */
 export function _obj( obj, state )
 {
+	//console.log("obj=",obj)
 	// чет я не очень понял зачем вызывать one_obj2js...
 	//let base = C.one_obj2js( obj,state )
 	let base = { bindings: []	}
@@ -156,21 +168,23 @@ export function _obj( obj, state )
 
 	let strs2 = []
 	strs2.push(`let self=CL2.create_item()`)
+	// чтобы можно было давать ссылки на self
+	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
 	let {params,rest_param,named_rest_param, children_param,next_obj_param} = get_obj_params( obj )
-	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
+	// console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
 	let starting_rest = positional_names.findIndex( id => id.endsWith("*"))
 	if (starting_rest >= 0)
 		positional_names = positional_names.slice( 0, starting_rest )
 
-///////////////// тело указанное в init
+  ///////////////// генерируем тело указанное в 1-м аргументе
 
 	let c_state = C.modify_parent( state, "self" )
-	let body = C.objs2js( C.get_children( obj ), c_state )
+	let body = C.objs2js( C.get_children( obj,1 ), c_state )
 	//strs2.push( body )
 
 	strs2.push( "// inner children",body )
@@ -227,17 +241,31 @@ export function _obj( obj, state )
 			// как его следует подавать
 			// - как именованный (и как именно - это касается позиционной подачи)
 			// - в рест позиционный - в рест именованный (и какое имя)
+
+			/* возвращает словарь: 
+			   named - список имен которые следует передать обычным образом
+			   renamed - словарь преобразования имен
+			   pos_rest_names - список имен которые следуте записать в rest-параметр
+			   named_rest_names - список имен которые следуте записать в named-rest-параметр
+				 children_param - имя параметра для записи функции добавки детей 
+			*/
 			let named = [], pos_rest_names = [], named_rest_names=[]
 			let renamed = {}
 			pos_rest_names.name = rest_param
 			named_rest_names.name = named_rest_param
+			// obj_params это словарь параметров из описания объекта (типа то бишь)
+			// positional_names - массив имен позиционных параметров из описания
 			for (let k of param_names) {
+				// k - имя очередного параметра указанное внешне. может быть числом, для позционных.				
 				if (obj_params.hasOwnProperty( k )) {
+					// k встречается в списке параметров объекта - значит это именованный
 					named.push( k )
 					continue
-				}
+				}				
+				
 				let qq = positional_names[k] // F-POSITIONAL-RENAME
 				if (obj_params.hasOwnProperty( qq )) {
+					// k есть позиционный параметр. запомним как его надо переименовать при присвоении
 					named.push( k )
 					renamed[k] = qq
 					continue
@@ -343,6 +371,7 @@ export function paste( obj, state )
 
 let ccc = 0
 // действие типа "функция"
+/*
 export function func( obj, state )
 {
 	let name = obj.$name_modified || obj.$name
@@ -365,7 +394,7 @@ export function func( obj, state )
 
   // todo это надо как-то соптимизировать. по сути нам надо сгенерировать объект
   // что-то типа define_obj_from_func "${name}" ${name}
-	let code = `	 
+	let code = `
 	 obj "${name}" {
 	 	  in {
 	 	  	rest*: cell
@@ -386,25 +415,10 @@ export function func( obj, state )
 	//let strs = [`function task_${name}(args) {}`]
 	//strs.push( `CL2.attach( self,"${name}",${name} )` )
 
-/*
-	let reactive_object = {
-		$name: ${name},
-		children: {
-			first: { basis: "apply"}
-		}
-	}
-*/
-  // была идея свести к реактивному объекту типа apply. но apply сам func использует..
-  /*
-  state.current[ id ] = {
-		make_code: (obj,state) => {
-			 xxx
-		},
-		check_params: default_cp
-	}*/
 
 	return {main:strs,bindings:[]}
 }
+*/
 
 export function bind( obj, state )
 {
@@ -418,7 +432,8 @@ export function bind( obj, state )
 // bind @func @ch
 
 
-/* пайп статический. потому что тогда он успешно подставляет input-параметры.
+/* F-PIPES
+   пайп сделан статический. потому что тогда он успешно подставляет input-параметры.
    а динамически это провернуть увы невозможно. для динамического пайпа отдельная наработка, dynamic_pipe
 */
 export function pipe( obj, state )
@@ -435,21 +450,32 @@ export function pipe( obj, state )
 	//  и фичеры.. это у нас дети которые не дети	
 	let counter = 0
 	let prev_objid = objid
-	let prev_from = `${objid}.input`
-	let ch = C.get_children(obj)
+	let prev_from = null // `${objid}.input`
+	let ch = C.get_children(obj,'children')
+	//console.log("pipe children is",ch, obj)
 	if (ch) {
 		let mod_state = C.modify_parent(state,objid)
 		for (let f of ch) {
 
 			// правило такое:
-			// если у объекта есть параметр input то ставим его. 
-			// но тока инупт должен быть первым в списке, иначе ошибка (запутаемся если в середину списка будем вставлять или в конец.)
-			// если инпута нет - то ставим первым позиционным.
-			let r = C.get_record( state, f.basis_path, f )
-			console.log('see record',r)
+			// сдвигаем параметры заданные позиционно вправо 
+			// и output левого элемента ставим первым таким параметром.
+			// ну если там был input и не совпало.. посмотрим, может ошибка.
 
-			f.params.input = {link:true}
-			f.links.input = {to:'input',from:`${prev_from}`}
+			//let r = C.get_record( state, f.basis_path, f )
+			//console.log('see record',r)
+			if (prev_from) {
+				let i = f.positional_params_count
+				while (i > 0) {
+					f.params[i] = f.params[i-1]
+					i = i-1
+				}
+				f.params[0] = {link:true}
+				f.links[0] = {to:0,from:`${prev_from}`}
+
+				//// вставка готова
+		  }
+
 			let o = C.one_obj2js_sp( f, mod_state )
 			base.main.push( o.main )
 			//bindings.push("// bindings from feature-list")

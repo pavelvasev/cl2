@@ -30,7 +30,7 @@ if (process.env.VERBOSE) {
 	  	if (s.length > 50) return "<<<" + s.substring(0,50) + "...>>>"
 	  	return s
 	  }
-	  return value			
+	  return value
 	}
 }
 
@@ -41,7 +41,7 @@ export class Comm {
 		this.$cl_id = (global_thing_counter++)
 	}
 	toString() {
-		return `${this.constructor.name}:${get_title( this )}[${this.$cl_id}]`
+		return `${this.constructor.name}:${get_title( this )}[id:${this.$cl_id}]`
 	}
 	// становится потребна
 	// subscribe на однократное срабатывание.
@@ -76,6 +76,7 @@ export class Channel extends Comm {
 		//this.is_cell = true
 	}
 	destroy() {
+		//console.log("comm destroy",this+"")
 		this.subscribers.clear()
 		// todo хранить ссылку на источник и удалять себя из источника..
 	}
@@ -207,6 +208,8 @@ export function create_reaction(x) {
 export class Cell extends Comm {
 	value = null
 	constructor( initial_value=NOVALUE ) {
+		// оказывается если послать сюда undefined то оно бодро превращается в NOVALUE..
+		//console.log('cell constructor',initial_value)
 		super()
 		attach( this,"changed_emit",create_channel())
 		// idea: this.changed_emit = attach( create_channel(),this )
@@ -334,16 +337,20 @@ export class ClObject extends Comm {
 		//this.release = create_channel(`${title}.release`)
 
 		this.release.subscribe( () => {
+			//console.log('t2',this+"")
 			// удалим объекты прикрепленные к этому...
 			if (this.subobjects) {
 				this.subobjects.forEach( obj => {
-					if (obj.destroy) obj.destroy()
+					if (obj !== this.release && obj.destroy) 
+					    obj.destroy()
 				})
-			}
+			}			
 		})
 	}
 	destroy() {
-		this.release.emit()
+		//console.log('destory called',this+"", "emitting release",this.release+"")
+		this.release.submit()
+		this.release.destroy() // надо его отдельно, а то он подписки свои вычищает
 	}
 	
 }
@@ -375,9 +382,8 @@ export class Item extends ClObject {
 			this.append( k )
 
 		this.release.subscribe( () => {
-			let parent = this.parent.get()
-			if (parent)
-				parent.remove( this )
+			if (this.parent.is_set)			
+				this.parent.get().remove( this )
 		})
 	}
 	append( child ) {
@@ -444,7 +450,7 @@ export function get_title( obj ) {
 	}
 	if (obj.attached_to)
 		return get_title( obj.attached_to ) + "." + (obj.$title || "unknown")
-	if (obj.parent && obj.parent.get())
+	if (obj.parent && obj.parent.is_set)
 		return get_title( obj.parent.get() ) + "." + (obj.$title || "unknown")	
 	return obj.$title || "unknown"
 }
@@ -462,8 +468,10 @@ export function attach_anonymous( target_object, embedded_object )
 export class Binding {
 	constructor( src,tgt ) {
 		//if (tgt instanceof Function)
+		if (!src)
+			console.error("binding src is null! tgt=", tgt + "")
 		if (!src.subscribe)
-			console.error("binding src have no subscribe method", src + "")
+			console.error("binding src have no subscribe method. src=", src + "","tgt=", tgt + "")
 
 		this.unsub = src.subscribe( tgt.submit.bind(tgt) )
 

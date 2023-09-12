@@ -5,9 +5,6 @@ obj "react" {
   in {
     input: channel
     action: cell
-    children_action&: cell
-    // вопрос - а как указать что чилдренов надо компилировать в вычислительном режиме?
-
   }
   // output: channel
   // нам надо биндится к результатам тасков.. таски выражаются react-ами.. поэтому надо ячейки
@@ -125,31 +122,21 @@ obj "print" {
 obj "else" {
   in {
     value: cell
-    else_block&:cell
-  }
-  bind @else_block @value
+  }  
 }
 
+// if cond then-func [else] else-func
 obj "if"
   {
   in {
     condition: cell // если канал то тогда константы не получается подставлять..
-    then_value: cell
-    else_value: cell
-
-    then_block&: cell
-
+    then_branch: cell
+    else_branch: cell
     _else~: cell
-
-    //debuglog: cell {: :}
-    debug: cell false
   }
   output: cell
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
   current_parent: cell
-
-  // режим if @cond {}
-  bind @then_block @then_value
 
   //bind @_else.value @else_value  
   // _else является ячейкой, содержащей объект
@@ -170,7 +157,7 @@ obj "if"
     //console.log("r1")
     let s1 = val.value.subscribe( (ev) => {
       //console.log("r2",ev)
-      else_value.set( ev )
+      else_branch.set( ev )
     })
   :}
 
@@ -184,40 +171,36 @@ obj "if"
     :}
 
   activate_branch: func {: branch_value arg |
-        cleanup_current_parent()
+      cleanup_current_parent()
 
-        //console.log("activate-branch: ",branch_value)
+      //console.log("activate-branch: ",branch_value)
+      let cp = CL2.create_item()
+      self.append( cp )
+      current_parent.set( cp )
 
-        if (branch_value?.is_block_function) {
-          //console.log("activate-branch: is-block-function",branch_value)
-          let cp = CL2.create_item()
-          self.append( cp )
-          current_parent.set( cp )
+      //let arg_cell = CL2.create_cell( arg )
+      //CL2.attach_anonymous( cp, arg_cell )
 
-          let arg_cell = CL2.create_cell( arg )
-          CL2.attach_anonymous( cp, arg_cell )
-
-          let res = branch_value( cp, arg_cell )
-          //output.set( res )
-          // ну вроде как там теперь return должен срабатывать
-          // т.е это забота ветки - находить output
-        } else {
-          //console.log("activate-branch: not block-function",branch_value)
-          output.set( branch_value )
-        }
+      let res = branch_value( cp, arg )
+      // cp то надо или нет уже
+      if (res instanceof CL2.Comm) {
+        let b = CL2.create_binding( res, self.output )
+        CL2.attach_anonymous( cp, b )
+        // по идее при удалении биндинг удалится
+      }
   :}
 
-  r_on_then_val: react @then_value {: value |
+  r_on_then_val: react @then_branch {: value |
     if (current_state.get() == 1) {
-      activate_branch( then_value.get(), condition.get() )
+      activate_branch( then_branch.get(), condition.get() )
     }
   :}
 
-  r_on_else_val: react @else_value {: value |
+  r_on_else_val: react @else_branch {: value |
     //console.log("else_value changed:",else_value.get(),"current_state.get()=",current_state.get(),"condition=",condition.get())
     if (current_state.get() == 2) {
       //console.
-      activate_branch( else_value.get(), condition.get() )
+      activate_branch( else_branch.get(), condition.get() )
     }
   :}
 
@@ -227,14 +210,14 @@ obj "if"
     if (value) {
       if (current_state.get() != 1) {
         //console.log("if activating branch then",value,"then-value=",then_value.get(),"then-block=",then_block.get())
-        activate_branch( then_value.get(), value )
+        activate_branch( then_branch.get(), value )
         current_state.set( 1 )
       }
     } else {
       if (current_state.get() != 2) {
         // ну пока так..
         //let els_value = _else.get() ? _else.get().value.get() : else_value.get()
-        activate_branch( else_value.get(), value )
+        activate_branch( else_branch.get(), value )
         //activate_branch( else_value.get(), value )
         current_state.set( 2 )
       }
@@ -361,6 +344,9 @@ obj "when_all" {
     self.release.subscribe( () => unsub() )
   :}
 }
+
+// read нам нужна.. чтобы работало f := 10
+func "read" {: x | return x :}
 
 obj "apply" {
   in {
@@ -535,6 +521,8 @@ obj "gather_events" {
 
 // reduce_events @channel acc_init func -> acc
 // собирает значения из канала и применяет к ним функцию func(channel_val, acc).
+// но вообще странно, надо ли это.. это же типа как реакция в целом то получается,
+// просто особой формы.. да и просто reduce нам тоже надо..
 obj "reduce_events" {
   in {
     input: channel
@@ -551,7 +539,16 @@ obj "reduce_events" {
 
   react @input {: value |
     let new_acc = f.get().call( this, value, acc.get() )
-    acc.set( new_acc )
+    // привет, тут промиса будет от кофункций. и что делать?
+    if (new_acc instanceof CL2.Comm) {
+      new_acc.once( val => {
+        acc.set( new_acc )
+        // надо какой-то режим буферизации.. чтобы может быть react функцию просто не вызывал
+        // пока мы тут не закончим.. а буферизировал скажем.. todo
+      })
+    }
+    else
+      acc.set( new_acc )
   :}
 }
 
@@ -569,6 +566,18 @@ func "assert1" {: cond message |
   console.log("assert OK",message )
 :}
 */
+
+// todo вынести в assert.cl и научиться ре-экспортировать имена
+// а также там-же ввести форму для assert (вынести из forms.js в cl-язык)
+func "arrays_equal" {: a b |
+  if (Array.isArray(a) && Array.isArray(b) && a.length == b.length) {
+    for (let i=0; i<a.length; i++)
+      if (a[i] != b[i]) return false
+    return true
+  }
+  return false
+:}
+
 
 ///////////////////////
 
@@ -612,8 +621,112 @@ func "map" {: arr f |
   }
 
   let output = CL2.create_cell()
+  // [...arr] переводит в массив принудительно, если там было Set например
+  if (!Array.isArray(arr)) arr = [...arr]
   process_arr( arr ).then( values => output.submit( values ))
   return output
+:}
+
+func "filter" {: arr f |
+  // is_task_function стало тяжко назначать..
+  //if (!f.is_task_function)
+  //  return arr.map( f )
+
+  function process_elem(e) {
+    return new Promise( (resolve,reject) => {
+    let result = f( e )
+    if (result instanceof CL2.Comm) {
+          // console.log('see channel, subscribing once')
+          // вернули канал? слушаем его дальше.. такое правило для реакций
+          // но вообще это странно.. получается мы не можем возвращать каналы..
+          // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
+          let unsub = result.once( (val) => {
+            // console.log('once tick',val,output+'')
+            resolve( val )
+          })
+        }
+        else {
+          //console.log('submitting result to output',output+'')
+          resolve( result )
+        }
+    })
+  }
+
+  function process_arr( arr,i=0 ) {
+    if (i >= arr.length) return Promise.resolve([])
+
+    return process_elem( arr[i] ).then( (result) => {
+      return process_arr( arr,i+1 ).then( (rest_result) => {
+        if (result)
+          return [arr[i], ...rest_result]
+        return rest_result
+      })      
+    })
+  }
+
+  let output = CL2.create_cell()
+  if (!Array.isArray(arr)) arr = [...arr]
+  process_arr( arr ).then( values => output.submit( values ))
+  return output
+:}
+
+func "reduce" {: arr acc_init f |
+  // is_task_function стало тяжко назначать..
+  //if (!f.is_task_function)
+  //  return arr.map( f )
+
+  function process_elem(e,acc) {
+    return new Promise( (resolve,reject) => {
+
+    let result = f( e, acc )
+    if (result instanceof CL2.Comm) {
+          // console.log('see channel, subscribing once')
+          // вернули канал? слушаем его дальше.. такое правило для реакций
+          // но вообще это странно.. получается мы не можем возвращать каналы..
+          // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
+          let unsub = result.once( (val) => {
+            // console.log('once tick',val,output+'')
+            resolve( val )
+          })
+        }
+        else {
+          //console.log('submitting result to output',output+'')
+          resolve( result )
+        }
+    })
+  }
+
+  function process_arr( arr,i=0,acc ) {
+    if (i >= arr.length) return Promise.resolve(acc)
+
+    return process_elem( arr[i],acc ).then( (result) => {
+      return process_arr( arr,i+1,result )
+    })
+  }
+
+  let output = CL2.create_cell()
+  if (!Array.isArray(arr)) arr = [...arr]
+  process_arr( arr,0,acc_init ).then( values => output.submit( values ))
+  return output
+:}
+
+// ну пока такое
+func "range" {: max |
+  let arr = new Array(max)
+  for (let i=0; i<max; i++) arr[i] = i
+  return arr
+:}
+
+func "len" {: obj |
+    return obj.length
+:}
+
+func "join" {: obj sep |
+    return obj.join(sep)
+:}
+
+func "flatten" {: obj |
+    return obj.flatten()
 :}
 
 // получается это мы делаем динамический пайп, в него можно будет в рантайме добавлять объекты
