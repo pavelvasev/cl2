@@ -11,20 +11,26 @@ obj "timer" {
 
   output: channel
 
-    init "(obj) => {
+  init "(obj) => {
     obj.interval.changed.subscribe( f )
     let existing
+
     function stop() {
-	if (existing) clearTimeout( existing )
-	    existing = null
+    	if (existing) {
+         clearInterval( existing )
+      }
+      existing = null
     }
+
     function f() {
-	stop()
-	existing = setInterval( () => {
-	    obj.output.emit()
-	}, obj.interval.get() )
+    	stop()
+    	existing = setInterval( () => {
+    	    obj.output.emit()
+    	}, obj.interval.get() )
     }
-    obj.release.on( stop )
+
+    obj.release.subscribe( stop )
+
     f()
   }"
 }

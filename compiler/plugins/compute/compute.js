@@ -177,8 +177,8 @@ function generate_func_caller(name, state) {
   	    	// console.log('ok taskj')
   	    	// r.destroy() xxxx
   	    	if (self.started)
-  	    		 console.log('FUNC duplicate call!!')
-  	    	self.started = true
+  	    		 console.log('FUNC duplicate call!! ${name} args=',args,'prev-args=',self.started)
+  	    	self.started = args
   	    }
 
   	    return ${name}( ...args ) 

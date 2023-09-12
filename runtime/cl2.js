@@ -76,6 +76,7 @@ export class Channel extends Comm {
 		//this.is_cell = true
 	}
 	destroy() {
+		//console.log("comm destroy",this+"")
 		this.subscribers.clear()
 		// todo хранить ссылку на источник и удалять себя из источника..
 	}
@@ -336,16 +337,20 @@ export class ClObject extends Comm {
 		//this.release = create_channel(`${title}.release`)
 
 		this.release.subscribe( () => {
+			//console.log('t2',this+"")
 			// удалим объекты прикрепленные к этому...
 			if (this.subobjects) {
 				this.subobjects.forEach( obj => {
-					if (obj.destroy) obj.destroy()
+					if (obj !== this.release && obj.destroy) 
+					    obj.destroy()
 				})
-			}
+			}			
 		})
 	}
 	destroy() {
-		this.release.emit()
+		//console.log('destory called',this+"", "emitting release",this.release+"")
+		this.release.submit()
+		this.release.destroy() // надо его отдельно, а то он подписки свои вычищает
 	}
 	
 }
@@ -377,9 +382,8 @@ export class Item extends ClObject {
 			this.append( k )
 
 		this.release.subscribe( () => {
-			let parent = this.parent.get()
-			if (parent)
-				parent.remove( this )
+			if (this.parent.is_set)			
+				this.parent.get().remove( this )
 		})
 	}
 	append( child ) {
