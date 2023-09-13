@@ -151,7 +151,7 @@ export function cofunc( obj, state )
 
 // создает объект, возвращающий в .output код функции
 function generate_func_object( self_objid, func_code ) {
-	return { main: [`let ${self_objid} =  CL2.create_item()`,
+	return { main: [`let ${self_objid} =  CL2.create_item(); ${self_objid}.$title="${self_objid}"`,
 				`let ${self_objid}_output = CL2.create_cell(`,func_code,")",
 				 `CL2.attach( ${self_objid}, 'output',${self_objid}_output )`],
 			     bindings:[] }
@@ -175,7 +175,8 @@ function generate_func_caller(name, state) {
   	  r: react @vals.output {: args |
   	    if (self.task_mode) {
   	    	// console.log('ok taskj')
-  	    	// r.destroy() xxxx
+  	    	//r.destroy() // один раз отреагировали и хватит. но это странно 
+  	    	vals.destroy() // попробем вот что отменить.. F-FUNC-ONCE
   	    	if (self.started)
   	    		 console.log('FUNC duplicate call!! ${name} args=',args,'prev-args=',self.started)
   	    	self.started = args
@@ -183,6 +184,7 @@ function generate_func_caller(name, state) {
 
   	    return ${name}( ...args ) 
   	  :}
+  	  //react @output {: self.destroy() :}
 
   	  bind @r.output @output
 	 }
@@ -300,7 +302,9 @@ export function cocode_to_code( v,state ) {
  	// но в коде мы считаем их коммуникац. примитивами. и поэтому мы их оборачиваем в примитивы, эти значения.
 	//let args_cells = v.pos_args.map(x => `let ${x} = CL2.create_cell( __${x} )`)	
 
-	let output_things = [`let func_self = {$title: 'cofunc_action'};`,"let output = CL2.create_cell();","CL2.attach( func_self,'output',output )"]
+	let output_things = [`let func_self = {$title: 'cofunc_action'};`,
+		"let output = CL2.create_cell();",
+		"CL2.attach( func_self,'output',output )"]
 	let strs = [`// cofunc from ${v.locinfo?.short}`, output_things, s,"return output"]
 
 	// некрасиво получается. подумать чтобы код мог быть массивом, тогда будут отступы.

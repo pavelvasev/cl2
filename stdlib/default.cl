@@ -16,7 +16,7 @@ obj "react" {
   // но вообще - в ЛФ вот порт хранит значение.. может и нам хранить? что такого.. (ну gc.. а ну и еще копии промежуточных данных в памяти.. ну посмотрим)
   output: channel
 
-  init "(obj) => {
+  init {: obj |
     //console.channel_verbose('------------- react: ',self+'','listening',input+'')
     let unsub = input.on( (value) => {
       let fn = action.get()      
@@ -25,10 +25,12 @@ obj "react" {
         //console.log('react invoking scheduled action.',self+'')
         //console.log('react scheduled call !!!!!!!!!!!!',fn,self+'')
         let result
-        if (fn.is_block_function)
-          result = fn( self, CL2.create_cell(value) )
-        else  
-          result = fn( value )
+        //if (fn.is_block_function)
+        //  result = fn( self, CL2.create_cell(value) )
+        //else  
+        
+        result = fn( value )
+
         //console.log('react result=',result+'')
 
         if (result instanceof CL2.Comm) {
@@ -45,11 +47,11 @@ obj "react" {
           //console.log('submitting result to output',output+'')
           output.submit( result )
         }
-      })
+      }, obj)
     })
 
     self.release.on( () => unsub() )
-  }"
+  :}
 }
 
 /* // реакция в стиле ЛФ
@@ -91,15 +93,15 @@ obj "extract" {
     o2: channel
     bind @o2 @output
 
-    init "(obj) => {
-  let p = CL2.monitor_rest_values( input, o2 )
-  obj.release.on( p )
-    }"
+    init {: obj |
+      let p = CL2.monitor_rest_values( input, o2 )
+      obj.release.on( p )
+    :}
 }
 
 // ну вроде как нам не надо прямо чтобы вот процесс.. функция тоже норм теперь 
 // когда мы из функций процессы делаем
-func "print" {: ...vals | console.log(...vals) :}
+func "print" {: ...vals | console.log(...vals); return vals :}
 
 
 /*
@@ -174,6 +176,8 @@ obj "if"
       cleanup_current_parent()
 
       //console.log("activate-branch: ",branch_value)
+      if (branch_value === CL2.NOVALUE) return
+
       let cp = CL2.create_item()
       self.append( cp )
       current_parent.set( cp )
@@ -205,8 +209,8 @@ obj "if"
   :}
 
   r_on_cond: react @condition {: value |
-    //console.log("if react on condition",value + "",current_state.get(),"self=",self+"")
-    //console.trace()
+    // console.log("if react on condition",value + "",current_state.get(),"self=",self+"",'then=',then_branch.get())
+    // console.trace()
     if (value) {
       if (current_state.get() != 1) {
         //console.log("if activating branch then",value,"then-value=",then_value.get(),"then-block=",then_block.get())

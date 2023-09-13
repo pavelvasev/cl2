@@ -38,10 +38,10 @@ if (process.env.VERBOSE) {
 
 export class Comm {
 	constructor() {
-		this.$cl_id = (global_thing_counter++)
+		this.$cl_id = (global_thing_counter++)		
 	}
 	toString() {
-		return `${this.constructor.name}:${get_title( this )}[id:${this.$cl_id}]`
+		return `${this.constructor.name}:${get_title( this )}[id:${this.$cl_id},pr:${this.get_m_priority()}]`
 	}
 	// становится потребна
 	// subscribe на однократное срабатывание.
@@ -56,6 +56,22 @@ export class Comm {
 		})
 		if (need_unsub) { unsub(); return () => {} }
 		return unsub
+	}
+
+	get_m_priority() {
+		if (this.attached_to?.get_m_priority)
+			return this.attached_to.get_m_priority()
+		return 0
+	}
+	// так то тут понижение может стоит всем подчиненным передать..
+	// и не только на момент связи
+	set_m_priority(v) {
+		if (this.attached_to?.set_m_priority)
+			return this.attached_to.set_m_priority(v)
+	}
+	m_priority_object() {
+		if (this.attached_to?.m_priority_object)
+			return this.attached_to.m_priority_object()
 	}
 }
 
@@ -352,6 +368,24 @@ export class ClObject extends Comm {
 		this.release.submit()
 		this.release.destroy() // надо его отдельно, а то он подписки свои вычищает
 	}
+
+	m_priority = 0
+	get_m_priority() {
+		return this.m_priority
+	}
+
+	set_m_priority(reason_object) {
+		// так бывает что каналы то одного объекта
+		if (reason_object.m_priority_object() == this) return
+
+		let v = Math.min( reason_object.get_m_priority(), this.m_priority )-1
+		if (v < this.m_priority) { // положение может только улучшаться..
+			this.m_priority = v
+			console.channel_verbose("SCHED PRIORITY CHANGED of object",this+'',"to",v,'because of pressure from',reason_object+'','hosted at',reason_object.m_priority_object() + '' )
+		} else 
+			console.channel_verbose("SCHED PRIORITY NOT CHANGED of object",this+'',"to",v,'because of pressure from',reason_object+'','hosted at',reason_object.m_priority_object() + '' )
+	}
+	m_priority_object() { return this }
 	
 }
 
@@ -460,6 +494,8 @@ export function attach_anonymous( target_object, embedded_object )
 	target_object.subobjects ||= []
 	target_object.subobjects.push( embedded_object )
 	embedded_object.attached_to = target_object	
+
+	//embedded_object.m_priority = target_object.m_priority
 }
 
 // зачем нам объект связывания непонятно до конца
@@ -475,6 +511,8 @@ export class Binding {
 
 		this.unsub = src.subscribe( tgt.submit.bind(tgt) )
 
+		tgt.set_m_priority( src )
+
 		//this.unsub = tgt.bind( src )
 	}
 	destroy() {
@@ -484,6 +522,11 @@ export class Binding {
 }
 
 export function create_binding( src, tgt ) {
+	if (src === tgt) {
+		console.trace()
+		console.log(src+'')
+		throw "binding src == tgt!"
+	}
 	console.channel_verbose("create_binding:",src+"","~~>",tgt+"")
 	let k = new Binding( src,tgt )
 	return k
@@ -559,7 +602,7 @@ export function when_all_once( list ) {
 			counter--
 			values[ my_index ] = v
 		    if (counter == 0)
-		    	schedule( () => q.emit( values ) )
+		    	schedule( () => q.emit( values ), q )
 		    // надо делать через шедуле.. а то там соединиться не успевают.. create_binding( when-all, ... )
 		    	
 		})
@@ -635,10 +678,15 @@ export function create_bound_cells( list ) {
 	let index
 	for (let k of list) {
 		//console.log("connnecting ",k,"to",q)
-		let c = k instanceof Cell ? k : create_cell()
-		let b = create_binding( k, c )
-		barr.push( b )
-		carr.push( c )
+		if (k instanceof Cell) {
+			carr.push( k )
+		}
+		else {
+			let c = create_cell()
+			let b = create_binding( k, c )
+			barr.push( b )
+			carr.push( c )
+		}
 	}
 	let unsub = () => {
 		//console.log("unsub called")
@@ -671,6 +719,8 @@ export function create_binding_delayed( src, tgt ) {
 
 	//return create_binding( src, tgt )
 
+	tgt.set_m_priority( src )
+
 	let res = { scheduled: false, destroy: () => unsub() }
 	let unsub = src.on( (value) => {
 		//console.log("delayed-binding on src=",src+"",". value",value+"","scheduling..")
@@ -686,13 +736,61 @@ export function create_binding_delayed( src, tgt ) {
 				console.channel_verbose("delayed-binding real pass",src+""," ---> ",tgt+"")
 				//console.channel_verbose("delayed-binding real pass",src+""," ---> ",tgt+"","value",res.value+"")
 				tgt.emit( res.value )
-			})
+			}, src)
 		} //else console.log("delayed-binding shield! not scheduling")
 		res.value = value
 	})
 	return res
 }
 
+
+let next_tick = []
+export function schedule( fn, priority_holder_object ) {
+
+	if (!priority_holder_object) {
+		console.trace()
+		throw "schedule: no priority_holder_object"
+	}
+
+	let fn_priority = priority_holder_object ? priority_holder_object.get_m_priority() : 0
+	fn.priority = fn_priority
+	fn.priority_holder_object = priority_holder_object
+
+	if (next_tick.length > 0) {
+		if (fn_priority > next_tick[0].priority) {
+			console.channel_verbose("SCHEDULE f fn with priority (prefixed)", fn.priority,priority_holder_object+'' )
+			next_tick.unshift( fn )
+		}
+		else {
+			next_tick.push( fn )
+			console.channel_verbose("SCHEDULE f fn with priority (suffixed)", fn.priority,priority_holder_object+'' )
+		}
+	}
+	else {
+		next_tick.push( fn )
+		console.channel_verbose("SCHEDULE f fn with priority (suffixed 1)", fn.priority,priority_holder_object+'' )
+	}
+	// ну это прикол конечно. надо то ли списки завести, то ли что.
+	next_tick = next_tick.sort( (a,b) => b.priority-a.priority)
+	console.channel_verbose( "NEXT-TICK priorities:",next_tick.map( x => x.priority)) 
+
+
+	if (next_tick.length == 1)
+		setImmediate( perform_scheduled )
+}
+
+function perform_scheduled() {
+	//console.log( "perform_scheduled",next_tick)
+	while (next_tick.length > 0) {
+		let k = next_tick.shift()
+		console.channel_verbose("SCHEDULED CALL of fn with priority", k.priority, k.priority_holder_object+'' )
+		k()
+	}
+}
+
+
+/* старый простой алгоритм*/
+/*
 let next_tick = []
 export function schedule( fn ) {
 	next_tick.push( fn )
@@ -707,6 +805,8 @@ function perform_scheduled() {
 	for (let k of my)
 		k()
 }
+*/
+
 
 /*
 export class DelayedEater() {
@@ -771,6 +871,8 @@ export function monitor_rest_values( src,tgt ) {
 			})
 
 			let b = create_binding_when_any( cells, all )
+
+			tgt.set_m_priority( all )
 
 			//console.log("eeee this.release",this.release)
 			unsub = () => {

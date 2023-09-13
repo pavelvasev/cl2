@@ -167,7 +167,7 @@ export function _obj( obj, state )
 	//strs.push(`/// type ${id}`,s,"{")
 
 	let strs2 = []
-	strs2.push(`let self=CL2.create_item()`)
+	strs2.push(`let self=CL2.create_item(); self.$title=initial_values.$title`)
 	// чтобы можно было давать ссылки на self
 	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)

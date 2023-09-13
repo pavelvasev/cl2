@@ -8,11 +8,11 @@ func "sort" {: arr | return arr.sort() :}
 obj "timer" {
 
   //cells interval=1000 output=0
-  in {
-    restart: channel
+  in {    
     interval: cell 1000 
     start: cell -1
     n: cell -1
+    restart: channel
   }
   /* из LF идея
     offset: cell 0
@@ -39,9 +39,9 @@ obj "timer" {
     }
 
     function on_tick() {
-        console.log('on-tick',count.get())
+        //console.log('on-tick',count.get())
 
-        obj.output.emit()
+        obj.output.emit( count.get() )
 
         if (n.get() >= 0) { // логика остановки
           count.set( count.get() + 1 )

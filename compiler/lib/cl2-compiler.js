@@ -398,12 +398,14 @@ export function default_obj2js( obj,state ) {
 	////////////
 
 	// init_consts["parent"] = state.struc_parent?.$name || "self"
+	let obj_title = objid.indexOf( obj.basis ) < 0 ? `${objid}[${obj.basis}]` : `${objid}`
+	init_consts['$title'] = obj_title
 	
   strs.push( `let ${objid} = ${obj.modul_prefix}create_${get_basis(basis_record)}( ${objToString(init_consts,1,state)} )`)
   // тоже чтобы можно было на него ссылаться напрямую, по значению
   state.static_values[ objid ] = true
 
-	strs.push( objid.indexOf( obj.basis ) < 0 ? `${objid}.$title = "${objid}[${obj.basis}]"` : `${objid}.$title = "${objid}"`)
+	//strs.push( objid.indexOf( obj.basis ) < 0 ? `${objid}.$title = "${objid}[${obj.basis}]"` : `${objid}.$title = "${objid}"`)
 	if (state.tree_parent_id) {
 		  // древовидная иерархия.. но там объекты у нас могут путешествовать туды сюды
 	    strs.push( `${state.tree_parent_id}.append(${objid})` )	    
