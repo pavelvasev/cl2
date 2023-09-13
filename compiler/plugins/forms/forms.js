@@ -434,7 +434,8 @@ export function bind( obj, state )
 
 /* F-PIPES
    пайп сделан статический. потому что тогда он успешно подставляет input-параметры.
-   а динамически это провернуть увы невозможно. для динамического пайпа отдельная наработка, dynamic_pipe
+   а динамически это провернуть увы невозможно. 
+   для динамического пайпа отдельная наработка, dynamic_pipe
 */
 export function pipe( obj, state )
 {
@@ -466,12 +467,15 @@ export function pipe( obj, state )
 			//console.log('see record',r)
 			if (prev_from) {
 				let i = f.positional_params_count
+				// сдвигаем
 				while (i > 0) {
 					f.params[i] = f.params[i-1]
 					i = i-1
 				}
+				// ставим первый позиционный
 				f.params[0] = {link:true}
 				f.links[0] = {to:0,from:`${prev_from}`}
+				f.positional_params_count = f.positional_params_count+1
 
 				//// вставка готова
 		  }
@@ -483,6 +487,7 @@ export function pipe( obj, state )
 			prev_objid = C.obj_id( f, mod_state )
 			prev_from = `${prev_objid}.output`
 		}
+		// output последнего линкуем на output всей пайпы
 		base.bindings.push(`let ${objid}_p = CL2.create_binding(${prev_objid}.output,${objid}.output)`)
 	}
 

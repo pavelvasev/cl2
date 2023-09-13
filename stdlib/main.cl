@@ -4,29 +4,77 @@ func "sort" {: arr | return arr.sort() :}
 
 // todo добавить start время начала и count сколько раз сработать.
 // ну и можно сигнал restart
+// timer n=1 interval=500 | timer n=10 - вот как-то бы так их постыковать ))) но тогда первое это start-trigger?
 obj "timer" {
 
   //cells interval=1000 output=0
-  in {  interval: cell 1000 }
+  in {
+    restart: channel
+    interval: cell 1000 
+    start: cell -1
+    n: cell -1
+  }
+  /* из LF идея
+    offset: cell 0
+    period: cell 0
+  */
 
   output: channel
+  count: cell
+  running: cell false
 
   init "(obj) => {
     obj.interval.changed.subscribe( f )
     let existing
+    let existing_timeout
 
     function stop() {
     	if (existing) {
          clearInterval( existing )
       }
+      if (existing_timeout)
+        clearTimeout( existing_timeout )
       existing = null
+      running.set( false )
     }
 
-    function f() {
+    function on_tick() {
+        console.log('on-tick',count.get())
+
+        obj.output.emit()
+
+        if (n.get() >= 0) { // логика остановки
+          count.set( count.get() + 1 )
+          if (count.get() >= n.get()) {
+            stop()
+            return false
+          }
+        }
+
+        return true
+    }
+
+    function f( start_reached ) {
     	stop()
-    	existing = setInterval( () => {
-    	    obj.output.emit()
-    	}, obj.interval.get() )
+      if (n.get() == 0) return
+
+      count.set( 0 )
+
+      if (start.get() >= 0) {
+         if (start.get() == 0)
+             start_reached = true
+         if (start_reached) {
+           if (!on_tick()) 
+             return
+         }
+         else {
+           existing_timeout = setTimeout( () => f(true), start.get() )
+           return
+         }
+      }
+
+      running.set( true )
+    	existing = setInterval( on_tick, obj.interval.get() )      
     }
 
     obj.release.subscribe( stop )
