@@ -3,8 +3,9 @@
 
 import os = "std/os.cl" std="std"
 
-#print "running tests"
-tests := reduce_events (k: os.spawn "find" "tests.official" "-name" "main.cl") [] {: s acc| return acc.concat(s.split("\n").filter(q => q != '')) :}
+dir := or (os.env | get "DIR") "tests.official"
+print "running tests from dir" @dir
+tests := reduce_events (k: os.spawn "find" @dir "-name" "main.cl") [] {: s acc | return acc.concat(s.split("\n").filter(q => q != '')) :}
 
 #func "join" {: arr sep | return arr.join(sep) :}
 
@@ -21,6 +22,7 @@ react @k.exitcode {
   print "found tests" @t2
   //t2 := apply {: t | return t.sort() :} @tests
   t2 := std.sort @tests
+
   summary := map @t2 { test|
     print "============= running test" @test
     r: os.spawn 'clon' 'r' @test  // stdio='inherit'
@@ -36,5 +38,8 @@ react @k.exitcode {
   }
   printed: print ("summary is\\n" + (format_summary @summary))
 
-  apply {: code | console.log('finished, code',code); process.exit( code ) :} (apply {: s | return s.find( r => r[1] != 0 ) ? 1 : 0 :} @summary) @printed.output
+  apply {: code | console.log('finished, code',code); process.exit( code ) :} 
+     (apply {: s | return s.find( r => r[1] != 0 ) ? 1 : 0 :} @summary) 
+     @printed.output
+
 }

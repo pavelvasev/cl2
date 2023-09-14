@@ -445,7 +445,7 @@ alias "and" "&&"
 // нестандартное поведение.. мб для про-режима сойдет, но не для таск-режима..
 func "or" {: ...values |   
    for (let i=0; i<values.length; i++)
-     if (values[i]) return true
+     if (values[i]) return values[i]
    return false
 :}
 alias "or" "||"

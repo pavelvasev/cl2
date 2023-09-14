@@ -366,6 +366,13 @@ env_modifier_for_operator
   / link_assignment
   / positional_attr
   / feature_addition_for_operator
+
+env_modifier_callstyle
+  = attr_assignment
+  / link_assignment_callstyle
+  / positional_attr_callstyle
+  / positional_rest
+  / named_rest  
  
 // ----- A2. attr_assignment
 attr_assignment
@@ -391,6 +398,11 @@ positional_attr
     // console.log("PP",value)
     return { positional_param: true, value: value }
   }
+
+positional_attr_callstyle
+  = value:positional_value_callstyle {
+    return { positional_param: true, value: value }
+  }
   
 link_assignment
   = name:attr_name ws "=" ws linkvalue:link soft_flag:("?")? stream_flag:("!")? { 
@@ -410,6 +422,22 @@ link_assignment
     return linkvalue2
     
   }
+
+link_assignment_callstyle
+  = name:attr_name ws "=" ws linkvalue:link_callstyle soft_flag:("?")? stream_flag:("!")? { 
+    let linkvalue2 = { 
+      link: true, 
+      to: name, 
+      from: linkvalue.value,
+      soft_mode: soft_flag ? true : false,
+      stream_mode: stream_flag ? true : false, // F-PARAMS-STREAM
+      locinfo: linkvalue.locinfo
+      };
+
+    //console.log("LINK",linkvalue2);
+    return linkvalue2
+    
+  }  
   
 feature_addition
   = "~" name:feature_name {
@@ -501,6 +529,24 @@ one_env_obj "environment record"
     return env;
   }
   //finalizer: (__ ";")*
+
+one_env_obj_callstyle "environment record with ()"
+  =
+  envid: (__ @(@attr_name ws ":")?)
+  __ first_feature_name:feature_name "("
+  env_modifiers:(__ @env_modifier_callstyle)* ")"  
+  {
+    var env = new_env( envid );
+    env.locinfo = getlocinfo();
+    // этим мы застолбили что фича первая всегда идет и точка.
+    env.features[ first_feature_name ] = {};
+    
+    set_basis( env, first_feature_name )
+
+    fill_env( env, env_modifiers, [] )
+
+    return env;
+  }  
 
 // F-MATH-OPERATOR
 // особый случай на предмет записи в стиле a + b
@@ -720,6 +766,12 @@ link "link value"
     return { link: true, value: path + "->.", locinfo: getlocinfo() }
   }
 
+link_callstyle "link value callstyle"
+  = obj_id:obj_id
+  {
+    return { link: true, value: obj_id, locinfo: getlocinfo() }    
+  }  
+
 // F_ACCESSORS 
 
 accessor
@@ -795,12 +847,24 @@ positional_value
   }
   / "(" ws env_list:env_list ws ")" {
     // attr expression
-    /*
-    if (env_list.length > 1) {
-       console.error("compolang: more than 1 record in positional ()",env_list)
-       console.log( getlocinfo() );
-    }
-    */
+    return { env_expression: env_list, locinfo: getlocinfo() }
+  }
+
+positional_value_callstyle
+  = false
+  / null
+  / true
+  / accessor
+  / object
+  / array
+  / number
+  / string
+  / js_inline
+  / cl_cofunc
+  / link_callstyle
+  / one_env
+  / "(" ws env_list:env_list ws ")" {
+    // attr expression
     return { env_expression: env_list, locinfo: getlocinfo() }
   }
 
