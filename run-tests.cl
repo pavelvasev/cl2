@@ -34,7 +34,7 @@ react @k.exitcode {
       print "------------- finished test" @test "exitcode" @code
       //if (@code > 0) { apply {: process.exit(1) :} }//{ apply {: console.log('throwing error'); throw "error" :} }
     }
-    return (list @test @r.exitcode )// @k.output)
+    return (list @test @r.exitcode)// @k.output)
   }
   printed: print ("summary is\\n" + (format_summary @summary))
 
@@ -42,4 +42,5 @@ react @k.exitcode {
      (apply {: s | return s.find( r => r[1] != 0 ) ? 1 : 0 :} @summary) 
      @printed.output
 
+  //print( "   ", x + 1, sin(x) )
 }

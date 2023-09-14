@@ -368,8 +368,8 @@ env_modifier_for_operator
   / feature_addition_for_operator
 
 env_modifier_callstyle
-  = attr_assignment
-  / link_assignment_callstyle
+  = attr_assignment_callstyle
+  / link_assignment
   / positional_attr_callstyle
   / positional_rest
   / named_rest  
@@ -379,6 +379,11 @@ attr_assignment
   = name:attr_name ws "=" ws value:value {
     return { param: true, name: name, value: value }
   }
+
+attr_assignment_callstyle
+  = name:attr_name ws "=" ws value:value_callstyle {
+    return { param: true, name: name, value: value }
+  }  
 
 positional_rest
   = "*" name:attr_name {
@@ -403,6 +408,11 @@ positional_attr_callstyle
   = value:positional_value_callstyle {
     return { positional_param: true, value: value }
   }
+
+positional_attr_callstyle2
+  = value:positional_value_callstyle2 {
+    return { positional_param: true, value: value }
+  }  
   
 link_assignment
   = name:attr_name ws "=" ws linkvalue:link soft_flag:("?")? stream_flag:("!")? { 
@@ -505,6 +515,7 @@ obj_path
 
 one_env
   = one_env_operator
+  / one_env_obj_callstyle
   / one_env_obj  
   / one_env_positional_attr
 
@@ -533,8 +544,9 @@ one_env_obj "environment record"
 one_env_obj_callstyle "environment record with ()"
   =
   envid: (__ @(@attr_name ws ":")?)
-  __ first_feature_name:feature_name "("
-  env_modifiers:(__ @env_modifier_callstyle)* ")"  
+  __ first_feature_name:feature_name __ "(" __
+  env_modifier0:(__ @env_modifier_callstyle)?
+  env_modifiers:(__ "," __ @env_modifier_callstyle)* __ ")"
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
@@ -543,7 +555,9 @@ one_env_obj_callstyle "environment record with ()"
     
     set_basis( env, first_feature_name )
 
-    fill_env( env, env_modifiers, [] )
+//    console.log("hello cs", env.locinfo,first_feature_name,env_modifier0,env_modifiers)
+
+    fill_env( env, env_modifier0 ? [env_modifier0,...env_modifiers] : [], [] )
 
     return env;
   }  
@@ -553,14 +567,14 @@ one_env_obj_callstyle "environment record with ()"
 one_env_operator "environment operator record"
   =
   envid: (__ @(@attr_name ws ":")?)
-  first_positional_attr: (__ @positional_attr)
-  env_modifiers:(__ @env_modifier_for_operator)+
-  child_envs:(__ "{" __ @env_list? __ "}" __)? // нафига операторам чайл енвс
+  first_positional_attr: (__ @positional_attr_callstyle2)
+  env_modifiers:(__ @env_modifier_for_operator)
+  second_positional_attr: (__ @positional_attr_callstyle2)?
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
 
-    let desired_operator = env_modifiers[0]
+    let desired_operator = env_modifiers
     let first_feature_name = desired_operator.name
 
     if (!first_feature_name) {
@@ -570,7 +584,7 @@ one_env_operator "environment operator record"
         // особый случай там отрицательное число а мы не поняли
         first_feature_name = "plus"
         // добавим кое что, потому что скоро удалят
-        env_modifiers.unshift( {} )
+        second_positional_attr = env_modifiers
       }
       else {
         console.error( "parser: operator not detected",getlocinfo(),env_modifiers )
@@ -582,13 +596,14 @@ one_env_operator "environment operator record"
     set_basis( env, first_feature_name )
 
 
-    let rest_args = env_modifiers.slice(1) // уберем обнаруженный оператор, собственно
-    fill_env( env, [first_positional_attr].concat(rest_args), child_envs )
+    // let rest_args = env_modifiers.slice(1) // уберем обнаруженный оператор, собственно
+    fill_env( env, [first_positional_attr,second_positional_attr], [] )
 
+/*
     if (env_modifiers.length == 0 || rest_args.length == 0) {
        console.error("operator record, no feature!",env_modifiers);
        console.log( env.locinfo );
-    };
+    };*/
 
     return env;
   }
@@ -861,12 +876,57 @@ positional_value_callstyle
   / string
   / js_inline
   / cl_cofunc
-  / link_callstyle
-  / one_env
-  / "(" ws env_list:env_list ws ")" {
+  / link               // link_callstyle  
+  / env:one_env_obj_callstyle {
+    return { env_expression: [env], locinfo: getlocinfo() }
+  }  
+  / "("? ws env_list:env_list ws ")"? {
     // attr expression
     return { env_expression: env_list, locinfo: getlocinfo() }
   }
+
+positional_value_callstyle2
+  = false
+  / null
+  / true
+  / accessor
+  / object
+  / array
+  / number
+  / string
+  / js_inline
+  / cl_cofunc
+  / link               // link_callstyle  
+  / env:one_env_obj_callstyle {
+    return { env_expression: [env], locinfo: getlocinfo() }
+  }
+  / "(" ws env_list:env_list ws ")" {
+    // attr expression
+    return { env_expression: env_list, locinfo: getlocinfo() }
+  }  
+
+value_callstyle
+  = false
+  / null
+  / true
+  / accessor
+  / object
+  / js_inline
+  / cl_cofunc
+  / array
+  / number
+  / string
+  / "{{{" __ env_list:env_list? __ "}}}" {
+    return { param_value_env_list: env_list || [] }
+  }
+  / "("? ws env_list:env_list ws ")"? {
+    // attr expression
+    if (env_list.length > 1) {
+       console.error("compolang: more than 1 record in attr val ()",env_list)
+       console.log( getlocinfo() );
+    }
+    return { env_expression: env_list, locinfo: getlocinfo() }
+  }  
 
 value
   = false

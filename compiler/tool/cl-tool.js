@@ -130,7 +130,7 @@ class Tool {
 	compile_string( str, state )
 	{
 		let dump = C.code2obj( str )
-		//console.log(dump)
+		//console.log( JSON.stringify(dump,null,'  '))
 		let jsarr = C.objs2js( dump,state )
 		let js = C.strarr2str( jsarr )
 		return js

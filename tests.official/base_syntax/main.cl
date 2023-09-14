@@ -16,7 +16,7 @@ assert (arrays_equal @r1 [10,20,30])
 n := 10
 m := @n-1
 
-print @m
+print "m = " @m
 
 assert (@m == 9)
 
