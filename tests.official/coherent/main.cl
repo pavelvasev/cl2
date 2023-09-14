@@ -40,7 +40,7 @@ pr1_c := reduce_events @pr1 'start' {: e acc | return `${acc}; ${e}` :}
 #print "p1 events:" @pr1_c
 #react @pr1 {: console.log('rrrr') :}
 
-react (std.timer n=1 interval=250) {
+react (std.timer n=1 period=250) {
   assert (@pr0_c == 'start; p0,10,30; p0,100,210; p0,150,310; p0,200,410; p0,250,510; p0,300,610')
   assert (@pr1_c == 'start; manual=,10,30; manual=,100,210')
 }

@@ -14,7 +14,7 @@ react (std.timer n=1 start=100) {:
   x.set(10)
 :}
 
-react (std.timer n=2 start=20 interval=300) { index|
+react (std.timer n=2 start=20 period=300) { index|
   if (@index == 0) {
     print "rere" @output_g
   }

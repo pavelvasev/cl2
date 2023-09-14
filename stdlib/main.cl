@@ -9,7 +9,7 @@ obj "timer" {
 
   //cells interval=1000 output=0
   in {    
-    interval: cell 1000 
+    period: cell 1000 
     start: cell -1
     n: cell -1
     restart: channel
@@ -24,7 +24,7 @@ obj "timer" {
   running: cell false
 
   init "(obj) => {
-    obj.interval.changed.subscribe( f )
+    obj.period.changed.subscribe( f )
     let existing
     let existing_timeout
 
@@ -74,7 +74,7 @@ obj "timer" {
       }
 
       running.set( true )
-    	existing = setInterval( on_tick, obj.interval.get() )      
+    	existing = setInterval( on_tick, obj.period.get() )      
     }
 
     obj.release.subscribe( stop )

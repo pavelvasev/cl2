@@ -58,11 +58,12 @@ export class Comm {
 		return unsub
 	}
 
+	// F-COHERENT-MIND
 	get_m_priority() {
 		if (this.attached_to?.get_m_priority)
 			return this.attached_to.get_m_priority()
 		return 0
-	}
+	}	
 	// так то тут понижение может стоит всем подчиненным передать..
 	// и не только на момент связи
 	set_m_priority(v) {
@@ -369,6 +370,7 @@ export class ClObject extends Comm {
 		this.release.destroy() // надо его отдельно, а то он подписки свои вычищает
 	}
 
+	// F-COHERENT-MIND
 	m_priority = 0
 	get_m_priority() {
 		return this.m_priority
@@ -379,6 +381,8 @@ export class ClObject extends Comm {
 		if (reason_object.m_priority_object() == this) return
 
 		let v = Math.min( reason_object.get_m_priority(), this.m_priority )-1
+		// а вот это не работает.
+		//let v = Math.min( reason_object.get_m_priority()-1, this.m_priority )
 		if (v < this.m_priority) { // положение может только улучшаться..
 			this.m_priority = v
 			console.channel_verbose("SCHED PRIORITY CHANGED of object",this+'',"to",v,'because of pressure from',reason_object+'','hosted at',reason_object.m_priority_object() + '' )
@@ -743,7 +747,7 @@ export function create_binding_delayed( src, tgt ) {
 	return res
 }
 
-
+// F-COHERENT-MIND
 let next_tick = []
 export function schedule( fn, priority_holder_object ) {
 
@@ -756,6 +760,16 @@ export function schedule( fn, priority_holder_object ) {
 	fn.priority = fn_priority
 	fn.priority_holder_object = priority_holder_object
 
+	// попробуем вставкой мб так побыстрее таки.. 
+	let i = 0
+	while (i < next_tick.length && fn_priority < next_tick[i].priority) {
+		i++
+	}
+	//console.log("next_tick before insert",next_tick.map( x => x.priority))
+	next_tick = [...next_tick.slice(0,i), fn, ...next_tick.slice(i) ]
+	//console.log("next_tick after insert",next_tick.map( x => x.priority))
+
+/*
 	if (next_tick.length > 0) {
 		if (fn_priority > next_tick[0].priority) {
 			console.channel_verbose("SCHEDULE f fn with priority (prefixed)", fn.priority,priority_holder_object+'' )
@@ -772,6 +786,7 @@ export function schedule( fn, priority_holder_object ) {
 	}
 	// ну это прикол конечно. надо то ли списки завести, то ли что.
 	next_tick = next_tick.sort( (a,b) => b.priority-a.priority)
+*/	
 	console.channel_verbose( "NEXT-TICK priorities:",next_tick.map( x => x.priority)) 
 
 
