@@ -10,6 +10,7 @@ let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: 
 
 export var tablica = {
 	let: { make_code: _let, check_params: default_cp },
+	let_next: { make_code: _let_next, check_params: default_cp },
 	obj: { make_code: _obj, check_params: (assigned_names) => { 
 		 return {normal: assigned_names, renamed: {'1': 'children'}, pos_rest: [],named_rest:[]} 
 		} },
@@ -89,6 +90,28 @@ export function _let( obj, state )
 	base.main.push( strs )
 
 	return base
+}
+
+// F-LET-NEXT
+export function _let_next( obj, state )
+{
+	let name = obj.params[0]
+	let strs = []
+	let s = `let ${name} = CL2.create_cell()`
+  strs.push( s )
+
+	let prev = state.next_obj_cb
+	//console.log("installin NEXT OBJ PARAM for",self_objid)
+	state.next_obj_cb = (obj2,objid2,strs,bindings,bindings_hash_before_rest) => {
+		bindings.push( `CL2.create_binding( ${objid2}.output, ${name} ) // from let_next` )
+		state.next_obj_cb = prev
+		//console.log('CASE, prev restored',prev+"","calling it, str=",strs)
+		if (state.next_obj_cb)
+			state.next_obj_cb(obj2,objid2,strs,bindings,bindings_hash_before_rest)
+	}
+
+
+	return {main: strs, bindings: []}
 }
 
 // по объектовой записи объекта понять кто его параметры включая каналы
@@ -490,6 +513,9 @@ export function pipe( obj, state )
 		// output последнего линкуем на output всей пайпы
 		base.bindings.push(`let ${objid}_p = CL2.create_binding(${prev_objid}.output,${objid}.output)`)
 	}
+
+  if (state.next_obj_cb)
+		state.next_obj_cb(obj,objid,base.main,base.bindings,{})	
 
 	return base
 }

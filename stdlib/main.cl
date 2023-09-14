@@ -43,8 +43,10 @@ obj "timer" {
 
         obj.output.emit( count.get() )
 
-        if (n.get() >= 0) { // логика остановки
-          count.set( count.get() + 1 )
+        // счетчик всегда ведем
+        count.set( count.get() + 1 )
+
+        if (n.get() >= 0) { // логика остановки          
           if (count.get() >= n.get()) {
             stop()
             return false

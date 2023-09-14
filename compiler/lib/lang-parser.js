@@ -692,10 +692,10 @@ function peg$parse(input, options) {
 
       return env;
     };
-  var peg$f12 = function(var_id, env) {
+  var peg$f12 = function(var_id) {
      var let_env = new_env();
-     set_basis( let_env, "let")
-     fill_env( let_env, [ {param: true, name: var_id, value:{env_expression: [env], locinfo: getlocinfo() }}])
+     set_basis( let_env, "let_next")
+     fill_env( let_env, [ {param: true, name: 0, value: var_id}])
      return let_env
    };
   var peg$f13 = function(pipeid, input_link, tail) {
@@ -2199,7 +2199,7 @@ function peg$parse(input, options) {
   }
 
   function peg$parseenv_let_shortcut() {
-    var s0, s1, s2, s3, s4, s5;
+    var s0, s1, s2, s3;
 
     s0 = peg$currPos;
     s1 = peg$parseWord();
@@ -2213,15 +2213,8 @@ function peg$parse(input, options) {
         if (peg$silentFails === 0) { peg$fail(peg$e35); }
       }
       if (s3 !== peg$FAILED) {
-        s4 = peg$parse__();
-        s5 = peg$parseenv_pipe();
-        if (s5 !== peg$FAILED) {
-          peg$savedPos = s0;
-          s0 = peg$f12(s1, s5);
-        } else {
-          peg$currPos = s0;
-          s0 = peg$FAILED;
-        }
+        peg$savedPos = s0;
+        s0 = peg$f12(s1);
       } else {
         peg$currPos = s0;
         s0 = peg$FAILED;

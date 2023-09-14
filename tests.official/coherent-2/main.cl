@@ -21,7 +21,7 @@ react (std.timer n=2 start=20 period=300) { index|
   if (@index == 1) {
     print "rere2" @output_g
     assert (@output_g == "x=,5,a=,6,b=,16,x=,10,a=,11,b=,31")
-  }  
+  }
   #assert (arrays_equal @output_g [ [ 'x=', 5, 'a=', 6, 'b=', 16 ], [ 'x=', 10, 'a=', 11, 'b=', 31 ] ])
   #
 }

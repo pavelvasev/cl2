@@ -28,7 +28,7 @@ obj "react" {
         //if (fn.is_block_function)
         //  result = fn( self, CL2.create_cell(value) )
         //else  
-        
+
         result = fn( value )
 
         //console.log('react result=',result+'')
@@ -154,9 +154,11 @@ obj "if"
   }
   */
 
+  //print "else=" @_else
+
   r_else_obj: react @_else {: val |
-    //if (debug)
-    //console.log("r1")
+    // if (debug)
+    // console.log("r1")
     let s1 = val.value.subscribe( (ev) => {
       //console.log("r2",ev)
       else_branch.set( ev )

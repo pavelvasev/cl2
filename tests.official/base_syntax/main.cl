@@ -43,3 +43,15 @@ apply {
   assert (@t2 == "petya")
 
 }
+
+## в форме k := if .. else ...
+apply {
+  k := if (10 > 100) { return true } else { return false }
+  assert (@k == false)
+}
+# в форме k := foo | alfa
+apply {
+  k_pipe := apply {: return 10 :} | react {: val | return val+12 :}
+  print "k_pipe=" @k_pipe
+  assert (@k_pipe == 22)
+}

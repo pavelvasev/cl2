@@ -575,6 +575,19 @@ one_env_positional_attr "environment positional record"
 
 
 // F-LET-SHORTCUT-OPERATOR
+// F-LET-NEXT
+
+env_let_shortcut
+ = var_id:attr_name __ ":="
+ {
+   var let_env = new_env();
+   set_basis( let_env, "let_next")
+   fill_env( let_env, [ {param: true, name: 0, value: var_id}])
+   return let_env
+ }
+ / env_pipe
+
+/*
 env_let_shortcut
  = var_id:attr_name __ ":=" __ env:env_pipe
  {
@@ -584,6 +597,7 @@ env_let_shortcut
    return let_env
  }
  / env_pipe
+*/ 
 
 env_pipe
  = pipeid:(attr_name __ ":")? __ input_link:link tail:(__ "|" @one_env)+

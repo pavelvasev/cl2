@@ -13,6 +13,8 @@ import path="node:path"
   
 */
 
+func "env" {: return process.env :}
+
 obj "spawn" {
   in {
     cmd_args*: cell
