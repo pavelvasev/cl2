@@ -41,7 +41,7 @@ func "info" { elem prefix |
 }
 */
 func "info" { elem prefix newline|
-   return (+ @prefix @elem.text @newline (map @elem.children { |c|
+   return (+ @prefix @elem.text @newline (map (filter @elem.children { x | return (get @x "text") }) { |c|
       return (apply @info @c (@prefix + '-') @newline) } | join "") )
 }
 
@@ -57,6 +57,7 @@ e2: element "privet" {
 
 //apply @e.show
 # apply {: e2.show('') :}
+
 print (apply @info @e2 '' '\\n')
 print (apply @info @e2 '' '%')
 assert ((apply @info @e2 '' '%') == "privet%-kak%-dela%--tvoi?%---otvet: horosho!%---otvet: a kak tvoi?%")

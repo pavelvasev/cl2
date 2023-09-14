@@ -687,6 +687,8 @@ export function create_bound_cells( list ) {
 		}
 		else {
 			let c = create_cell()
+			//if (k == null)
+				//console.log("warning: k is null. list=",list.map( x=>x+''))
 			let b = create_binding( k, c )
 			barr.push( b )
 			carr.push( c )
@@ -862,6 +864,9 @@ export function monitor_rest_values( src,tgt ) {
 				dtgt.emit( [] )
 				unsub = () => {}
 				return
+			}
+			if (comms.some( elem => elem == null)) {
+				console.error("monitor_rest_values: incoming src list have nulls. src=",src+'',comms.map(x=>x+''))
 			}
 
 			let cells = create_bound_cells( comms )
