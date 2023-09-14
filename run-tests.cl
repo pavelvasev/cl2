@@ -10,7 +10,7 @@ tests := reduce_events (k: os.spawn "find" @dir "-name" "main.cl") [] {: s acc |
 #func "join" {: arr sep | return arr.join(sep) :}
 
 func "format_summary" { s |
-  return (map @s { line |
+  return (map @s  { line |
     code := get @line 1
     name := get @line 0
     return (+ (if (@code == 0) { return "  OK"} else { return "FAIL"}) " : " @name)
@@ -23,7 +23,7 @@ react @k.exitcode {
   //t2 := apply {: t | return t.sort() :} @tests
   t2 := std.sort @tests
 
-  summary := map @t2 { test|
+  summary := map(@t2) { test|
     print "============= running test" @test
     r: os.spawn 'clon' 'r' @test  // stdio='inherit'
     //react @r.stdout (func { |msg| print @msg })

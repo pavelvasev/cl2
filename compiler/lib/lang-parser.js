@@ -655,7 +655,7 @@ function peg$parse(input, options) {
 
       return env;
     };
-  var peg$f12 = function(envid, first_feature_name, env_modifier0, env_modifiers) {
+  var peg$f12 = function(envid, first_feature_name, env_modifier0, env_modifiers, cl_cofunc) {
       var env = new_env( envid );
       env.locinfo = getlocinfo();
       // этим мы застолбили что фича первая всегда идет и точка.
@@ -665,14 +665,20 @@ function peg$parse(input, options) {
 
   //    console.log("hello cs", env.locinfo,first_feature_name,env_modifier0,env_modifiers)
 
-      fill_env( env, env_modifier0 ? [env_modifier0,...env_modifiers] : [], [] )
+      let modifiers = env_modifier0 ? [env_modifier0,...env_modifiers] : []
+      if (cl_cofunc) {
+         //console.log("catched cl_cofunc=",cl_cofunc)
+         modifiers.push({ positional_param: true, value: cl_cofunc })
+      }
+      
+      fill_env( env, modifiers, [] )
 
       return env;
     };
-  var peg$f13 = function(envid, first_positional_attr, env_modifiers, second_positional_attr) {
+  var peg$f13 = function(envid, first_positional_attr, first_feature_name, second_positional_attr) {
       var env = new_env( envid );
       env.locinfo = getlocinfo();
-
+  /*
       let desired_operator = env_modifiers
       let first_feature_name = desired_operator.name
 
@@ -686,10 +692,11 @@ function peg$parse(input, options) {
           second_positional_attr = env_modifiers
         }
         else {
-          console.error( "parser: operator not detected",getlocinfo(),env_modifiers )
+          console.error( "parser: operator not detected",getlocinfo(),first_positional_attr,env_modifiers,second_positional_attr )
           throw "operator not detected"
         }
       }
+  */    
         //console.log("QQQQ",first_feature_name,getlocinfo())
       
       set_basis( env, first_feature_name )
@@ -2307,8 +2314,20 @@ function peg$parse(input, options) {
           if (peg$silentFails === 0) { peg$fail(peg$e35); }
         }
         if (s10 !== peg$FAILED) {
+          s11 = peg$currPos;
+          s12 = peg$parse__();
+          s13 = peg$parsecl_cofunc();
+          if (s13 !== peg$FAILED) {
+            s11 = s13;
+          } else {
+            peg$currPos = s11;
+            s11 = peg$FAILED;
+          }
+          if (s11 === peg$FAILED) {
+            s11 = null;
+          }
           peg$savedPos = s0;
-          s0 = peg$f12(s1, s3, s7, s8);
+          s0 = peg$f12(s1, s3, s7, s8, s11);
         } else {
           peg$currPos = s0;
           s0 = peg$FAILED;
@@ -2374,7 +2393,7 @@ function peg$parse(input, options) {
     if (s2 !== peg$FAILED) {
       s3 = peg$currPos;
       s4 = peg$parse__();
-      s5 = peg$parseenv_modifier_for_operator();
+      s5 = peg$parsefeature_operator_name();
       if (s5 !== peg$FAILED) {
         s3 = s5;
       } else {

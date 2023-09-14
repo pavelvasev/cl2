@@ -547,6 +547,7 @@ one_env_obj_callstyle "environment record with ()"
   __ first_feature_name:feature_name __ "(" __
   env_modifier0:(__ @env_modifier_callstyle)?
   env_modifiers:(__ "," __ @env_modifier_callstyle)* __ ")"
+  cl_cofunc:(__ @cl_cofunc)?
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
@@ -557,7 +558,13 @@ one_env_obj_callstyle "environment record with ()"
 
 //    console.log("hello cs", env.locinfo,first_feature_name,env_modifier0,env_modifiers)
 
-    fill_env( env, env_modifier0 ? [env_modifier0,...env_modifiers] : [], [] )
+    let modifiers = env_modifier0 ? [env_modifier0,...env_modifiers] : []
+    if (cl_cofunc) {
+       //console.log("catched cl_cofunc=",cl_cofunc)
+       modifiers.push({ positional_param: true, value: cl_cofunc })
+    }
+    
+    fill_env( env, modifiers, [] )
 
     return env;
   }  
@@ -568,12 +575,12 @@ one_env_operator "environment operator record"
   =
   envid: (__ @(@attr_name ws ":")?)
   first_positional_attr: (__ @positional_attr_callstyle2)
-  env_modifiers:(__ @env_modifier_for_operator)
+  first_feature_name:(__ @feature_operator_name) 
   second_positional_attr: (__ @positional_attr_callstyle2)?
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
-
+/*
     let desired_operator = env_modifiers
     let first_feature_name = desired_operator.name
 
@@ -587,10 +594,11 @@ one_env_operator "environment operator record"
         second_positional_attr = env_modifiers
       }
       else {
-        console.error( "parser: operator not detected",getlocinfo(),env_modifiers )
+        console.error( "parser: operator not detected",getlocinfo(),first_positional_attr,env_modifiers,second_positional_attr )
         throw "operator not detected"
       }
     }
+*/    
       //console.log("QQQQ",first_feature_name,getlocinfo())
     
     set_basis( env, first_feature_name )

@@ -1,4 +1,13 @@
 # тестируем новый синтаксис вида name(arg,arg,foo=arg)
+///////////////// map работает в форме map(arr) {}
+
+arr2:=[1,2,3]
+r2:= map(@arr2) { x | print @x return @x}
+print "r2=" @r2
+assert (arrays_equal @r2 [1,2,3])
+
+
+
 // умеем вычислять выражение
 
 func "add1" {: x | return x+1 :}
@@ -21,6 +30,8 @@ r1 := map( [1,2,3],@f )
 print("r1 is",@r1)
 
 assert(arrays_equal(@r1,[10,20,30]))
+
+
 
 // ====================================================
 # тестируем фичу отлова вычитания F-OPERATOR-MINUS
