@@ -11,7 +11,7 @@ r1: react (std.timer n=1 period=10) {:
 :}
 
 react (std.timer n=1 period=10 start=20) {
-//r_check: react null {
+//r_check: react @r1.output {
   assert (apply {: x | console.log("checking x"); return x.a == 5 && x.b == 10 :} @x)
 }
 

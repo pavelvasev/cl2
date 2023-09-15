@@ -861,18 +861,19 @@ export function monitor_rest_values( src,tgt ) {
 
 			let comms = src.get()
 
-			if (comms == null || comms.length == 0) {
-				dtgt.emit( [] )
-				unsub = () => {}
-				return
-			}
-
 			let rest_names // F-NAMED-REST
-			if (!Array.isArray(comms)) {
+			if (comms && !Array.isArray(comms)) {
 				// запомним что на вход шел словарь
 				rest_names = Object.keys(comms)
 				comms = Object.values( comms )
 			}
+
+			// это после преобразования F-NAMED-REST
+			if (comms == null || comms.length == 0) {
+				dtgt.emit( [] )
+				unsub = () => {}
+				return
+			}			
 
 
 			if (comms.some( elem => elem == null)) {

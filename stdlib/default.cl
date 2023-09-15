@@ -594,6 +594,7 @@ obj "dict" {
   output: cell
 
   xtracted: extract @rest_all
+  //react @xtracted.output {: console.log('xtracted') :}
 
   bind @xtracted.output @output
 }

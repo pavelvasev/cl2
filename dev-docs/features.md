@@ -282,6 +282,7 @@ p.s. Может быть стоило сделать это на основе л
 x:=5
 r1: react .. { set x=10 }
 r2: react @r1.output { assert x==10 } // не сработает
+см tests.official/dict/main.cl
 
 *****************************
 F-SKOBKI
