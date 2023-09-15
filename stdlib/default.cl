@@ -616,9 +616,9 @@ func "map" {: arr f |
   //if (!f.is_task_function)
   //  return arr.map( f )
 
-  function process_elem(e) {
+  function process_elem(e,index) {
     return new Promise( (resolve,reject) => {
-    let result = f( e )
+    let result = f( e,index )
     if (result instanceof CL2.Comm) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
@@ -639,17 +639,33 @@ func "map" {: arr f |
   function process_arr( arr,i=0 ) {
     if (i >= arr.length) return Promise.resolve([])
 
-    return process_elem( arr[i] ).then( (result) => {
+    return process_elem( arr[i],i ).then( (result) => {
       return process_arr( arr,i+1 ).then( (rest_result) => {
         return [result,...rest_result]
       })      
     })
   }
 
+  function process_dict( arr,names,i=0 ) {
+    if (i >= arr.length) return Promise.resolve([])
+
+    return process_elem( arr[i],names[i] ).then( (result) => {
+      return process_dict( arr,names, i+1 ).then( (rest_result) => {
+        return [result,...rest_result]
+      })
+    })
+  }  
+
   let output = CL2.create_cell()
   // [...arr] переводит в массив принудительно, если там было Set например
-  if (!Array.isArray(arr)) arr = [...arr]
-  process_arr( arr ).then( values => output.submit( values ))
+  if (!Array.isArray(arr)) {
+    if (arr instanceof Set)
+        arr = [...arr]
+  }
+  if (typeof(arr) == "object") 
+    process_dict( Object.values(arr), Object.keys(arr) ).then( values => output.submit( values ))
+  else  
+    process_arr( arr ).then( values => output.submit( values ))
   return output
 :}
 
