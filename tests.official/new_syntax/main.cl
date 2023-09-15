@@ -1,7 +1,17 @@
 # тестируем новый синтаксис вида name(arg,arg,foo=arg)
-///////////////// вызов функции по-новому
 
 import os="std/os.cl"
+
+///////////////// случай or
+
+//init_dir := or (get (os.env) "DIR") (567 + 1)
+#k1:= get(os.env(),"DIR1")
+#init_dir := or (get(os.env(),"DIR")) (567 + 1)
+init_dir := or (get(os.env(),"DIR123")) "567"
+print "init_dir=" @init_dir
+assert( @init_dir == "567" )
+
+///////////////// вызов функции по-новому
 
 func "foo" { x | return (2*@x) }
 foo(4, os.cwd("alfa"))
@@ -9,7 +19,7 @@ foo(4, os.cwd("alfa"))
 ///////////////// map работает в форме map(arr) {}
 
 arr2:=[1,2,3]
-r2:= map(@arr2) { x | print @x return @x}
+r2:= map(@arr2) { x | print "map x=" @x return @x}
 print "r2=" @r2
 assert (arrays_equal @r2 [1,2,3])
 
@@ -20,6 +30,7 @@ func "add1" {: x | return x+1 :}
 kk := add1( add1( add1(1) + add1(2) ) )
 print "kk=" @kk "should be 7"
 assert (@kk == 7)
+
 
 // ====================================================
 
@@ -83,3 +94,4 @@ apply {
   print "k_pipe=" @k_pipe
   assert (@k_pipe == 22)
 }
+*/

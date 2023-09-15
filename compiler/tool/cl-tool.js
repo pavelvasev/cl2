@@ -11,7 +11,7 @@ let default_modules = [
 	"../../stdlib",
 	"defaults",	
 	"compile",
-	"run","test"
+	"run","test","nest"
 	]
 
 // командной строки компилятор
@@ -25,11 +25,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let DEFAULT_PLUGINS_DIR = path.resolve( path.join( __dirname,"..","plugins") )
+let CLON_DIR = path.resolve( path.join( __dirname,"..","..") )
 
 		
 //////////////////////////////////////		
 
 class Tool {
+
+	clon_dir=CLON_DIR
 
 	constructor( state ) {
 		//this.state = state
@@ -60,6 +63,7 @@ class Tool {
 
 		let dir = U.get_module_dir( record, current_dir )
 		//console.log("\nload_module, path=",dir,"current_dir=",current_dir)
+		//console.trace()
 		
 		this.loaded_modules[dir] ||= U.load_module_config( dir ).then( conf => {
 			state.modules_conf[ dir ] = conf

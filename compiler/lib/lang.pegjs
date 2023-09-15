@@ -340,7 +340,7 @@ JSON_text
      return env;
   }
 
-env
+env1
   = __ @env_let_shortcut
 
 begin_array     = ws "[" ws
@@ -544,7 +544,7 @@ one_env_obj "environment record"
 one_env_obj_callstyle "environment record with ()"
   =
   envid: (__ @(@attr_name ws ":")?)
-  __ first_feature_name:feature_name __ "(" __
+  __ first_feature_name:feature_name "(" __ // F-SKOBKI-NOSPACE чтобы вернуть перед "(" добавить __
   env_modifier0:(__ @env_modifier_callstyle)?
   env_modifiers:(__ "," __ @env_modifier_callstyle)* __ ")"
   cl_cofunc:(__ @cl_cofunc)?
@@ -742,7 +742,7 @@ env_args_list "environment args list"
 env_list "environment list"
   = __ args:env_args_list? // F-ENV-ARGS 
     __
-    head:env tail:((__ ";")* @env __ )* (__ ";")*
+    head:env1 tail:((__ ";")* @env1 __ )* (__ ";")*
     __
     {
     // выяснилось что у нас в tail могут быть пустые окружения

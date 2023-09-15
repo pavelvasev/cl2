@@ -94,7 +94,9 @@ export function code2obj( str, base_url="?" )
 	let grammarSource = {lines:str.split("\n")}
 
 	try {
-		let parsed = P.parse( str,{base_url,grammarSource} )
+		let parsed = P.parse( str,{base_url,grammarSource,tracer:{
+			trace: (obj) => { console.log("trace:",obj)}
+		}} )
 		//console.log("parsed=",parsed)
 		//return get_children( parsed )
 		return Object.values(parsed.children)
@@ -397,7 +399,7 @@ export function default_obj2js( obj,state ) {
 
   // F-NAMED-REST
   if (named_rest.name) {
-  	console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)
+  	//console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)
   	let named_rest_name = `${objid}_${named_rest.name}`
   	if (named_rest.length > 0) {
   		bindings_hash[ named_rest.name ] = named_rest_name

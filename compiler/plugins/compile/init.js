@@ -1,6 +1,7 @@
 import { access, constants } from 'node:fs/promises';
 
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 export function init( state, tool ) {
 
@@ -12,7 +13,7 @@ export function init( state, tool ) {
 		}
 		let out_file = file + ".js"
 		
-		let config_file = process.cwd() + "/init.js"
+		let config_file = path.dirname( file ) + "/init.js"
 
 		let mmm0 = access(config_file, constants.R_OK)
 		let mmm = mmm0.then( () => {
@@ -20,7 +21,7 @@ export function init( state, tool ) {
 				tool.config = conf
 				state.import_map = conf.import_map //{...state.space.default_import_map, ...conf.import_map}
 			}).catch( err => {
-				console.error("error during load config:",config_file)
+				console.error("compile: error during load_module:",config_file,err)
 				throw err
 			})
 		}).catch( () => {})

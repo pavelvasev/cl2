@@ -3,8 +3,9 @@ import * as path from 'node:path';
 export function get_module_dir0(r) {
 			if (typeof(r) === "string") return r
 			if (r.dir) return r.dir
-			if (r.src) {
-				return r.src.split("/").slice(-1).split(".git").slice("-1")
+			// todo это .git не очень уместно тут. надо в драйвер выносить.
+			if (r.git) {
+				return r.git.split("/").slice(-1)[0].split(".git").slice(-1)[0]
 			}
 			return null
 		}
@@ -18,7 +19,7 @@ export function get_module_dir1(r, current_dir) {
 				return dir0
 			// все остальные считаются от проекта
 			// return path.join( state.dir, "modules",dir_0 )
-			return path.join( current_dir, "modules",dir_0 )
+			return path.join( current_dir, "modules",dir0 )
 		}
 
 // по спецификации рассчитывает каталог модуля

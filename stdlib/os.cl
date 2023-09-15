@@ -14,17 +14,25 @@ import fs='node:fs/promises'
   
 */
 
+// idea создать прокси-объект на папку.
+// типа d: dir "path" и далее d["init.js"] или типа того, d.fetch("init.js")
+
 // возвращает путь текущий рабочий каталог
 // возвращает путь текущий рабочий каталог + указанный подкаталог/файл
 func "cwd" {: subpath |
   return path.resolve( path.join( process.cwd(),subpath || '' ) )
 :}
 
+func "join" {: ...parts |
+  return path.join(...parts)
+:}
+
 func "exist" {: path |
+  console.log('exist',path,process.cwd())
   let mmm0 = fs.access(path, fs.constants.R_OK)
   // мы же работаем в режиме каналов а там надо что-то записать
   // запишем false
-  return mmm0.catch( (err) => false )
+  return mmm0.then(result => true).catch( (err) => false )
 :}
 
 func "env" {: return process.env :}
