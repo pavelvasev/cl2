@@ -587,6 +587,19 @@ func "arrays_equal" {: a b |
 
 ///////////////////////
 
+obj "dict" {
+  in {
+    rest_all**: cell
+  }  
+  output: cell
+
+  xtracted: extract @rest_all
+
+  bind @xtracted.output @output
+}
+
+//func "dict" {: rest_values | return values :}
+
 func "list" {: ...values | return values :}
 
 func "get" {: src field | return src[field] :}

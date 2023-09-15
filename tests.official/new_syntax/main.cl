@@ -1,12 +1,17 @@
 # тестируем новый синтаксис вида name(arg,arg,foo=arg)
+///////////////// вызов функции по-новому
+
+import os="std/os.cl"
+
+func "foo" { x | return (2*@x) }
+foo(4, os.cwd("alfa"))
+
 ///////////////// map работает в форме map(arr) {}
 
 arr2:=[1,2,3]
 r2:= map(@arr2) { x | print @x return @x}
 print "r2=" @r2
 assert (arrays_equal @r2 [1,2,3])
-
-
 
 // умеем вычислять выражение
 

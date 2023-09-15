@@ -45,6 +45,7 @@ let DEFAULT_PLUGINS_DIR = path.resolve( path.join( __dirname,"..","plugins") )
 			return path.join( state.dir, "modules",dir_0 )
 		}
 
+		// r это спецификатор модуля из записей init.js
 		function get_module_dir( r, current_dir ) {
 			return path.resolve( get_module_dir1( r, current_dir ))
 		}
@@ -57,7 +58,7 @@ class Tool {
 		// будем запихивать?
 	}
 
-  // загружает init.js-файлы по списку
+  // загружает init.js-файлы по списку спецификаторов указанных в arr
   // dir - массив путей, где каждый путь это каталог или файл .js
 	load_modules( arr, state, current_dir="" ) {
 		//console.log("load_modules: ",arr)
@@ -114,7 +115,7 @@ class Tool {
 
 		//console.log("load_module_config: importing",init_file)
 		return import( init_file ).then( m => {
-			let inner_modules = m.modules || {}
+			let inner_modules = m.modules || m.sources || {}
 
 			// функция 1 - запомнить пути для карты импорта
 			let import_map = {}

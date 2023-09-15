@@ -13,6 +13,12 @@ import path="node:path"
   
 */
 
+// возвращает путь текущий рабочий каталог
+// возвращает путь текущий рабочий каталог + указанный подкаталог/файл
+func "cwd" {: subpath |
+  return path.resolve( path.join( process.cwd(),subpath || '' ) )
+:}
+
 func "env" {: return process.env :}
 
 obj "spawn" {

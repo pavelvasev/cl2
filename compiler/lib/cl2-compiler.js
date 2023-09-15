@@ -395,6 +395,44 @@ export function default_obj2js( obj,state ) {
 		}
   }
 
+  // F-NAMED-REST
+  if (named_rest.name) {
+  	console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)
+  	let named_rest_name = `${objid}_${named_rest.name}`
+  	if (named_rest.length > 0) {
+  		bindings_hash[ named_rest.name ] = named_rest_name
+
+  		let named_cells = {}
+			for (let j=0; j<named_rest.length; j++) {
+				let name = named_rest[j]		
+				if (!bindings_hash[ name ]) {
+					// константа
+					let named_cell_name = `named_cell_${objid}_${name}`
+					strs2.push( `let ${named_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state) })`)
+					strs2.push( `${named_cell_name}.$title="named_cell_${name}"; ${named_cell_name}.attached_to=${objid}` )
+					named_cells[name]=named_cell_name
+					delete init_consts[ name ]
+					//init_consts[ name ] = "CL2.NOVALUE"				
+				}
+				else
+				{
+					// ссылка
+					let to = bindings_hash[ name ]
+					delete bindings_hash[ name ]
+					named_cells[name]=to
+				}
+				// стало быть это ссылки типа binding..
+			}
+			console.log("named_cells=",named_cells)
+			bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
+			bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
+
+  	}
+  	else {
+  		init_consts[ internal_name(named_rest.name) ] = {}
+  	}
+  }
+
 	////////////
 
 	// init_consts["parent"] = state.struc_parent?.$name || "self"

@@ -97,8 +97,12 @@ export function _let_next( obj, state )
 {
 	let name = obj.params[0]
 	let strs = []
-	let s = `let ${name} = CL2.create_cell()`
+	let s = `let ${name} = CL2.create_cell(); ${name}.$title='${name}'`
   strs.push( s )
+  //console.log('let-next ',name,'state.struc_parent_id=',state.struc_parent_id,state.tree_parent_id)
+  if (state.struc_parent_id) {
+  	strs.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )`)
+  }
 
 	let prev = state.next_obj_cb
 	//console.log("installin NEXT OBJ PARAM for",self_objid)
@@ -138,6 +142,7 @@ export function get_obj_params( obj ) {
 			if (k.$name.endsWith("**")) {
 				k.$name_modified = k.$name.slice(0,-2)
 				named_rest_param = k.$name_modified
+				//console.log("!!! named_rest_param=",named_rest_param)
 			}
 			else
 				if (k.$name.endsWith("*")) {
@@ -300,7 +305,7 @@ export function _obj( obj, state )
 					continue // временное название для **
 				}
 				if (named_rest_param) {
-					pos_rest_names.push( k )
+					named_rest_names.push( k )
 					continue // временное название для *
 				}
 				console.error(`object ${id} has no parameter ${k}. obj.params=`,obj_params, locinfo)

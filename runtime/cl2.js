@@ -789,6 +789,7 @@ export function schedule( fn, priority_holder_object ) {
 	// ну это прикол конечно. надо то ли списки завести, то ли что.
 	next_tick = next_tick.sort( (a,b) => b.priority-a.priority)
 */	
+	console.channel_verbose( "SCHEDULE item. Priorioty=",fn.priority,'holder=',fn.priority_holder_object+'') 
 	console.channel_verbose( "NEXT-TICK priorities:",next_tick.map( x => x.priority)) 
 
 
@@ -800,7 +801,7 @@ function perform_scheduled() {
 	//console.log( "perform_scheduled",next_tick)
 	while (next_tick.length > 0) {
 		let k = next_tick.shift()
-		console.channel_verbose("SCHEDULED CALL of fn with priority", k.priority, k.priority_holder_object+'' )
+		console.channel_verbose("EXEC SCHEDULED item of priority", k.priority, k.priority_holder_object+'' )
 		k()
 	}
 }
@@ -834,7 +835,7 @@ export class DelayedEater() {
 }
 */
 
-// src - источник массивов ячеек
+// src - ячейка-источник, содержит массив ячеек
 // tgt - целевой канал куда слать
 // что делает. считывает src рассчитывая увидеть там массив ячеек
 // и при изменении значений этих ячеек - собирает их в массив
@@ -865,6 +866,15 @@ export function monitor_rest_values( src,tgt ) {
 				unsub = () => {}
 				return
 			}
+
+			let rest_names // F-NAMED-REST
+			if (!Array.isArray(comms)) {
+				// запомним что на вход шел словарь
+				rest_names = Object.keys(comms)
+				comms = Object.values( comms )
+			}
+
+
 			if (comms.some( elem => elem == null)) {
 				console.error("monitor_rest_values: incoming src list have nulls. src=",src+'',comms.map(x=>x+''))
 			}
@@ -886,6 +896,13 @@ export function monitor_rest_values( src,tgt ) {
 				}
 				//console.log("monitor_rest_values: collected",values,"from",src.get(),"emitting to",dtgt+"")
 				console.channel_verbose("monitor_rest_values: collected values from",src+"","emitting to",tgt+"","values=",values,"cells was",src.get() + "")
+
+				if (rest_names) { // F-NAMED-REST
+					let result = {}
+					// преобразуем обратно к словарю
+					rest_names.map( (name,index) => result[name]=values[index])
+					values = result
+				}
 
 				dtgt.emit( values )
 			})
