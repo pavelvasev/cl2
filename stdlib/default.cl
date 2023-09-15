@@ -43,6 +43,11 @@ obj "react" {
             output.submit( val )
           })
         }
+        else if (result instanceof Promise) {
+          result.then( val => {
+            output.submit(val)
+          })
+        }
         else {
           //console.log('submitting result to output',output+'')
           output.submit( result )

@@ -2,6 +2,7 @@
 
 import cp="node:child_process"
 import path="node:path"
+import fs='node:fs/promises'
 
 /* todo:
   в таск-режиме spawn создаст задачу которая вернет 1-ю запись из stdout и на этом завершится.
@@ -17,6 +18,13 @@ import path="node:path"
 // возвращает путь текущий рабочий каталог + указанный подкаталог/файл
 func "cwd" {: subpath |
   return path.resolve( path.join( process.cwd(),subpath || '' ) )
+:}
+
+func "exist" {: path |
+  let mmm0 = fs.access(path, fs.constants.R_OK)
+  // мы же работаем в режиме каналов а там надо что-то записать
+  // запишем false
+  return mmm0.catch( (err) => false )
 :}
 
 func "env" {: return process.env :}

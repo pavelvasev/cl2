@@ -19,36 +19,14 @@ import './node-fetch-fix.js';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as C from "../lib/cl2-compiler.js"
+import * as U from "./utils.js"
 
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let DEFAULT_PLUGINS_DIR = path.resolve( path.join( __dirname,"..","plugins") )
 
-//////////////////////////////////////
-		function get_module_dir0(r) {
-			if (typeof(r) === "string") return r
-			if (r.dir) return r.dir
-			if (r.src) {
-				return r.src.split("/").slice(-1).split(".git").slice("-1")
-			}
-			return null
-		}
-		function get_module_dir1(r, current_dir) {
-			let dir0 = get_module_dir0( r )
-			if (dir0 [0] == ".") { // относительно файла
-				return path.join( current_dir, dir0 )
-			}
-			if (path.isAbsolute( dir0) ) // абсолютный путь
-				return dir0
-			// все остальные считаются от проекта
-			return path.join( state.dir, "modules",dir_0 )
-		}
-
-		// r это спецификатор модуля из записей init.js
-		function get_module_dir( r, current_dir ) {
-			return path.resolve( get_module_dir1( r, current_dir ))
-		}
+		
 //////////////////////////////////////		
 
 class Tool {
@@ -77,12 +55,13 @@ class Tool {
 	// список промис
 	loaded_modules = {}
 	// загружает 1 модуль находящийся в указанной папке
+	// папка указывается через record - спецификацию модуля
 	load_module( record, state, current_dir="" ) {
 
-		let dir = get_module_dir( record, current_dir )
+		let dir = U.get_module_dir( record, current_dir )
 		//console.log("\nload_module, path=",dir,"current_dir=",current_dir)
 		
-		this.loaded_modules[dir] ||= this.load_module_config( dir, state ).then( conf => {
+		this.loaded_modules[dir] ||= U.load_module_config( dir ).then( conf => {
 			state.modules_conf[ dir ] = conf
 			// 1 загрузим под-модули этого модуля
 			// 2 передадим управление на инициализацию этого модуля
@@ -94,39 +73,7 @@ class Tool {
 
 		return this.loaded_modules[dir]
 	}
-		
-	// загружает конфигурацию модуля по указанному пути (папка или файл)
-	load_module_config( module_path, state ) {
-		//console.log("load_module_config module_path=",module_path)
 
-		// let dir = get_module_dir( record, current_dir ) // тут dir, path, все вперемешку короче получилось
-		// console.log("resolved dir for module:",dir)
-
-		let init_file, dir
-		//console.log("load_module: ",dir)
-		if (module_path.endsWith(".js")) {
-			init_file = module_path
-			dir = path.dirname( module_path )			
-		}
-		else {
-		  init_file = path.join(module_path,"init.js")
-			dir = module_path
-		}
-
-		//console.log("load_module_config: importing",init_file)
-		return import( init_file ).then( m => {
-			let inner_modules = m.modules || m.sources || {}
-
-			// функция 1 - запомнить пути для карты импорта
-			let import_map = {}
-			for (let key in inner_modules) 
-				import_map[key] = get_module_dir( inner_modules[key], dir )
-
-			let conf = {...m, modules: inner_modules, import_map, dir}
-
-			return conf
-		})
-	}
 
 	compile_string( str, state )
 	{
@@ -164,6 +111,7 @@ class Tool {
 
 	global_code = []
 
+	// добавляет код к кодогенерации
   // каждый элемент code - строчка, массив строчек, массив массивов..
 	add_global_code( ...code ) {
 		this.global_code.push( ...code )
@@ -278,4 +226,3 @@ let command = process.argv[2] || "compile"
 mmm.then( () => {
 	tool.get_command(command).apply( this, [...process.argv].slice(3) )	
 })
-
