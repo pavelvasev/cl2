@@ -33,6 +33,9 @@ obj "react" {
 
         //console.log('react result=',result+'')
 
+        // мега-идея промис js в том, что если результат это канал, то процесс продолжается..
+        // т.е. нам как бы вернули информацию, что процесс еще идет и результаты уже у него
+
         if (result instanceof CL2.Comm) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
@@ -811,24 +814,68 @@ obj "dynamic_pipe" {
 }
 */
 
-func "sequence" { blocks |
-  q  := find_return_scope
-  fn := get @blocks 0
-  r  := apply @fn
+func "sequence" {: ...blocks |
+    console.log("seq called, blocks=",blocks)
+    let fn = blocks[0]
+    let next_blocks = blocks.slice(-1)
+    
+    let result = fn()
 
-  react @r {:
-    if (q.output.is_set) {
+    function next(val) {
+      console.log("seq finished! going next")
+      if (blocks.length > 1)
+        return sequence( ...blocks.slice(-1) )
+      console.log("seq all finished. val=",val)  
+      return val
+    }
+
+    // далее идет полное непонимание происходящего.
+    // и вообще я рассчитывал на реакцию а она не случилась..
+    if (result instanceof CL2.Comm) {
+      // console.log('see channel, subscribing once')
+      // вернули канал? слушаем его дальше.. такое правило для реакций
+      // но вообще это странно.. получается мы не можем возвращать каналы..
+      // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
+      let next_result = CL2.create_channel()
+      //  next_result.is_nxt = true
+      let unsub = result.once( (val) => {
+        // console.log('once tick',val,output+'')
+        let next_val = next( val )
+        if (next_val instanceof CL2.Comm)
+          next_val.once( r => next_result.submit(r) )
+        else  
+          next_result.submit( next_val )
+      })
+      return next_result
+    }
+    else if (result instanceof Promise) {
+      return result.then( val => {
+        return next( val )
+      })
+    }
+    else {
+      //console.log('submitting result to output',output+'')
+      return next( val )
+    }
+
+:}
+
+/*
+func "sequence2" { blocks |
+
+  fn := get @blocks 0
+
+  r  := apply @fn // кстати идея а не подать ли какой-то аргумент..
+  print "sequecne executing fn=" @fn "blocks=" @blocks
+
+  react @r {: val |
+    if (exit_scope.output.is_set) {
+       // закончили упражнение
     } else {
-      return sequence( blocks.slice(1) )
+      if (blocks.length > 0)
+        return sequence( blocks.slice(1) )
+      return val
     }
   :}
-
-  /*
-  react @r {
-    if (assigned @q.output) {
-    } else {
-      sequence (slice @blocks 1)
-    }
-  }
-  */
 }
+*/
