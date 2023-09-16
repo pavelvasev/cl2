@@ -114,6 +114,9 @@ export function _let_next( obj, state )
 			state.next_obj_cb(obj2,objid2,strs,bindings,bindings_hash_before_rest)
 	}
 
+	// надо отключить если было включено
+	state.static_values[ name ] = false
+
 
 	return {main: strs, bindings: []}
 }

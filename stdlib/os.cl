@@ -41,6 +41,7 @@ obj "spawn" {
   in {
     cmd_args*: cell
     stdio: cell 'pipe'
+    dir: cell '' 
   }
   output: channel
   stderr: channel
@@ -50,9 +51,18 @@ obj "spawn" {
   
   bind @stdout @output
 
-  rr: react (extract @cmd_args) {: args |
-    // console.log("os.spawn spawning",JSON.stringify(args))
+/*
+  args := extract @cmd_args
+  print "spawn args=" @args
+  print "spawn dir=" @dir
+  print "spawn std=" @stdio
+*/  
+
+  rr: react (when_all (extract @cmd_args) @stdio @dir) {: values |
+    let args = values[0]
+    //console.log("os.spawn spawning",JSON.stringify(values))
     rr.destroy() // больше чтобы не запускать
+    // т.е. этот процесс у нас символизирует один запуск
     
      // фича - добавить путь к cl-tool
      // но выяснилось что это не работает если cl-tool r
@@ -62,26 +72,36 @@ obj "spawn" {
      //let s_env = {...process.env}
      //s_env.PATH = s_env.PATH + ":" + tool_dir
     //let child = cp.spawn( args[0], args.slice(1), {env: s_env} )
-    let opts = { stdio: self.stdio.get()}
+    let opts = { stdio: self.stdio.get() }
+    if (self.dir.is_set) {
+      let d = self.dir.get()
+      if (d && d.length > 0)
+         opts.cwd = d
+    }
     // todo мб лучше прямо опции передать да и все. но тогда это несовместимость с др платформами ;-)
+    //console.log("spawning args=",args,"opts=",opts)
     
     let child = cp.spawn( args[0], args.slice(1),opts )
 
     // https://stackoverflow.com/questions/14332721/node-js-spawn-child-process-and-get-terminal-output-live
-    child.stdout.setEncoding('utf8');
-    child.stdout.on('data', function(data) {
-      // data = data.toString() ?
-      // console.log('data',data)
-      self.stdout.submit( data )
-    })
-    child.stderr.setEncoding('utf8');
-    child.stderr.on('data', function(data) {
-      // data = data.toString() ?
-      self.stderr.submit( data )
-    })    
-    child.on('close', function(code) {
-      self.exitcode.submit(code)
-    })
+    if (child.stdout) {
+      child.stdout.setEncoding('utf8');
+      child.stdout.on('data', function(data) {
+        // data = data.toString() ?
+        // console.log('data',data)
+        self.stdout.submit( data )
+      })
+    }
+    if (child.stderr) {
+      child.stderr.setEncoding('utf8');
+      child.stderr.on('data', function(data) {
+        // data = data.toString() ?
+        self.stderr.submit( data )
+      })    
+      child.on('close', function(code) {
+        self.exitcode.submit(code)
+      })
+    }
     //let s = spawn( args[0], args.slice(1),{ stdio: 'inherit' })
   :}
 }

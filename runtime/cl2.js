@@ -224,6 +224,7 @@ export function create_reaction(x) {
 
 export class Cell extends Comm {
 	value = null
+	// большой вопрос. мы не можем получается задать значение null по умолчанию
 	constructor( initial_value=NOVALUE ) {
 		// оказывается если послать сюда undefined то оно бодро превращается в NOVALUE..
 		//console.log('cell constructor',initial_value)
