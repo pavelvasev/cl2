@@ -13,7 +13,7 @@ func "format_summary" { s |
   return (map @s  { line |
     code := get @line 1
     name := get @line 0
-    return (+ (if (@code == 0) { return "  OK"} else { return "FAIL"}) " : " @name)
+    return (+ (if (@code == 0) { "  OK"} else { "FAIL"}) " : " @name)
   } | join "\\n")
 }
 

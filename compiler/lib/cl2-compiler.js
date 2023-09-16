@@ -20,10 +20,14 @@ import * as P from "./lang-parser.js"
      struc_parent_id - используется для генерации исходящих ссылок для выражений
      import_map - таблица преобразований вида id -> dir для работы инструкций import в рамках текущего модуля
      modules_conf - конфигурации загруженных модулей (init-файлы)
+     generated_ids - список сгенерированных объектов на текущем уровне вложенности. Надо для F-RETVAL-LAST
 */
 
 export function create_state( env={}, current={},dir="", tool ) {
-	return { env, current, struc_parent_id:null, tree_parent_id: null, dir, prefix:'', space:{}, static_values: {}, tool, import_map: {}, modules_conf: {} }
+	return { env, current, struc_parent_id:null, tree_parent_id: null, 
+	   dir, prefix:'', space:{}, static_values: {}, tool, 
+	   import_map: {}, modules_conf: {},
+	   generated_ids: [] }
 }
 
 export function modify_prefix( state={}, new_prefix )
@@ -39,7 +43,8 @@ export function modify_parent( state={}, nv, nv2=nv )
 	    tree_parent_id: nv2, 
 	    static_values: {...state.static_values}, // чтобы вложенные функции оставались внутри
       current: {...state.current}, // вложенные определения чтобы оставались внутри
-	    next_obj_cb: null}
+	    next_obj_cb: null,
+	    generated_ids: [] }
 	return ns
 }
 
@@ -360,6 +365,7 @@ export function default_obj2js( obj,state ) {
 	let objid = obj_id( obj, state )
 	let strs = [`/// object ${objid}`]
 	let strs2 = []
+	state.generated_ids.push( objid )
 
 	let bindings_hash_before_rest = {...bindings_hash} // надо для compute_mode
 
@@ -373,7 +379,7 @@ export function default_obj2js( obj,state ) {
 				if (!bindings_hash[ name ]) {
 					// константа
 					let pos_cell_name = `pos_cell_${objid}_${j}`
-					strs2.push( `let ${pos_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state) })`)
+					strs2.push( `let ${pos_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state,obj) })`)
 					strs2.push( `${pos_cell_name}.$title="pos_cell_${j}"; ${pos_cell_name}.attached_to=${objid}` )
 					pos_cells.push(pos_cell_name)
 					delete init_consts[ name ]
@@ -410,7 +416,7 @@ export function default_obj2js( obj,state ) {
 				if (!bindings_hash[ name ]) {
 					// константа
 					let named_cell_name = `named_cell_${objid}_${name}`
-					strs2.push( `let ${named_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state) })`)
+					strs2.push( `let ${named_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state,obj) })`)
 					strs2.push( `${named_cell_name}.$title="named_cell_${name}"; ${named_cell_name}.attached_to=${objid}` )
 					named_cells[name]=named_cell_name
 					delete init_consts[ name ]
@@ -441,7 +447,7 @@ export function default_obj2js( obj,state ) {
 	let obj_title = objid.indexOf( obj.basis ) < 0 ? `${objid}[${obj.basis}]` : `${objid}`
 	init_consts['$title'] = obj_title
 	
-  strs.push( `let ${objid} = ${obj.modul_prefix}create_${get_basis(basis_record)}( ${objToString(init_consts,1,state)} )`)
+  strs.push( `let ${objid} = ${obj.modul_prefix}create_${get_basis(basis_record)}( ${objToString(init_consts,1,state,obj)} )`)
   // тоже чтобы можно было на него ссылаться напрямую, по значению
   state.static_values[ objid ] = true
 
@@ -530,10 +536,10 @@ export function default_obj2js( obj,state ) {
 	return {main:strs,bindings}
 }
 
-export function objToString(obj, ndeep, state ) {
+export function objToString(obj, ndeep, state,parent_obj ) {
   if(obj == null) { return String(obj); }
   if (obj.this_is_env_list) return paramEnvToFunc( obj, state)
-  if (obj.code && obj.pos_args) return value_to_arrow_func( obj,state )
+  if (obj.code && obj.pos_args) return value_to_arrow_func( obj,state,parent_obj )
   if (obj.link && obj.from) return obj.from // F-STATIC-VALUES
 
   switch(typeof obj){
@@ -542,13 +548,14 @@ export function objToString(obj, ndeep, state ) {
     case "object":
       var indent = Array(ndeep||1).join('\t'), isArray = Array.isArray(obj);
       return '{['[+isArray] + Object.keys(obj).map(function(key){
-      	   if (isArray) return objToString(obj[key], (ndeep||1)+1,state)
-           return indent + key + ': ' + objToString(obj[key], (ndeep||1)+1,state);
+      	   if (isArray) return objToString(obj[key], (ndeep||1)+1,state,parent_obj)
+           return indent + key + ': ' + objToString(obj[key], (ndeep||1)+1,state,parent_obj);
          }).join(',') + '}]'[+isArray];
     default: return obj.toString();
   }
 }
 
+/// todo убрать это
 export function paramEnvToFunc( value, state ) {
 	if (!state)
 		throw new Error("paramEnvToFunc: state is not defined")
@@ -563,12 +570,16 @@ export function paramEnvToFunc( value, state ) {
 }
 
 import * as COMPUTE from "../plugins/compute/compute.js"
-export function value_to_arrow_func( code,state ) 
+export function value_to_arrow_func( code,state,parent_obj ) 
 {
 	// ссылки типа @funcname - резолвим прямо на funcname
 	code = code?.from ? code.from : code
 
-  code = COMPUTE.cocode_to_code( code,state )
+	// F-SKIP-RETURN-SCOPE
+	//let insert_return_scope = {"if":true,"else":true}[ parent_obj?.basis ] ? false : true
+	let insert_return_scope = true // F-FUNC-EXIT
+
+  code = COMPUTE.cocode_to_code( code,state,insert_return_scope )
 
 	// обработка формы {: :} но вообще это не так уж и ортогонально..
 	if (code.code && code.pos_args)

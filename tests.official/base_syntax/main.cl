@@ -11,6 +11,7 @@ print "r1 is" @r1
 
 assert (arrays_equal @r1 [10,20,30])
 
+
 # тестируем фичу отлова вычитания F-OPERATOR-MINUS
 
 n := 10
@@ -29,7 +30,7 @@ apply {
 
 # тестируем if
 func "igra" { d |
-    return (if (@d > 10) { return "vasya" } else { return "petya" })
+    if (@d > 10) { "vasya" } else { "petya" }
 } // todo внутри apply чето не работает
 apply {
 
@@ -46,7 +47,7 @@ apply {
 
 ## в форме k := if .. else ...
 apply {
-  k := if (10 > 100) { return true } else { return false }
+  k := if (10 > 100) true else false
   assert (@k == false)
 }
 # в форме k := foo | alfa

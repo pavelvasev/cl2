@@ -256,6 +256,9 @@ export function _obj( obj, state )
 					if ("_" + obj2.basis == next_obj_param) {
 						//console.log("NEXT OBJ PARAM",objid2)
 						strs.push( `${self_objid}.${next_obj_param}.set( ${objid2} )` )
+						//console.log("popping state.generated_ids",state.generated_ids)
+						state.generated_ids.pop() // съели
+						//console.log("so state.generated_ids",state.generated_ids)
 					}
 					state.next_obj_cb = prev
 					//console.log('CASE, prev restored',prev+"","calling it, str=",strs)
@@ -583,6 +586,7 @@ export function alias( obj, state )
 	return { main: [], bindings:[] }
 }
 
+// что-то перебор заради одного locinfos
 export function assert( obj, state )
 {
 	let cond = obj.params[0]
@@ -596,12 +600,18 @@ export function assert( obj, state )
 
 	let base = { main: [`// assert ${obj_id}`], bindings: [] }
 
+	// сделано чтобы можно было по F-RETVAL-LAST цепляться
+	base.main.push( `let ${obj_id} = CL2.create_item()`)	
+	base.main.push( `CL2.attach( ${obj_id},'output',CL2.create_cell() )`)
+	state.generated_ids.push( obj_id )
+
 	//  и фичеры.. это у нас дети которые не дети	
-	if (C.get_nested(obj)) 
+	let modified = C.modify_parent( state )
+	if (C.get_nested(obj))
 	{
 		//let mod_state = C.modify_parent(state,obj.$name)
 		for (let f of C.get_nested(obj)) {
-			let o = C.one_obj2js_sp( f, state )
+			let o = C.one_obj2js_sp( f, modified )
 			base.main.push( o.main )			
 			base.bindings.push( o.bindings )
 		}
@@ -624,7 +634,8 @@ export function assert( obj, state )
 	    console.error( 'assert FAILED',\`${message || ''}\` )
 	    throw \`${message || ''}\`
 	  }
-	  console.log("assert OK",\`${message || ''}\` )	  
+	  console.log("assert OK",\`${message || ''}\` )
+	  ${obj_id}.output.submit(true)
 	  ${clear_timeout}
 	})	
 	`)

@@ -185,6 +185,13 @@ obj "if"
       //console.log("activate-branch: ",branch_value)
       if (branch_value === CL2.NOVALUE) return
 
+      // если подали не функцию - ну вернем что подали.
+      // if cond 10 else 20
+      if (typeof(branch_value) !== "function") {
+        self.output.submit( branch_value )
+        return
+      }
+
       let cp = CL2.create_item()
       self.append( cp )
       current_parent.set( cp )
@@ -253,72 +260,6 @@ func "find_return_scope" {: start |
     }
 :}
 
-// ну посмотреть на его поведение.. сейчас странная цепочка
-// мб вернуться к parent-у и реакцию на parent
-obj "return2" {
-  in {
-    value: cell
-  }
-
-  //return_scope := find_return_scope
-
-  // ну тут история что value сразу срабатывает. а может быть имеет смысл delayed сделать..
-  // тогда парент-а проверять не придется т.к. он как правило есть
-  // но вообще хорошо бы парента просто в обязательные параметры
-  react @value {: value |
-    // надо добраться до некотого блока возвращающего значения.. и передать его туда
-    //let p = self.attached_to
-    // спорная реализация.. я тут не проверяю parent на изменение
-    // но впрочем как и всю цепочку.. будем посмотреть
-    let rs = find_return_scope( self )
-    console.log("return: find_return_scope result=",rs,'self=',self+'')
-    //let rs = return_scope.get()
-    if (!rs?.output) {
-      console.error("return: failed to find return scope!",self+"",rs)
-      return "return_not_found_output"
-    }
-    console.log("sending value",value)
-    rs.output.submit( value )
-  :}
-}
-
-/*
-obj "return" {
-  in {
-    value: cell
-  }
-
-  if @self.parent { 
-    print "OK RETURN HAVE PARENT"
-
-    // ну тут история что value сразу срабатывает. а может быть имеет смысл delayed сделать..
-    // тогда парент-а проверять не придется т.к. он как правило есть
-    // но вообще хорошо бы парента просто в обязательные параметры
-    react @value {: value |
-      // надо добраться до некотого блока возвращающего значения.. и передать его туда
-      let p = self.parent.get()
-      //console.log("============ return reacting", p+"")
-      //console.trace()
-      while (p) {
-        //console.log("=========== return checking p=",p+"")
-        if (p.output) {
-          //console.log("================== return found output")
-          p.output.set( value )
-          return {return_found_output:true}
-        }
-        p = p.parent.get()
-      }
-      return {return_found_output:false}
-    :}
-
-  } else {
-    print "OK RETURN HAVE NO PARENT"
-    react @value {: value |
-      console.log("============ return reacting, no-parent mode")
-    :}
-  }
-}
-*/
 
 // исп: block { some things } -> output_func где output_func функция создания содержимого блока
 obj "block" {
@@ -327,26 +268,6 @@ obj "block" {
   }
 }
 
-/*
-obj "task" {
-  in {
-    basis_func: cell
-    bindings: cell
-    consts: cell
-  }
-  output: cell
-
-  incoming_vals: extract @bindings
-
-  react @incoming_vals.output {: vals |
-    // .. merge_vals_to_consts
-    let obj = basis_func( consts )
-    obj.output.subscribe( (result) => {
-      self.output.set( result )
-    })
-  :}
-}
-*/
 
 obj "when_all" {
   in {
@@ -594,6 +515,7 @@ obj "reduce_events" {
 // идея - как-то автоматом передавать locinfo в assert..
 // идея - дампить доп объекты
 // перенесено в формы, чтобы locinfo по умолчанию в message выводить..
+
 /*
 func "assert1" {: cond message |
   message ||= ''
@@ -603,6 +525,26 @@ func "assert1" {: cond message |
   }
   console.log("assert OK",message )
 :}
+*/
+/*
+obj "assert" {
+  in {
+    cond: cell
+    message: cell
+  }
+  output: cell
+  bind @cond @output
+
+  compiler_hook {: obj state |
+    obj.params.message ||= obj.locinfo.short
+  :}
+
+  react @cond {: val |
+    if (!val) {
+      // но надо бы подождать message.. но она например зависла.. и ассерт тогда не сработает..
+    }
+  :}
+}
 */
 
 // todo вынести в assert.cl и научиться ре-экспортировать имена
