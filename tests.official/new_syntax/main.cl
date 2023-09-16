@@ -2,6 +2,14 @@
 
 import os="std/os.cl"
 
+///////////////// возможность использовать пайпу в аргументах
+
+func "foo0" { coef x | return (@coef*@x) }
+
+r44 := foo0( 2, foo0(2,10) | foo0 5 )
+print "r44=" @r44
+assert (@r44 == 200) // 2 * (2*10)*5
+
 ///////////////// случай or
 
 //init_dir := or (get (os.env) "DIR") (567 + 1)

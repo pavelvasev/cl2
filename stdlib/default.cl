@@ -456,6 +456,11 @@ func "or" {: ...values |
 :}
 alias "or" "||"
 
+// нет даже идей во что она превратит 0
+func "not" {: value |   
+   return (!value)
+:}
+
 ///////////////////////
 
 func "equal" {: ...values |
@@ -466,6 +471,15 @@ func "equal" {: ...values |
    return true  
 :}
 alias "equal" "=="
+
+func "not_equal" {: ...values |
+   // какое надо equals? строгое или нестрогое?
+   // здесь сделаем нестрогое
+   for (let i=1; i<values.length; i++)
+     if ((values[i] == values[i-1])) return false
+   return true  
+:}
+alias "not_equal" "!="
 
 func "less" {: ...values |
    // какое надо equals? строгое или нестрогое?
@@ -599,17 +613,71 @@ obj "dict" {
   }  
   output: cell
 
-  xtracted: extract @rest_all
-  //react @xtracted.output {: console.log('xtracted') :}
-
-  bind @xtracted.output @output
+  xtracted := extract @rest_all
+  bind @xtracted @output
 }
+
+func "list_to_dict" {: nodes |
+   let h = {}
+   for (let k of nodes) {
+      h[ k[0] ] = k[1] 
+   }
+   return h   
+:}
+
+func "keys" {: obj |
+  if (Array.isArray(obj)) return [...Array( obj.length ).keys()]
+  if (obj instanceof Map) return obj.keys()
+  if (obj instanceof Set) return obj.keys()  
+  return Object.keys(obj)
+:}
+
+func "values" {: obj |
+  if (Array.isArray(obj)) return obj
+  if (obj instanceof Map) return obj.values()
+  if (obj instanceof Set) return obj.keys()  
+  return Object.values(obj)
+:}
+
+func "concat" {: a b | 
+   if (Array.isArray(a)) return [...a,...b]
+   if (a instanceof Set) return {...a,...b}
+   if (typeof(a) == "object") return {...a,...b}
+   console.error("a=",a,"b=",b)
+   throw `concat: incompatible types.`
+:}
+
+// ну пока такое
+func "range" {: max |
+  let arr = new Array(max)
+  for (let i=0; i<max; i++) arr[i] = i
+  return arr
+:}
+
+func "len" {: obj |
+    if (Array.isArray(obj)) return obj.length
+    if (obj instanceof Map) return obj.size()
+    if (obj instanceof Set) return obj.size()
+    return Object.keys(obj).length
+:}
+
+func "join" {: obj sep |
+    return obj.join(sep)
+:}
+
+func "flatten" {: obj |
+    return obj.flatten()
+:}
 
 //func "dict" {: rest_values | return values :}
 
 func "list" {: ...values | return values :}
 
-func "get" {: src field | return src[field] :}
+// ну а если там ячейка?
+func "get" {: src field | 
+    //let val = src[field] 
+    return src[field] 
+:}
 
 func "map" {: arr f |
   // is_task_function стало тяжко назначать..
@@ -752,24 +820,6 @@ func "reduce" {: arr acc_init f |
   return output
 :}
 
-// ну пока такое
-func "range" {: max |
-  let arr = new Array(max)
-  for (let i=0; i<max; i++) arr[i] = i
-  return arr
-:}
-
-func "len" {: obj |
-    return obj.length
-:}
-
-func "join" {: obj sep |
-    return obj.join(sep)
-:}
-
-func "flatten" {: obj |
-    return obj.flatten()
-:}
 
 // получается это мы делаем динамический пайп, в него можно будет в рантайме добавлять объекты
 // но в целом это так-то очень редко надо.. плюс проблема - обработка input-позиционных аргументов..

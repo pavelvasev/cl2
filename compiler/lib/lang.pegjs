@@ -489,9 +489,11 @@ feature_operator_name  // разрешим еще больше в имени ч�
   / "/" { return text(); }
   / "<" { return text(); }
   / ">" { return text(); }
+  / ">=" { return text(); }
+  / "<=" { return text(); }    
   / "==" { return text(); }
+  / "!=" { return text(); }
   / "and" { return text(); }
-  / "=>" { return text(); }
   / "or" { return text(); }
   / "not" 
   { return text(); }
@@ -885,13 +887,15 @@ positional_value_callstyle
   / js_inline
   / cl_cofunc
   / link               // link_callstyle  
-  / env:one_env_obj_callstyle {
-    return { env_expression: [env], locinfo: getlocinfo() }
-  }  
-  / "("? ws env_list:env_list ws ")"? {
+  // / "("? env_list:env_list ")"? {     // почему-то скобки не прокатывают..
+  / env_list:env_list {
     // attr expression
     return { env_expression: env_list, locinfo: getlocinfo() }
   }
+  / env:one_env_obj_callstyle {
+    return { env_expression: [env], locinfo: getlocinfo() }
+  }  
+
 
 positional_value_callstyle2
   = false
