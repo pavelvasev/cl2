@@ -23,16 +23,20 @@ func "download" { spec dir |
 }
 
 func "nest" { spec dir root_dir nested need_download|
-  if (get @nested @dir) {
+  sequence
+  {
+    if (get @nested @dir) {
       // уже обработали
       print "already processed"
       return @nested
+    }
   }
-  ============
-  if (@need_download) {
-    download @spec @dir
+  {
+    if (@need_download) {
+      download @spec @dir
+    }
   }
-  ============
+  {
   print "nesting dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
   conf := apply {: dir | return util.load_module_config(dir) :} @dir
@@ -46,6 +50,7 @@ func "nest" { spec dir root_dir nested need_download|
   }
 
   merge @subnested @s2
+  }
 }
 
 init_dir := or (get(os.env(),"DIR")) (os.cwd)
@@ -53,7 +58,7 @@ init_file := os.join @init_dir "init.js"
 
 if (os.exist @init_file) {
   print "running"
-  result := nest( @init_dir,os.join(@init_dir,"modules"),dict())
+  result := nest( dict(), @init_dir, os.join(@init_dir,"modules"), dict(), false)
   react @result {
     print "finished"
   }

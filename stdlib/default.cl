@@ -170,7 +170,7 @@ obj "if"
     })
   :}
 
-  cleanup_current_parent: func {:
+  func "cleanup_current_parent" {:
     //console.log("cleanup_current_parent",current_parent.get())
       if (current_parent.is_set) {
           let cp = current_parent.get()
@@ -179,7 +179,7 @@ obj "if"
         }
     :}
 
-  activate_branch: func {: branch_value arg |
+  func "activate_branch" {: branch_value arg |
       cleanup_current_parent()
 
       //console.log("activate-branch: ",branch_value)
@@ -236,38 +236,50 @@ obj "if"
   :}
 }
 
+// может быть не скопу искать а сразу ячейку куды писать
+func "find_return_scope" {: start |
+    start ||= self
+    let p = start.parent && start.parent.is_set ? start.parent.get() : start.attached_to
+    // console.log('============ return acting',self+"",self)
+    // console.log("============ return reacting", p+"")
+    // console.trace()
+    while (p) {
+      //console.log("=========== return checking p=",p+"")
+      if (p.output && p.is_return_scope) {
+        return p
+      }
+      //console.log("it has no ouytput",JSON.stringify(p))
+      p = p.parent ? p.parent.get() : p.attached_to
+    }
+:}
+
 // ну посмотреть на его поведение.. сейчас странная цепочка
 // мб вернуться к parent-у и реакцию на parent
-obj "return" {
+obj "return2" {
   in {
     value: cell
   }
 
-    // ну тут история что value сразу срабатывает. а может быть имеет смысл delayed сделать..
-    // тогда парент-а проверять не придется т.к. он как правило есть
-    // но вообще хорошо бы парента просто в обязательные параметры
-    react @value {: value |
-      // надо добраться до некотого блока возвращающего значения.. и передать его туда
-      //let p = self.attached_to
-      // спорная реализация.. я тут не проверяю parent на изменение
-      // но впрочем как и всю цепочку.. будем посмотреть
-      let p = self.parent && self.parent.is_set ? self.parent.get() : self.attached_to
-      //console.log('============ return acting',self+"",self)
-      //console.log("============ return reacting", p+"")
-//      console.trace()
-      while (p) {
-        //console.log("=========== return checking p=",p+"")
-        if (p.output) {
-          //console.log("================== return found output", value,p.output + "")
-          p.output.set( value )
-          return "return_found_output"
-        }
-        //console.log("it has no ouytput",JSON.stringify(p))
-        p = p.parent ? p.parent.get() : p.attached_to
-      }
-      console.error("return: failed to find output cell!",self+"")
+  //return_scope := find_return_scope
+
+  // ну тут история что value сразу срабатывает. а может быть имеет смысл delayed сделать..
+  // тогда парент-а проверять не придется т.к. он как правило есть
+  // но вообще хорошо бы парента просто в обязательные параметры
+  react @value {: value |
+    // надо добраться до некотого блока возвращающего значения.. и передать его туда
+    //let p = self.attached_to
+    // спорная реализация.. я тут не проверяю parent на изменение
+    // но впрочем как и всю цепочку.. будем посмотреть
+    let rs = find_return_scope( self )
+    console.log("return: find_return_scope result=",rs,'self=',self+'')
+    //let rs = return_scope.get()
+    if (!rs?.output) {
+      console.error("return: failed to find return scope!",self+"",rs)
       return "return_not_found_output"
-    :}
+    }
+    console.log("sending value",value)
+    rs.output.submit( value )
+  :}
 }
 
 /*
@@ -679,6 +691,8 @@ func "get" {: src field |
     return src[field] 
 :}
 
+func "slice" {: list start length | return list.slice( start,length ) :}
+
 func "map" {: arr f |
   // is_task_function стало тяжко назначать..
   //if (!f.is_task_function)
@@ -854,3 +868,25 @@ obj "dynamic_pipe" {
   
 }
 */
+
+func "sequence" { blocks |
+  q  := find_return_scope
+  fn := get @blocks 0
+  r  := apply @fn
+
+  react @r {:
+    if (q.output.is_set) {
+    } else {
+      return sequence( blocks.slice(1) )
+    }
+  :}
+
+  /*
+  react @r {
+    if (assigned @q.output) {
+    } else {
+      sequence (slice @blocks 1)
+    }
+  }
+  */
+}

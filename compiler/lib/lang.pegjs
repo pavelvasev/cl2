@@ -642,7 +642,7 @@ one_env_positional_attr "environment positional record"
     fill_env( env, [first_positional_attr], [] )
 
     return env;
-  }  
+  }
 
 
 // F-LET-SHORTCUT-OPERATOR
