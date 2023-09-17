@@ -480,6 +480,7 @@ attr_name
 // разрешим еще больше в имени чтобы фичи могли называться как угодно < || && + и т.д.
 feature_name "feature name"
   = [a-zA-Zа-яА-Я_][a-zA-Zа-яА-Я0-9_\-\.!]* { return text(); } 
+//  / "===" "="+ { return "wait"} //F-SEQ-WAIT
   / feature_operator_name // оставим возможность фичам вида + a b c
 
 feature_operator_name  // разрешим еще больше в имени чтобы фичи могли называться как угодно < || && + и т.д.
@@ -516,10 +517,11 @@ obj_path
   = [\.\/~]+ { return text(); } 
 
 one_env
-  = one_env_operator
+  = one_env_obj_wait
+  / one_env_operator
   / one_env_obj_callstyle
-  / one_env_obj  
-  / one_env_positional_attr
+  / one_env_obj
+  / one_env_positional_attr  
 
 
 // ------- A. envs
@@ -540,6 +542,35 @@ one_env_obj "environment record"
     fill_env( env, env_modifiers, child_envs )
 
     return env;
+  }
+  //finalizer: (__ ";")*
+
+one_env_obj_wait "environment record wait"
+  =
+  envid: (__ @(@attr_name ws ":")?)
+  __ first_feature_name:("===" "="+ / "wait")
+  env_modifiers:(__ @env_modifier)*
+  child_envs:(__ @env_list __)
+  {
+    //console.log("found wait",first_feature_name)
+    var env = new_env( envid );
+    env.locinfo = getlocinfo();
+    // этим мы застолбили что фича первая всегда идет и точка.
+    first_feature_name = "wait"
+    env.features[ first_feature_name ] = {};
+    
+    set_basis( env, first_feature_name )
+
+    let p = {positional_param: true, 
+         value: { code: child_envs, cofunc: true, 
+              pos_args: child_envs?.env_args?.attrs || [], 
+              locinfo: getlocinfo() } }
+    env_modifiers.push( p )              
+
+    fill_env( env, env_modifiers, [] )
+    //fill_env( env, env_modifiers, child_envs )
+
+    return env;xxx
   }
   //finalizer: (__ ";")*
 

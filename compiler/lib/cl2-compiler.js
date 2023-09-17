@@ -211,6 +211,7 @@ function get_basis( record ) {
 // objs - массив описаний
 // state - состояние компилятора. в него записываются прочитанные определения новых типов
 //  т.е. оно служит и окружением компилятора. см state.current
+// todo выделить эту штуку до мержа со строчками. и использовать всюду. и добавить каллбеку.
 export function objs2js( objs,state )
 {
 	//console.log("gonna make js for",objs)

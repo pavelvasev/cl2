@@ -185,7 +185,9 @@ export function cocode_to_code( v,state, is_return_scope, is_exit_scope ) {
 	//let last_obj_id = C.obj_id( v.code[ v.code.length-1 ], state )
 	// не прокатило. потому что у нас else поедается if-ом и т.п.
 	let last_obj_id = modified.generated_ids[ modified.generated_ids.length-1 ]
-	let connect_last = modified.generated_ids.length == 1 && last_obj_id ? `CL2.create_binding( ${last_obj_id}.output, output )` : ``
+	let connect_last = modified.generated_ids.length == 1 && last_obj_id ? `CL2.create_binding( ${last_obj_id}.output, output ) // F-RETVAL-LAST` : ``
+
+	if (modified.disable_retval_last) connect_last = ''
 
 	//s = C.strarr2str( s )
 
@@ -252,7 +254,18 @@ export function _return( obj, state )
   	}
   }
   // отобьем желание генерировать возврат на текущем уровне.. ну это хак. F-RETVAL-LAST
-  state.generated_ids.push( ";-)","***")
+  // state.generated_ids.push( ";-)","***")
+  // вроде как бы и не нужно стало т.к. F-RETVAL-LAST работает только на 1 окружении
+  // ну а если он совпадает с return то и ладно.
+
+  // для F-RETVAL-LAST все-таки что-то надо показать, а то оно return просто не видит..
+  // и считает что там например 1 оператор и на него сажается
+  // но в то же время просто ерунду мы записать в id не можем т.к. F-SEQ-WAIT читает эти id
+  //let objid = C.obj_id( obj, state )
+  //base.main.push( `let ${objid} = {} // return operator`)
+  //state.generated_ids.push( objid )
+  // короче заморочки.. проще вот так сделать
+  state.disable_retval_last = true
 	
 	return base
 
@@ -294,7 +307,8 @@ export function _exit( obj, state )
   	}
   }
   // отобьем желание генерировать возврат на текущем уровне.. ну это хак. F-RETVAL-LAST
-  state.generated_ids.push( ";-)","***")
+  // state.generated_ids.push( ";-)","***")
+  state.disable_retval_last = true
 	
 	return base
 
