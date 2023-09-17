@@ -1,19 +1,18 @@
 {
-  "name": "cl2",
+  "name": "clon-lang",
   "exports": {
     ".": "./runtime/cl2.js"
    },
    "main": "./runtime/cl2.js",
   "type": "module",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "CLON language tool.",
   "directories": {
     "example": "examples"
   },
   "bin": { 
-     "clon" : "clon.sh",
-     "cl2" : "clon.sh",
-     "clon-js" : "compiler/tool/cl-tool.js" 
+     "clon" : "compiler/tool/cl-tool.js",
+     "clon-lang" : "compiler/tool/cl-tool.js"
    },
   "repository": {
     "type": "git",

@@ -933,3 +933,10 @@ export function mark_task_function( fn ) {
 	fn.is_task_function = true
 	return fn
 }
+
+// необходимо перечислить все вышеперечисленное для непонимающих
+let CL2={ create_binding, 
+  create_cell, create_channel, create_item,
+  NOVALUE, Cell, Channel, ClObject, Comm, attach,
+  attach_anonymous, monitor_rest_values, when_all, when_all_once,
+  create_binding_delayed, create_binding_any, schedule }

@@ -117,15 +117,19 @@ class Tool {
 
 	// добавляет код к кодогенерации
   // каждый элемент code - строчка, массив строчек, массив массивов..
-	add_global_code( ...code ) {
-		this.global_code.push( ...code )
+	add_global_code( ...code) {
+			this.global_code.push( ...code )
+	}
+	prepend_global_code( ...code ) {
+		this.global_code.unshift( ...code )
 	}
 	get_global_code() {
 		return C.strarr2str( this.global_code )
 	}
 
 	gen_full_code( code ) {
-		return `import * as CL2 from 'cl2'\nlet self={};\n${this.get_global_code()}\n${code}`
+		//return `import * as CL2 from 'clon-lang'\nlet self={};\n${this.get_global_code()}\n${code}`
+		return `// CLON program\nlet self={};\n${this.get_global_code()}\n${code}`
 	}
 
 	commands = {}
