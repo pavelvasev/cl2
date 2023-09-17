@@ -227,6 +227,8 @@ state.env["import"] = {
 
 let command = process.argv[2] || "compile"
 
+//process.env['PATH'] = process.e
+
 mmm.then( () => {
 	tool.get_command(command).apply( this, [...process.argv].slice(3) )	
 })

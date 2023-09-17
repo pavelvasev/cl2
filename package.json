@@ -5,22 +5,12 @@
    },
   "type": "module",
   "version": "1.0.42",
-  "description": "Visualizes scenes written in Compalang.",
+  "description": "CLON language.",
   "main": "app.js",
   "directories": {
     "example": "examples"
   },
-  "bin": {
-    "vrungel": "./server.mjs",
-    "vrungel-setup": "./local-data-server-setup/setup.mjs",
-    "vrungel-setup-off": "./local-data-server-setup/setup-off.mjs"
-  },
-  "scripts": {
-    "start": "node ./server.mjs",
-    "setup": "node ./local-data-server-setup/setup.mjs",
-    "setupoff": "node ./local-data-server-setup/setup.mjs off",
-    "node": "node ./vrungel-node.js"
-  },
+  "bin": { "clon" : "clon.sh", "clon-js" : "compiler/tool/cl-tool.js" },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/viewzavr/vrungel.git"
