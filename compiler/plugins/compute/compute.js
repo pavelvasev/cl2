@@ -13,6 +13,11 @@ export function init( state, tool )
 	state.env.return = { make_code: _return, check_params: default_cp}
 	state.env.exit = { make_code: _exit, check_params: default_cp} // F-FUNC-EXIT
 
+	// todo вообще этот output можно ловить и передавать старшему процессу. для F-RUN
+	tool.add_global_code( ['let return_scope = self; let exit_scope = self;',
+		`CL2.attach( self, 'output', CL2.create_cell() )`
+	])
+
 /* оставлено на память как пример добавки cl-кода из js
 	let task_code = `
 obj "task" {

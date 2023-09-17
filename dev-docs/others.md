@@ -9,3 +9,5 @@
 * Coffescript - пример того что js-вычисление можно описать короче чем js и без потери ясности.
   https://github.com/olga3n/viewlang_setki/blob/master/src/coffee/grid.coffee
 * DMS - пример краткой стандартной библиотеки https://www.w3.org/2019/11/dms/
+* Rust - утилита командной строки cargo похожая на нашу.  И пакеты называются коробками, crates.
+https://doc.rust-lang.org/cargo/guide/dependencies.html

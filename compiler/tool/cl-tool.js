@@ -125,7 +125,7 @@ class Tool {
 	}
 
 	gen_full_code( code ) {
-		return `import * as CL2 from 'cl2'\nlet self={}\n${this.get_global_code()}\n${code}`
+		return `import * as CL2 from 'cl2'\nlet self={};\n${this.get_global_code()}\n${code}`
 	}
 
 	commands = {}
