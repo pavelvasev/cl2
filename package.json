@@ -3,29 +3,27 @@
   "exports": {
     ".": "./runtime/cl2.js"
    },
+   "main": "./runtime/cl2.js",
   "type": "module",
-  "version": "1.0.42",
-  "description": "CLON language.",
-  "main": "app.js",
+  "version": "1.0.1",
+  "description": "CLON language tool.",
   "directories": {
     "example": "examples"
   },
-  "bin": { "clon" : "clon.sh", "clon-js" : "compiler/tool/cl-tool.js" },
+  "bin": { 
+     "clon" : "clon.sh",
+     "cl2" : "clon.sh",
+     "clon-js" : "compiler/tool/cl-tool.js" 
+   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/viewzavr/vrungel.git"
+    "url": "git+https://github.com/pavelvasev/cl2.git"
   },
   "author": "Pavel Vasev",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/viewzavr/vrungel/issues"
+    "url": "https://github.com/pavelvasev/cl2/issues"
   },
-  "homepage": "https://github.com/viewzavr/vrungel#readme",
-  "dependencies": {
-    "chalk": "^5.1.2",
-    "console-stamp": "^3.0.6",
-    "node-static": "^0.7.11",
-    "opener": "^1.5.2",
-    "peggy": "^1.2.0"
-  }
+  "homepage": "https://github.com/pavelvasev/cl2#readme",
+  "dependencies": {}
 }
