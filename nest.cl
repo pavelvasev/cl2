@@ -5,7 +5,7 @@ import path="node:path" os="std/os.cl" util="./compiler/tool/utils.js"
 # установить модули для модуля dir в проекте root_dir с учетом уже установленных модулей nested
 
 func "download" { spec dir |
-  return (if (get @spec "git") {
+  if (get @spec "git") {
     print "this is git"
     return (if (os.exist @dir) {
       print "git dir exist. issuing pull."
@@ -19,7 +19,7 @@ func "download" { spec dir |
     })
   } else {
     return 1
-  })
+  }
 }
 
 func "nest" { spec dir root_dir nested need_download|
@@ -28,7 +28,7 @@ func "nest" { spec dir root_dir nested need_download|
     if (get @nested @dir) {
       // уже обработали
       print "already processed"
-      return @nested
+      exit @nested
     }
   }
   {
