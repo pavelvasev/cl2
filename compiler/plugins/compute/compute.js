@@ -12,6 +12,7 @@ export function init( state, tool )
 	state.env.func = { make_code: func, check_params: default_cp}
 	state.env.return = { make_code: _return, check_params: default_cp}
 	state.env.exit = { make_code: _exit, check_params: default_cp} // F-FUNC-EXIT
+	state.env.wait = { make_code: wait, check_params: default_cp} // F-FUNC-EXIT
 
 	// todo вообще этот output можно ловить и передавать старшему процессу. для F-RUN
 	tool.add_global_code( ['let return_scope = self; let exit_scope = self;',
@@ -426,3 +427,45 @@ obj "return" {
   }
 }
 */
+
+
+// F-SEQ-WAIT
+import * as COMPUTE from "../compute/compute.js"
+export function wait( obj, state )
+{
+	let base = { main: [], bindings: [] }
+
+	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
+	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
+	let objid = C.obj_id(obj,state)
+	base.main.push( `let ${objid} = CL2.create_item() // wait`)
+	base.main.push( `CL2.attach( ${objid},'input',CL2.create_cell())`)
+	base.main.push( `CL2.attach( ${objid},'output',CL2.create_cell())`)
+
+	//  и фичеры.. это у нас дети которые не дети	
+	let counter = 0
+	let prev_objid = objid
+	let prev_from = null // `${objid}.input`
+	//let ch = C.get_children(obj,0)
+	//let ch = Object.values(obj.children) // hack
+	let ch = obj.params[0]
+
+	let mod_state = C.modify_parent(state,objid)
+	let code = COMPUTE.cocode_to_code( ch,state,false,false )
+	//console.log(code)
+	//state.auto_return_disabled = true
+
+	// и теперь мы настраиваем реакцию..
+	// ну кого ждем и как? ну например всех и по output. хотя надо бы по шедулед-заданиям так-то
+	let ids = "[" + state.generated_ids.join(",") + "]"
+	base.main.push( 
+		`let ${objid}_waiting_items = ${ids}.filter( x => x.output ? true : false).map( x => x.output )`,
+		`let ${objid}_done = CL2.when_all_once( ${objid}_waiting_items )`,
+		`let ${objid}_unsub = ${objid}_done.once( () => { if (return_scope.output.is_set) return; `,code.code,` })`,
+		`return_scope.output.once( ${objid}_unsub )` // мол нечего ждать если return сказали
+	)
+
+	state.generated_ids.push( objid )
+
+	return base
+}	
