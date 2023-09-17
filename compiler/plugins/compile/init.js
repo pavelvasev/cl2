@@ -13,7 +13,8 @@ export function init( state, tool ) {
 		}
 		let out_file = file + ".js"
 		
-		let config_file = path.dirname( file ) + "/init.js"
+		// надо полный путь а то получаются короткие имена вида some/init.js и оно начинает думать что some это имя модуля
+		let config_file = path.resolve( path.dirname( file ) + "/init.js" )
 
 		let mmm0 = access(config_file, constants.R_OK)
 		let mmm = mmm0.then( () => {

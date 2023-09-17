@@ -627,6 +627,8 @@ func "flatten" {: obj |
 // применение: ключи и значения можно указывать как позиционные параметры и как именованные
 // все что указано и сформирует итоговый словарь
 // dict [k v k v] [k=v k=v]
+// либо
+// dict arr [k=v k=v] где arr содержит пары, т.е [ [k v] [k v] ...]
 obj "dict" {
   in {
     rest_pos*: cell
@@ -642,8 +644,17 @@ obj "dict" {
       if (list.length == 0) return kv
       //if (Object.keys(kv))
       let h = {...kv}
-      for (let i=0; i<list.length; i+=2)
+      if (list.length == 1) // случай dict arr
+      {
+        let nodes = list[0]
+        for (let k of nodes) {
+              h[ k[0] ] = k[1] 
+        }
+      }
+      else
+      for (let i=0; i<list.length; i+=2) // значения из позиционных аргументов
         h[ list[i] ] = list[i+1]
+
       return h
   :} (extract @rest_pos) (extract @rest_all)
 

@@ -30,6 +30,7 @@ export function get_module_dir( r, current_dir ) {
 
 // загружает конфигурацию модуля по указанному пути (папка или файл)
 // пока считается что там файл init.js в папке лежит
+// и дорабатывает этот конфиг, считает для него карту импорта (зачем-то)
 export function	load_module_config( module_path ) {
 		//console.log("load_module_config module_path=",module_path)
 
@@ -40,7 +41,7 @@ export function	load_module_config( module_path ) {
 		//console.log("load_module: ",dir)
 		if (module_path.endsWith(".js")) {
 			init_file = module_path
-			dir = path.dirname( module_path )			
+			dir = path.dirname( module_path )
 		}
 		else {
 		  init_file = path.join(module_path,"init.js")
@@ -52,6 +53,7 @@ export function	load_module_config( module_path ) {
 			let inner_modules = m.modules || m.sources || {}
 
 			// функция 1 - запомнить пути для карты импорта
+			// todo вообще ее надо отсюда вынести. пусть эта функция только читает
 			let import_map = {}
 			for (let key in inner_modules) 
 				import_map[key] = get_module_dir( inner_modules[key], dir )
@@ -60,4 +62,12 @@ export function	load_module_config( module_path ) {
 
 			return conf
 		})
-	}		
+	}
+
+// проект - выносим генерацию карт импорта в отдельный модуль
+// module_config - загруженная конфигурация модуля. 
+// содержит список источников модуля в .modules и .dir - папка модуля.	
+export function generate_import_map( module_config, root_dir ) 
+{
+
+}

@@ -1,5 +1,7 @@
 #!./clon r
 
+// Программа установщик модулей CLON для текущего проекта.
+
 import path="node:path" os="std/os.cl" util="../../tool/utils.js"
 
 # установить модули для модуля dir в проекте root_dir с учетом уже установленных модулей nested
