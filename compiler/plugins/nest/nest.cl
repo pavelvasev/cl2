@@ -1,6 +1,6 @@
 #!./clon r
 
-import path="node:path" os="std/os.cl" util="./compiler/tool/utils.js"
+import path="node:path" os="std/os.cl" util="../../tool/utils.js"
 
 # установить модули для модуля dir в проекте root_dir с учетом уже установленных модулей nested
 
