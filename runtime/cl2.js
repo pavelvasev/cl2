@@ -871,7 +871,7 @@ export function monitor_rest_values( src,tgt ) {
 
 			// это после преобразования F-NAMED-REST
 			if (comms == null || comms.length == 0) {
-				dtgt.emit( [] )
+				dtgt.emit( rest_names ? {} : [] )
 				unsub = () => {}
 				return
 			}			

@@ -43,7 +43,7 @@ func "nest" { spec dir root_dir nested need_download|
 
   s2 := reduce (get @conf "modules") @subnested { value key acc |
     dir := get (get @conf "import_map") @key
-    apply @nest @value @dir @root_dir @acc true
+    return (apply @nest @value @dir @root_dir @acc true)
   }
 
   concat @subnested @s2

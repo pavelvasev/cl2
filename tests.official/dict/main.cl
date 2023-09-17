@@ -1,3 +1,14 @@
+
+print "stage 0"
+
+a := dict()
+print "a=" @a
+
+assert (apply {: x | return typeof(x) == "object" && Object.keys(x).length == 0 :} @a)
+
+===========================
+print "stage 1"
+
 import std="std"
 
 y := 7

@@ -634,6 +634,8 @@ obj "dict" {
   }  
   output: cell
 
+  //print "rest_all=" @rest_all
+
   //xtracted := extract @rest_all
 
   merged := apply {: list kv |
