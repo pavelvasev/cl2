@@ -370,6 +370,7 @@ export function default_obj2js( obj,state ) {
 
 	let bindings_hash_before_rest = {...bindings_hash} // надо для compute_mode
 
+	//console.log({pos_rest,named_rest})
 	if (pos_rest.name) {
 		let rest_name = `${objid}_${pos_rest.name}`
 		if (pos_rest.length > 0) {			
@@ -432,7 +433,7 @@ export function default_obj2js( obj,state ) {
 				}
 				// стало быть это ссылки типа binding..
 			}
-			console.log("named_cells=",named_cells)
+			//console.log("named_cells=",named_cells)
 			bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
 			bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
 

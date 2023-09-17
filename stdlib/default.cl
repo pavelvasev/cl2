@@ -186,7 +186,10 @@ obj "if"
       cleanup_current_parent()
 
       //console.log("activate-branch: ",branch_value)
-      if (branch_value === CL2.NOVALUE) return
+      if (branch_value === CL2.NOVALUE) {
+        self.output.submit()
+        return
+      }
 
       // если подали не функцию - ну вернем что подали.
       // if cond 10 else 20
@@ -564,16 +567,6 @@ func "arrays_equal" {: a b |
 
 ///////////////////////
 
-obj "dict" {
-  in {
-    rest_all**: cell
-  }  
-  output: cell
-
-  xtracted := extract @rest_all
-  bind @xtracted @output
-}
-
 func "list_to_dict" {: nodes |
    let h = {}
    for (let k of nodes) {
@@ -597,6 +590,7 @@ func "values" {: obj |
 :}
 
 func "concat" {: a b | 
+   //console.log('concat',a,b)
    if (Array.isArray(a)) return [...a,...b]
    if (a instanceof Set) return {...a,...b}
    if (typeof(a) == "object") return {...a,...b}
@@ -627,6 +621,34 @@ func "flatten" {: obj |
 :}
 
 //func "dict" {: rest_values | return values :}
+
+// функция создания словаря
+// можно сделать как func если научимся именованные параметры в функции передавать
+// применение: ключи и значения можно указывать как позиционные параметры и как именованные
+// все что указано и сформирует итоговый словарь
+// dict [k v k v] [k=v k=v]
+obj "dict" {
+  in {
+    rest_pos*: cell
+    rest_all**: cell
+  }  
+  output: cell
+
+  //xtracted := extract @rest_all
+
+  merged := apply {: list kv |
+      if (list.length == 0) return kv
+      //if (Object.keys(kv))
+      let h = {...kv}
+      for (let i=0; i<list.length; i+=2)
+        h[ list[i] ] = list[i+1]
+      return h
+  :} (extract @rest_pos) (extract @rest_all)
+
+  //merged := concat @xtracted_pos @xtracted
+
+  bind @merged @output
+}
 
 func "list" {: ...values | return values :}
 

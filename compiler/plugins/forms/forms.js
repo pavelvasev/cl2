@@ -205,7 +205,7 @@ export function _obj( obj, state )
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
 	let {params,rest_param,named_rest_param, children_param,next_obj_param} = get_obj_params( obj )
-	// console.log("get-obj-params:",{params,rest_param,named_rest_param})
+	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
 	let starting_rest = positional_names.findIndex( id => id.endsWith("*"))
@@ -295,7 +295,7 @@ export function _obj( obj, state )
 					// k встречается в списке параметров объекта - значит это именованный
 					named.push( k )
 					continue
-				}				
+				}
 				
 				let qq = positional_names[k] // F-POSITIONAL-RENAME
 				if (obj_params.hasOwnProperty( qq )) {
@@ -305,7 +305,8 @@ export function _obj( obj, state )
 					continue
 				}
 				// есть рест и обычные - заполнены
-				if (rest_param && named.length == positional_names.length) {
+				// и при этом имя параметра это число. todo как-то отдельно эти бы числа просто пройти..
+				if (rest_param && named.length == positional_names.length && /^(0|[1-9]\d*)$/.test(k)) {
 					pos_rest_names.push( k )
 					// todo но это только если k - позиционно подан
 					continue // временное название для **

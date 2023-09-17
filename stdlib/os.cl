@@ -28,7 +28,7 @@ func "join" {: ...parts |
 :}
 
 func "exist" {: path |
-  console.log('exist',path,process.cwd())
+  //console.log('exist',path,process.cwd())
   let mmm0 = fs.access(path, fs.constants.R_OK)
   // мы же работаем в режиме каналов а там надо что-то записать
   // запишем false

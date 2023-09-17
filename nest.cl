@@ -23,29 +23,30 @@ func "download" { spec dir |
 }
 
 func "nest" { spec dir root_dir nested need_download|
+  print "nest" @dir
   if (get @nested @dir) {
     // уже обработали
     print "already processed"
     exit @nested
   }
   =====
-    if (@need_download) {
+  if (@need_download) {
       download @spec @dir
-    }
+  }
   =====
   print "nesting dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
   conf := apply {: dir | return util.load_module_config(dir) :} @dir
   print "conf = " @conf
 
-  subnested := merge @nested (dict @dir true)
+  subnested := concat @nested (dict @dir true)
 
   s2 := reduce (get @conf "modules") @subnested { value key acc |
     dir := get (get @conf "import_map") @key
-    nest @value @dir @root_dir @acc true
+    apply @nest @value @dir @root_dir @acc true
   }
 
-  merge @subnested @s2
+  concat @subnested @s2
 }
 
 init_dir := or (get(os.env(),"DIR")) (os.cwd)
