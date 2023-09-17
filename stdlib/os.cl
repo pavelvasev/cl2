@@ -98,11 +98,12 @@ obj "spawn" {
         // data = data.toString() ?
         self.stderr.submit( data )
       })    
-      child.on('close', function(code) {
-        self.exitcode.submit(code)
-      })
     }
-    //let s = spawn( args[0], args.slice(1),{ stdio: 'inherit' })
+    
+    child.on('close', function(code) {
+      self.exitcode.submit(code)
+    })    
+    
   :}
 }
 

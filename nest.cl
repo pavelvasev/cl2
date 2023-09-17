@@ -6,7 +6,7 @@ import path="node:path" os="std/os.cl" util="./compiler/tool/utils.js"
 
 func "download" { spec dir |
   if (get @spec "git") {
-    print "this is git"
+    print "this is git. syncing." @dir
     return (if (os.exist @dir) {
       print "git dir exist. issuing pull."
       k: os.spawn "git" "pull" dir=@dir stdio='inherit'
@@ -24,6 +24,7 @@ func "download" { spec dir |
 
 func "nest" { spec dir root_dir nested need_download|
   print "nest" @dir
+
   if (get @nested @dir) {
     // уже обработали
     print "already processed"
@@ -31,13 +32,15 @@ func "nest" { spec dir root_dir nested need_download|
   }
   =====
   if (@need_download) {
-      download @spec @dir
+      d := download @spec @dir
+      return @d
   }
   =====
-  print "nesting dir=" @dir
+  print "checking conf dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
   conf := apply {: dir | return util.load_module_config(dir) :} @dir
-  print "conf = " @conf
+  #print "conf = " @conf
+  print "see modules: " (get @conf "modules")
 
   subnested := concat @nested (dict @dir true)
 
@@ -45,8 +48,10 @@ func "nest" { spec dir root_dir nested need_download|
     dir := get (get @conf "import_map") @key
     return (apply @nest @value @dir @root_dir @acc true)
   }
+  #print "s2=" @s2
+  #print "subnested=" @subnested
 
-  concat @subnested @s2
+  return (concat @subnested @s2)
 }
 
 init_dir := or (get(os.env(),"DIR")) (os.cwd)
@@ -55,8 +60,9 @@ init_file := os.join @init_dir "init.js"
 if (os.exist @init_file) {
   print "running"
   result := nest( dict(), @init_dir, os.join(@init_dir,"modules"), dict(), false)
-  react @result {
-    print "finished"
+  //print "result = " @result
+  react @result { val |
+    print "finished" @val
   }
 } else {
   print "no init.js file in current dir. nothing for nest."

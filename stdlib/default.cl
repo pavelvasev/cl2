@@ -725,9 +725,9 @@ func "filter" {: arr f |
   //if (!f.is_task_function)
   //  return arr.map( f )
 
-  function process_elem(e) {
+  function process_elem(e, index) {
     return new Promise( (resolve,reject) => {
-    let result = f( e )
+    let result = f( e, index )
     if (result instanceof CL2.Comm) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
@@ -768,10 +768,10 @@ func "reduce" {: arr acc_init f |
   //if (!f.is_task_function)
   //  return arr.map( f )
 
-  function process_elem(e,acc) {
+  function process_elem(e,index,acc) {
     return new Promise( (resolve,reject) => {
 
-    let result = f( e, acc )
+    let result = f( e, index, acc )
     if (result instanceof CL2.Comm) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
@@ -792,15 +792,30 @@ func "reduce" {: arr acc_init f |
   function process_arr( arr,i=0,acc ) {
     if (i >= arr.length) return Promise.resolve(acc)
 
-    return process_elem( arr[i],acc ).then( (result) => {
+    return process_elem( arr[i],i,acc ).then( (result) => {
       return process_arr( arr,i+1,result )
     })
   }
 
+  function process_dict( arr,names,i=0,acc ) {
+    if (i >= arr.length) return Promise.resolve(acc)
+
+    return process_elem( arr[i],names[i],acc ).then( (result) => {
+      return process_dict( arr,names, i+1, result )
+    })
+  }  
+
   let output = CL2.create_cell()
-  if (!Array.isArray(arr)) arr = [...arr]
-  process_arr( arr,0,acc_init ).then( values => output.submit( values ))
-  return output
+  // [...arr] переводит в массив принудительно, если там было Set например
+  if (!Array.isArray(arr)) {
+    if (arr instanceof Set)
+        arr = [...arr]
+  }
+  if (typeof(arr) == "object") 
+    process_dict( Object.values(arr), Object.keys(arr),0,acc_init ).then( values => output.submit( values ))
+  else  
+    process_arr( arr,0,acc_init ).then( values => output.submit( values ))
+  return output  
 :}
 
 

@@ -1,6 +1,6 @@
 # тестируем операторы из default.cl
 
-a := reduce [5,7,5] 0 {: x acc | return x+acc :}
+a := reduce [5,7,5] 0 {: x index acc | return x+acc :}
 print "a=" @a
 
 assert (@a == 17)

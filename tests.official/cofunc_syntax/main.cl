@@ -62,7 +62,7 @@ func "times" { f n |
 func "times" { f n |
   return { x |
     // print "range is" (range (@n-1)) "n is" @n "n-1 is" (@n-1)
-    return (reduce (range (@n-1)) (apply @f @x) { x acc | return (apply @f @acc) })
+    return (reduce (range (@n-1)) (apply @f @x) { x index acc | return (apply @f @acc) })
   }
 }
 
