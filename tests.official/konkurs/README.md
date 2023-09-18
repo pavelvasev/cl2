@@ -2,10 +2,7 @@
 
 Условия конкурса: https://beautifulcode.sber.ru/task/frontend
 
-Программа написана на языке CLON.
-Подробнее о языке см. https://github.com/pavelvasev/clon-lang
-
-Код решения:
+## Код решения
 ```
 func "mapArrayToHashByKey" { array key |
   h := map (@array or []) { item | list (get @item @key) @item }
@@ -14,6 +11,9 @@ func "mapArrayToHashByKey" { array key |
   return (concat @h (dict (+ "_" @key "s") (keys @h)))
 }
 ```
+
+Программа написана на языке CLON.
+Подробнее о языке см. https://github.com/pavelvasev/clon-lang
 
 Пояснения.
 * func - вводит в окружение указанную функцию под указанным именем,
@@ -31,9 +31,9 @@ func "mapArrayToHashByKey" { array key |
 * Вызов операторов в CLON без скобок, аргументы-ссылки предваряются символом @, позиционные аргументы-выражения выделяются скобками.
 * Операторы в CLON вычисляются на основе частичного порядка, который определяется зависимостями по данным.
 
-# Запуск программы
+## Запуск программы
 
-Код решения размещен в файле (main.cl)[main.cl], и в нём же размещены тестовые данные и вычисление на их основе.
+Код решения размещен в файле [main.cl](main.cl), и в нём же размещены тестовые данные и вычисление на их основе.
  
 * Работает в Линукс с установленной Nodejs
 * Зайти в каталог программы (с файлом main.cl)
@@ -42,4 +42,4 @@ func "mapArrayToHashByKey" { array key |
   - транслирует файл `main.cl` в `main.cl.mjs`
   - запускает команду `node main.cl.mjs`.
 
-Пример вывода программы см. файл (output.txt)[output.txt].
+Пример вывода программы см. файл [output.txt](output.txt).
