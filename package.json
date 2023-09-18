@@ -5,7 +5,7 @@
    },
    "main": "./runtime/cl2.js",
   "type": "module",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "CLON language tool.",
   "directories": {
     "example": "examples"
@@ -16,13 +16,13 @@
    },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pavelvasev/cl2.git"
+    "url": "git+https://github.com/pavelvasev/clon-lang.git"
   },
   "author": "Pavel Vasev",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pavelvasev/cl2/issues"
+    "url": "https://github.com/pavelvasev/clon-lang/issues"
   },
-  "homepage": "https://github.com/pavelvasev/cl2#readme",
+  "homepage": "https://github.com/pavelvasev/clon-lang#readme",
   "dependencies": {}
 }
