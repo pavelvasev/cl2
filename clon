@@ -3,7 +3,10 @@
 SCRIPT="$(readlink --canonicalize-existing "$0")"
 SCRIPTPATH="$(dirname "$SCRIPT")"
 
-PATH="$PATH:$SCRIPTPATH" $(dirname $0)/compiler/tool/cl-tool.js $*
+# не годится править пути здесь, потому что из windows этот скрипт не запускается
+# сообразно добавка пути перенесено в cl-tool F-FIX-PATH
+# PATH="$PATH:$SCRIPTPATH" 
+$(dirname $0)/compiler/tool/cl-tool.js $*
 #echo 111
 
 #echo "cl finish" $?

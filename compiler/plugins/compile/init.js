@@ -11,7 +11,6 @@ export function init( state, tool ) {
 		  const basename = path.basename(file, path.extname(file))
 		  return path.join(path.dirname(file), basename + extension)
 		}
-		let out_file = file + ".js"
 		
 		// надо полный путь а то получаются короткие имена вида some/init.js и оно начинает думать что some это имя модуля
 		let config_file = path.resolve( path.dirname( file ) + "/init.js" )
@@ -32,16 +31,44 @@ export function init( state, tool ) {
 			return true 
 		})
 
-		// hack
-		
+		// F-EMBED-RUNTIME		
 		mmm = mmm.then( () => {
 			let file_p = "file://" + path.resolve( path.join(tool.clon_dir,"./runtime/cl2.js"))
 			return fetch( file_p ).then( r => r.text() ).then( content => {
 				tool.prepend_global_code(['// clon cl2.js runtime',content])
 			})
 		})
+		// встроим пока тоже и браузер, для упрощения
+		// F-JOIN-NODEJS-BROWSER-RUNTIME
+		// хотя может стоит и разделить. тогда можно нодовый вариант делать с shebang
+		// и +x ключик ставить - запускайте пожалуйста.
+		mmm = mmm.then( () => {
+			let file_p = "file://" + path.resolve( path.join(tool.clon_dir,"./runtime/cl2-browser.js"))
+			return fetch( file_p ).then( r => r.text() ).then( content => {
+				tool.prepend_global_code([content])
+			})
+		})		
 
-		return mmm.then( () => tool.compile_file_p( file, state )).then( k => {
+		let compiled = mmm.then( () => tool.compile_file_p( file, state ))
+
+		/// сохранение файлов
+
+		let out_file = file + ".js"
+		let out_file_mjs = file + ".mjs"
+
+		let nodejs = compiled.then( k => {
+			let code = tool.gen_full_code( k.code )
+
+			return new Promise( (resolve,reject) => {
+				fs.writeFile( out_file_mjs, code,(err) => {
+			  	if (err) console.log(err)
+			  	console.log("done: ",file,"-->",out_file_mjs)
+			    resolve( out_file_mjs )
+			  } )
+			})	  
+		})
+
+		let browser = compiled.then( k => {
 			let code = tool.gen_full_code( k.code )
 
 			return new Promise( (resolve,reject) => {
@@ -52,6 +79,11 @@ export function init( state, tool ) {
 			  } )		  
 			})	  
 		})
+
+		/// но вернуть нам надо имя файла которое затем смогут запускать
+		/// вернем нодовый вариант
+
+		return Promise.all( [nodejs, browser ]).then( (values) => values[0])
 
 	} )
 	tool.add_command("c", tool.get_command("compile"))

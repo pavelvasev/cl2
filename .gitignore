@@ -1,4 +1,5 @@
 *.cl.js
+*.cl.mjs
 modules
 *.*-
 package-lock.json

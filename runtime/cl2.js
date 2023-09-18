@@ -1,9 +1,17 @@
+/* CLON-рантайм для платформы Javascript
+ - библиотека примитивов синхронизации (Comm, Cell, Channel,и т.п).
+ - и операций над ними (when_all, when_any и т.д.)
+ - доп. утилиты (monitor_rest_values и т.п.)
+ - планировщик отложенных заданий (schedule)  
+*/ 
+
+// специальное значение чтобы явно отмечать значение "нет данных"
 export var NOVALUE = {novalue: true}
 
 // todo переделать bind. надо bind на target-object. и это зависит как бы от нас
 // а нас подписать - это просто нам send послать.
 // и тогда не надо будет делать проверку типов (кто нам посылает? надо знать на что у него подписаться).
-// это позволит в частнои реализовать Н-модель. Раз на вход send - универсальный протокол.
+// это позволит в частнои реализовать Н-модель (Нариньяни А.С.). Раз на вход send - универсальный протокол.
 // хотя можно и по-другному как сейчас, но это не удобно.
 // окей а что выдает пропагатор? ответ? интервал? если интервал - как он идет в ячейку?
 
@@ -164,6 +172,7 @@ export function create_channel() {
 	return channel
 }
 
+// сейчас не используется, см default.cl reaction
 export class Reaction extends Comm { // Code?
 	constructor( fn ) {
 		super()
@@ -934,9 +943,11 @@ export function mark_task_function( fn ) {
 	return fn
 }
 
-// необходимо перечислить все вышеперечисленное для непонимающих
+// необходимо перечислить все вышеперечисленное для доступа
+// по идентификатору CL2 при встройке этого файла.
+// вещи типа CL2=this и CL2=import.meta что-то не сработали.
 let CL2={ create_binding, 
   create_cell, create_channel, create_item,
   NOVALUE, Cell, Channel, ClObject, Comm, attach,
   attach_anonymous, monitor_rest_values, when_all, when_all_once,
-  create_binding_delayed, create_binding_any, schedule }
+  create_binding_delayed, create_binding_any, schedule, get_title }

@@ -129,7 +129,7 @@ class Tool {
 
 	gen_full_code( code ) {
 		//return `import * as CL2 from 'clon-lang'\nlet self={};\n${this.get_global_code()}\n${code}`
-		return `// CLON program\nlet self={};\n${this.get_global_code()}\n${code}`
+		return `// Программа сгенерирована clon-lang\nlet self={};\n${this.get_global_code()}\n${code}`
 	}
 
 	commands = {}
@@ -231,7 +231,10 @@ state.env["import"] = {
 
 let command = process.argv[2] || "compile"
 
-//process.env['PATH'] = process.e
+// F-FIX-PATH надо добавить путь к текущему clon-установке чтобы стала доступны утилита clon
+// именно этой установки. это используется сейчас в run-tests.
+// хотя быть может на будущее проще говорить что-то вроде npm exec clon?
+process.env.PATH = [CLON_DIR].concat( process.env.PATH.split(path.delimiter) ).join(path.delimiter);
 
 mmm.then( () => {
 	tool.get_command(command).apply( this, [...process.argv].slice(3) )	
