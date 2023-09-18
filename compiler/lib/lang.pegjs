@@ -609,7 +609,7 @@ one_env_operator "environment operator record"
   envid: (__ @(@attr_name ws ":")?)
   first_positional_attr: (__ @positional_attr_callstyle2)
   first_feature_name:(__ @feature_operator_name) 
-  second_positional_attr: (__ @positional_attr_callstyle2)?
+  second_positional_attr: (__ @positional_attr_callstyle2)
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();

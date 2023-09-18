@@ -129,7 +129,7 @@ class Tool {
 
 	gen_full_code( code ) {
 		//return `import * as CL2 from 'clon-lang'\nlet self={};\n${this.get_global_code()}\n${code}`
-		return `// Программа сгенерирована clon-lang\nlet self={};\n${this.get_global_code()}\n${code}`
+		return `// Программа сгенерирована clon-lang -- https://github.com/pavelvasev/clon-lang\nlet self={};\n${this.get_global_code()}\n${code}`
 	}
 
 	commands = {}

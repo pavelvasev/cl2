@@ -43,7 +43,7 @@ if (process.env.VERBOSE) {
 }
 
 
-
+// базовый класс примитивов синхронизации.
 export class Comm {
 	constructor() {
 		this.$cl_id = (global_thing_counter++)		

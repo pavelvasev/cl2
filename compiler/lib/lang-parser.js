@@ -2609,11 +2609,13 @@ function peg$parse(input, options) {
           peg$currPos = s4;
           s4 = peg$FAILED;
         }
-        if (s4 === peg$FAILED) {
-          s4 = null;
+        if (s4 !== peg$FAILED) {
+          peg$savedPos = s0;
+          s0 = peg$f14(s1, s2, s3, s4);
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
         }
-        peg$savedPos = s0;
-        s0 = peg$f14(s1, s2, s3, s4);
       } else {
         peg$currPos = s0;
         s0 = peg$FAILED;
