@@ -1,0 +1,51 @@
+> npx clon-lang run
+Need to install the following packages:
+  clon-lang@1.0.6
+Ok to proceed? (y) 
+done:  main.cl --> main.cl.js
+done:  main.cl --> main.cl.mjs
+spawning
+data= [
+  {
+    id: 1,
+    age: 25,
+    address: { city: 'New York', zipCode: 10001 },
+    name: 'John',
+    surname: 'Doe'
+  },
+  {
+    id: 2,
+    age: 30,
+    address: { city: 'Los Angeles', zipCode: 90001 },
+    name: 'Jane',
+    surname: 'Smith'
+  },
+  {
+    id: 3,
+    age: 30,
+    address: { city: 'Los Angeles', zipCode: 90001 },
+    name: 'Janett',
+    surname: 'Smith'
+  },
+  { id: 4 }
+]
+result= {
+  '25': {
+    id: 1,
+    age: 25,
+    address: { city: 'New York', zipCode: 10001 },
+    name: 'John',
+    surname: 'Doe'
+  },
+  '30': {
+    id: 3,
+    age: 30,
+    address: { city: 'Los Angeles', zipCode: 90001 },
+    name: 'Janett',
+    surname: 'Smith'
+  },
+  _ages: [ '25', '30' ]
+}
+assert OK 55: assert ((get (get @result '30') 'name') == 'Janett')
+assert OK 54: assert (arrays_equal (get @result "_ages") ['25','30'])
+

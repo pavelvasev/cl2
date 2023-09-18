@@ -1,6 +1,8 @@
-# Решение задачи Frontend
+# Решение задачи Frontend для конкурса Beautifulcode
 
-Программа написана на языке CLON. 
+Условия конкурса: https://beautifulcode.sber.ru/task/frontend
+
+Программа написана на языке CLON.
 Подробнее о языке см. https://github.com/pavelvasev/clon-lang
 
 Код решения:
@@ -31,8 +33,13 @@ func "mapArrayToHashByKey" { array key |
 
 # Запуск программы
 
-Код решения размещен в файле `main.cl`, и в нём же размещены тестовые данные и вычисление на их основе.
+Код решения размещен в файле (main.cl)[main.cl], и в нём же размещены тестовые данные и вычисление на их основе.
  
 * Работает в Линукс с установленной Nodejs
 * Зайти в каталог программы (с файлом main.cl)
-* Выполнить команду `npx clon-lang run`
+* Выполнить команду `npx clon-lang run` которая:
+  - скачивает транслятор языка CLON в Javascript
+  - транслирует файл `main.cl` в `main.cl.mjs`
+  - запускает команду `node main.cl.mjs`.
+
+Пример вывода программы см. файл (output.txt)[output.txt].
