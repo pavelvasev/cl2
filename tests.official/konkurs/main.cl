@@ -1,32 +1,10 @@
-/*
-func "mapArrayToHashByKey" { array key |
-  h := reduce (or @array []) (dict) { item acc|
-    // ето не o(n)
-    // return (dict **@acc **( list (get @item @key) @item))
-    set @acc (get @item @key) @item
-  }
-  return (dict **h **( list (+ "_" @key "s") (keys @h)))
-}
-*/
-
-//// как-то бы рекурсивно попробовать.. но если дублировать словарь то это не o(n)
-// попробуем промепить и в словарь
-
-/* рабочий вариант
-func "mapArrayToHashByKey" { array key |
-  h := map (@array or []) { item | return (list (get @item @key) @item) }
-        | filter { v | return ((get @v 0) != null) }
-        | list_to_dict
-  return (concat @h (list (list (+ "_" @key "s") (keys @h)) | list_to_dict))
-  #return (dict **@h **(dict(list (+ "_" @key "s") (keys @h) )))
-}
-*/
+//////////// решение задачи - функция mapArrayToHashByKey
 
 func "mapArrayToHashByKey" { array key |
-  h := map( @array or [] ) { item | return (list( get(@item,@key), @item )) }
-       | filter { v | return (get(@v,0) != null) }
-       | list_to_dict
-  return (concat(@h, list( list( +("_",@key,"s"), keys(@h) ) ) | list_to_dict))
+  h := map (@array or []) { item | list (get @item @key) @item }
+        | filter { v | (get @v 0) != null }
+        | dict
+  return (concat @h (dict (+ "_" @key "s") (keys @h)))
 }
 
 //////////// тест
@@ -67,9 +45,11 @@ data := apply {: return [
   }
 ] :}
 
-print "data=" @data 
+print "data=" @data
 print "result=" @result
 
 result := mapArrayToHashByKey @data "age"
 
+==============
 assert (arrays_equal (get @result "_ages") ['25','30'])
+assert ((get (get @result '30') 'name') == 'Janett')
