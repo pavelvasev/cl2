@@ -33,7 +33,16 @@ obj "compute1" {
   :}
 }
 
-pr1: print
+obj "print1" {
+  in {
+     input: cell
+  }
+  react @input {: val |
+    console.log(val)
+  :}
+}
+
+pr1: print1
 cmp1: compute1 20 2
 
 bind @cmp1.output @pr1.input
