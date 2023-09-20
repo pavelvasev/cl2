@@ -32,7 +32,11 @@ obj "compute1" {
      self.output.submit( y )
   :}
 }
-print "compute1 = " (compute1 20 2)
+
+pr1: print
+cmp1: compute1 20 2
+
+bind @cmp1.output @pr1.input
 ```
 Результат - процесс печатающий 
 ```
