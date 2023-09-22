@@ -53,7 +53,8 @@ load-file name="coords" | parse-csv | points radius=@c.output
 p: points
 window on_click = { info |
   info := intersect_3d @window (list @info.x @info.y) @p
-  print "нажали точку N" @info.index // сработает только когда info будет вычислено
+  pos := slice @p.positions (3 * @info.index) 3 // сработает только когда info будет вычислено
+  print "нажали точку с координатами" @pos // сработает когда вычислят pos
 }
 ```
 ### Реакции
