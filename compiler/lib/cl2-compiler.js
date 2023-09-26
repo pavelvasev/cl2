@@ -538,14 +538,19 @@ export function default_obj2js( obj,state ) {
 	return {main:strs,bindings}
 }
 
+function obj_str( str ) {
+	if (/\r|\n/.exec( str )) return "`" + str + "`"
+	return "'"+str+"'"
+}
+
 export function objToString(obj, ndeep, state,parent_obj ) {
   if(obj == null) { return String(obj); }
   if (obj.this_is_env_list) return paramEnvToFunc( obj, state)
   if (obj.code && obj.pos_args) return value_to_arrow_func( obj,state,parent_obj )
   if (obj.link && obj.from) return obj.from // F-STATIC-VALUES
 
-  switch(typeof obj){
-    case "string": return obj === "CL2.NOVALUE" ? obj : '"'+obj+'"';
+  switch(typeof obj){  	
+    case "string": return obj === "CL2.NOVALUE" ? obj : obj_str(obj);
     case "function": return obj.name || obj.toString();
     case "object":
       var indent = Array(ndeep||1).join('\t'), isArray = Array.isArray(obj);

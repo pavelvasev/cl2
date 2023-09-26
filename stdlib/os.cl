@@ -32,7 +32,7 @@ func "exist" {: path |
   let mmm0 = fs.access(path, fs.constants.R_OK)
   // мы же работаем в режиме каналов а там надо что-то записать
   // запишем false
-  return mmm0.then(result => true).catch( (err) => false )
+  return mmm0.then(result => path).catch( (err) => false )
 :}
 
 func "env" {: return process.env :}
@@ -99,13 +99,39 @@ obj "spawn" {
         self.stderr.submit( data )
       })    
     }
-    
+
     child.on('close', function(code) {
       self.exitcode.submit(code)
     })    
     
   :}
 }
+
+func "stop" {: code |
+  process.exit( code ) 
+:}
+
+// чтение файла
+func "read" {: url opts |
+  // todo приделать сюда таки мб http и прочее
+
+  return new Promise( (resolve,reject) => {
+
+     //let path = file.slice(7);
+     fs.readFile(url, 'utf8', (err, data) => {
+       if (err) reject(err);
+       resolve( r );
+     });
+
+  });
+:}
+
+// запись файла
+func "write" {: url content |
+  // todo если тут урль прям реально? post делать?
+  // todo а еще надо бы file:// отрабатывать
+  return fs.writeFile( url, content )
+:}
 
 /* вроде бы оно по духу и функция.. но должно вернуть объект..
 func "exec" {: ...args |

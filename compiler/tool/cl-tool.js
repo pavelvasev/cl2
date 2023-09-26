@@ -11,7 +11,7 @@ let default_modules = [
 	"../../stdlib",
 	"defaults",	
 	"compile",
-	"run","test","nest"
+	"run","test","nest", "init"
 	]
 
 // командной строки компилятор

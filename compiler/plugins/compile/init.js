@@ -47,7 +47,7 @@ export function init( state, tool ) {
 			return fetch( file_p ).then( r => r.text() ).then( content => {
 				tool.prepend_global_code(['// clon cl2-browser.js runtime'])
 			})
-		})		
+		})
 
 		let compiled = mmm.then( () => tool.compile_file_p( file, state ))
 
