@@ -169,6 +169,7 @@ let mmm = tool.load_modules( default_modules.map( x => path.join(DEFAULT_PLUGINS
 // уже прочитанные модули
 let imported_modules = {} // abs-path => state
 
+// todo идея мб не import name="id" а таки import name=@id т.е. модули вводить как ячейки?..
 state.env["import"] = {
 	make_code: function( obj, state ) {
 		let promarr = []

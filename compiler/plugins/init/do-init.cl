@@ -15,6 +15,19 @@ if ( (os.exist @init_file) or (os.exist @init_file_2)) { cp fil|
 } else {
   print "generating new project: main.cl init.js"
   os.write( "main.cl",
+`# Название проекта
+Чтобы использовать этот проект, добавьте в init.js его подключение:
+\`\`\`
+export var modules={
+  myproj: {git:"https://github.com/name/myproj"},  
+}
+\`\`\`
+и затем импортируйте его в слон-файлах:
+\`\`\`
+import mp="myproj"
+\`\`\`
+`)
+  os.write( "main.cl",
 `/* это главный файл пакета. он получает управление при подключении пакета. 
 здесь можно указать определения процессов, функций, выполнить разные действия.
 введенные определения затем можно использовать в других пакетах.
@@ -48,5 +61,18 @@ export var modules={
 
 // todo тесты текущего модуля
 // export var tests = ["tests/all.cl"]
+
+// функция init вызывается на старте компилятора
+// в ней можно добавить команды компилятора и другие изменения в его поведение
+/*
+export function init( state, tool ) {
+  
+  tool.add_command( "mycommand", (arg1,arg2) => {
+    // например, в ответ на команду запускаем слон-файл
+    return tool.get_command("run")( path.join(__dirname,"do-init.cl"), arg1, arg2 )
+  } )
+  tool.add_command("mc", tool.get_command("mycommand"))  
+}
+*/
 `)
 }
