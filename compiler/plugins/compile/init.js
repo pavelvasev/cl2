@@ -45,7 +45,7 @@ export function init( state, tool ) {
 		mmm = mmm.then( () => {
 			let file_p = "file://" + path.resolve( path.join(tool.clon_dir,"./runtime/cl2-browser.js"))
 			return fetch( file_p ).then( r => r.text() ).then( content => {
-				tool.prepend_global_code(['// clon cl2-browser.js runtime'])
+				tool.prepend_global_code(['// clon cl2-browser.js runtime',content])
 			})
 		})
 

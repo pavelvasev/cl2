@@ -567,6 +567,7 @@ func "arrays_equal" {: a b |
 
 ///////////////////////
 
+// кандидат на вылет ибо dict так щас научен делать
 func "list_to_dict" {: nodes |
    let h = {}
    for (let k of nodes) {
@@ -574,6 +575,7 @@ func "list_to_dict" {: nodes |
    }
    return h   
 :}
+
 
 func "keys" {: obj |
   if (Array.isArray(obj)) return [...Array( obj.length ).keys()]
@@ -864,6 +866,8 @@ obj "dynamic_pipe" {
 }
 */
 
+// на вылет, сделано wait (====)
+/*
 func "sequence" {: ...blocks |
     console.log("seq called, blocks=",blocks)
     let fn = blocks[0]
@@ -909,6 +913,7 @@ func "sequence" {: ...blocks |
     }
 
 :}
+*/
 
 /*
 func "sequence2" { blocks |

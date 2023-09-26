@@ -8,7 +8,9 @@ export function init( st ) {
 	space.register_item = ( id, state, strs2 ) => {
 		//console.log('register_item: ',id,'state.tree_parent_id=',state.tree_parent_id, state.struc)
 		let strs = []
-		let export_flag = state.dir === "" ? "export " : ""
+		let export_flag = (state.dir == '' || state.dir == './') ? "export " : ""
+		// todo совместить расчет export_flag с тем что в compute.js для функций
+		//console.log("register_item: id=",id," export_flag=",export_flag,"state.dir=",state.dir)
 		let s = `${export_flag}function create_${id}( initial_values )`
 		strs.push(`/// type ${id}`,s,"{")
 		strs.push( strs2 )

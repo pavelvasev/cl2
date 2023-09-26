@@ -27,7 +27,8 @@ console.log = (...args) => {
 console.channel_verbose = (...args) => {}
 let fmtval = () => {}
 
-if (process.env.VERBOSE) {
+// process мб не определён
+if (typeof(process) !== "undefined" && process.env.VERBOSE) {
 	console.channel_verbose = (...args) => {
 		console.log("\t",...args)
 		//return true
@@ -858,7 +859,7 @@ export function monitor_rest_values( src,tgt ) {
 	let dtgt = create_channel()
 	dtgt.$title = "create_binding_any(dtgt)"
 	dtgt.attached_to = src
-	let db = create_binding_delayed( dtgt, tgt )	
+	let db = create_binding_delayed( dtgt, tgt )
 
 		src.changed.subscribe( f )
 		f()
