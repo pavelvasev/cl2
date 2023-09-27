@@ -8,10 +8,10 @@ let default_modules = [
 	"compute/compute.js",
 	"bundle-2/bundle-2.js",
 	"module-path/module-path.js",
-	"../../stdlib",
-	"defaults",	
-	"compile",
-	"run","test","nest", "init", "init-web", "init-electron"
+	"../../stdlib/init.js",
+	"defaults/init.js",	
+	"compile/init.js",
+	"run/init.js","test/init.js","nest/init.js", "init/init.js", "init-web/init.js", "init-electron/init.js"
 	]
 
 // командной строки компилятор

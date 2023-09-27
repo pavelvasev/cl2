@@ -5,7 +5,7 @@
 import path="node:path" os="std/os.cl" util="../../tool/utils.js"
 
 init_dir := or (get(os.env(),"DIR")) (os.cwd)
-init_file := os.join @init_dir "init.js"
+init_file := os.join @init_dir "clon.mjs"
 init_file_2 := os.join @init_dir "main.cl"
 
 if ( (os.exist @init_file) or (os.exist @init_file_2)) { cp fil|
@@ -13,11 +13,11 @@ if ( (os.exist @init_file) or (os.exist @init_file_2)) { cp fil|
   =====
   os.stop 1
 } else {
-  print "generating new project: main.cl init.js"
+  print "generating new project"
 
   os.write( "README.md",
 "# Название проекта
-Чтобы использовать этот проект, добавьте в init.js его подключение:
+Чтобы использовать этот проект, добавьте в clon.mjs его подключение:
 
 ```
 export var modules={
@@ -55,8 +55,8 @@ obj "myobj" {
 print "hello world" (myobj 10)
 
 `)
-  os.write("init.js",
-`// это файл конфигурации пакета.
+  os.write("clon.mjs",
+`// это файл конфигурации clon-проекта.
 // подключаемые пакеты
 export var modules={
   //lib3d: {git:"https://github.com/pavelvasev/cl2threejs"},

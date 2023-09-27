@@ -39,13 +39,13 @@ export function	load_module_config( module_path ) {
 
 		let init_file, dir
 		//console.log("load_module: ",dir)
-		if (module_path.endsWith(".js")) {
+		if (module_path.endsWith(".js") || module_path.endsWith(".mjs")) {
 			init_file = module_path
 			dir = path.dirname( module_path )
 		}
 		else {
-		  init_file = path.join(module_path,"init.js")
-			dir = module_path
+		  init_file = path.join(module_path,"clon.mjs")
+		  dir = module_path
 		}
 
 		//console.log("load_module_config: importing",init_file)

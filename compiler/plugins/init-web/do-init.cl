@@ -8,7 +8,7 @@
 import path="node:path" os="std/os.cl" util="../../tool/utils.js"
 
 init_dir := or (get(os.env(),"DIR")) (os.cwd)
-files := list 'README.md' "init.js" "main.cl" "index.html" | map { item | os.join @init_dir @item }
+files := list 'README.md' "clon.mjs" "main.cl" "index.html" | map { item | os.join @init_dir @item }
 existing_files := filter @files { f | os.exist @f }
 
 if ((len @existing_files) > 0) { cp arg |
@@ -71,8 +71,8 @@ obj "main" {
 
 
 `)
-  os.write("init.js",
-`// это файл конфигурации пакета.
+  os.write("clon.mjs",
+`// это файл конфигурации clon-проекта.
 // подключаемые пакеты
 export var modules={
   dom: {git:"https://github.com/pavelvasev/dom.cl"},

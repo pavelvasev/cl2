@@ -41,7 +41,7 @@ func "nest" { spec dir root_dir nested need_download|
   print "checking conf dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
   conf := apply {: dir | return util.load_module_config(dir) :} @dir
-  #print "conf = " @conf
+  // print "conf = " @conf
   print "see modules: " (get @conf "modules")
 
   subnested := concat @nested (dict @dir true)
@@ -57,7 +57,7 @@ func "nest" { spec dir root_dir nested need_download|
 }
 
 init_dir := or (get(os.env(),"DIR")) (os.cwd)
-init_file := os.join @init_dir "init.js"
+init_file := os.join @init_dir "clon.mjs"
 
 if (os.exist @init_file) {
   print "running"
@@ -67,5 +67,5 @@ if (os.exist @init_file) {
     print "finished" @val
   }
 } else {
-  print "no init.js file in current dir. nothing for nest."
+  print "no clon.mjs file in current dir. nothing for nest."
 }

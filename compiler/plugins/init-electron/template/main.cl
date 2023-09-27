@@ -22,8 +22,6 @@ obj "main" {
 
     output_space: dom.element "div" style="border: 1px solid grey"
 
-    //reaction (dom.event @btn.output "click") {:  :}
-
     react (dom.event @btn.output "click") {:
       let odom = output_space.output.get()
       let idom = input_space.output.get()

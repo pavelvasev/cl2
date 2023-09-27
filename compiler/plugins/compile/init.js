@@ -13,7 +13,7 @@ export function init( state, tool ) {
 		}
 		
 		// надо полный путь а то получаются короткие имена вида some/init.js и оно начинает думать что some это имя модуля
-		let config_file = path.resolve( path.dirname( file ) + "/init.js" )
+		let config_file = path.resolve( path.dirname( file ) + "/clon.mjs" )
 
 		let mmm0 = access(config_file, constants.R_OK)
 		let config = {}

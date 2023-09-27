@@ -10,11 +10,14 @@ export function init( state, tool ) {
 		tool.get_command("compile")( file ).then( (out_file) => {
 			console.log("spawning")
 			let node_path = process.execPath // "node"
+			//console.log("inspect!")
+			setTimeout( () => {
 			let s = spawn( node_path, [out_file],{ stdio: 'inherit' })
 			// также можно запускать через import...
 			s.on('exit',(code) => {
 				process.exit(code)
 			})
+			},1)
 		})
 
 	})
