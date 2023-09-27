@@ -12,3 +12,4 @@
 * Rust - утилита командной строки cargo похожая на нашу.  И пакеты называются коробками, crates.
 https://doc.rust-lang.org/cargo/guide/dependencies.html
 * Julia - именуют модули name.jl и хорошо описан манифест зачем мы это сделали https://julialang.org/blog/2012/02/why-we-created-julia/
+* Nim - https://nim-lang.org/ красивое но много всего.. ну и Zig - имеет llvm-бекенд.
