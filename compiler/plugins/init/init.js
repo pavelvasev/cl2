@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 
 export function init( state, tool ) {
 	tool.add_command( "init", () => {
+		//return tool.eval( `import os='os' os.cp (+ @dirname 'template') '.' ` )
 		return tool.get_command("run")( path.join(__dirname,"do-init.cl") )
 	} )
 	//tool.add_command("i", tool.get_command("init"))

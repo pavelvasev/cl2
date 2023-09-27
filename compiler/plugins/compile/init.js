@@ -16,9 +16,13 @@ export function init( state, tool ) {
 		let config_file = path.resolve( path.dirname( file ) + "/init.js" )
 
 		let mmm0 = access(config_file, constants.R_OK)
+		let config = {}
 		let mmm = mmm0.then( () => {
 			return tool.load_module( config_file,state ).then( conf => {
+				//console.log("loaded conf",conf)
 				tool.config = conf
+				config = conf
+				//config.output_dir ||= path.dirname( path.resolve(file) ) // todo мб не здесь
 				state.import_map = conf.import_map //{...state.space.default_import_map, ...conf.import_map}
 			}).catch( err => {
 				console.error("compile: error during load_module:",config_file,err)
@@ -52,12 +56,24 @@ export function init( state, tool ) {
 		let compiled = mmm.then( () => tool.compile_file_p( file, state ))
 
 		/// сохранение файлов
+		// console.log("config.output_dir=",config.output_dir, config,config_file)
+		
 
 		let out_file = file + ".js"
 		let out_file_mjs = file + ".mjs"
 
+/*
+		if (config.output_dir) {
+			out_file = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".js"
+			out_file_mjs = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".mjs"
+		}
+*/		
+
 		let nodejs = compiled.then( k => {
 			let code = tool.gen_full_code( k.code )
+
+			if (config.output_dir)
+			    out_file_mjs = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".mjs"
 
 			return new Promise( (resolve,reject) => {
 				fs.writeFile( out_file_mjs, code,(err) => {
@@ -70,6 +86,9 @@ export function init( state, tool ) {
 
 		let browser = compiled.then( k => {
 			let code = tool.gen_full_code( k.code )
+
+			if (config.output_dir)
+				out_file = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".js"
 
 			return new Promise( (resolve,reject) => {
 				fs.writeFile( out_file, code,(err) => {

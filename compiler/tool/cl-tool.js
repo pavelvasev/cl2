@@ -1,4 +1,4 @@
-#!/bin/env -S node --stack_trace_limit=200 
+#!/bin/env -S node --stack_trace_limit=200
 
 // пример запуска: ./cl-tool.js 1.cl
 
@@ -11,7 +11,7 @@ let default_modules = [
 	"../../stdlib",
 	"defaults",	
 	"compile",
-	"run","test","nest", "init", "init-web"
+	"run","test","nest", "init", "init-web", "init-electron"
 	]
 
 // командной строки компилятор

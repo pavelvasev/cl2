@@ -1,6 +1,6 @@
 // paste "import {spawn} from 'node:child_process'"
 
-import cp="node:child_process"
+import childprocess="node:child_process"
 import path="node:path"
 import fs='node:fs/promises'
 
@@ -36,6 +36,12 @@ func "exist" {: path |
 :}
 
 func "env" {: return process.env :}
+
+// https://nodejs.org/api/fs.html#fspromisescpsrc-dest-options
+func "cp" {: src tgt opts| 
+  opts ||= {recursive:true,errorOnExist:true,force:false}
+  return fs.cp( src,tgt, opts )
+:}
 
 // os.spawn "ls" stdio="inherit"
 obj "spawn" {
@@ -82,7 +88,7 @@ obj "spawn" {
     // todo мб лучше прямо опции передать да и все. но тогда это несовместимость с др платформами ;-)
     //console.log("spawning args=",args,"opts=",opts)
     
-    let child = cp.spawn( args[0], args.slice(1),opts )
+    let child = childprocess.spawn( args[0], args.slice(1),opts )
 
     // https://stackoverflow.com/questions/14332721/node-js-spawn-child-process-and-get-terminal-output-live
     if (child.stdout) {
