@@ -37,6 +37,7 @@ func "exist" {: path |
 
 func "env" {: return process.env :}
 
+// os.spawn "ls" stdio="inherit"
 obj "spawn" {
   in {
     cmd_args*: cell
