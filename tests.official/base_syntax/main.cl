@@ -12,6 +12,10 @@ print "r1 is" @r1
 
 assert (arrays_equal @r1 [10,20,30])
 
+func "test1" {
+  print "exported"
+}
+
 
 # тестируем фичу отлова вычитания F-OPERATOR-MINUS
 ========================
@@ -38,7 +42,8 @@ apply {
 ========================
 print "stage 4"
 func "igra" { d |
-    if (@d > 10) { "vasya" } else { "petya" }
+    // тут мы заодно тестируем оператор >=
+    if (@d >= 10) { "vasya" } else { "petya" }
 } // todo внутри apply чето не работает
 apply {
 
@@ -73,6 +78,18 @@ apply {
   assert (@k_pipe == 22)
   ==== return 1
 }
+
+
+
+=======================
+# операции сравнения
+print "stage 7"
+assert (10 > 0)
+assert (10 >= 10)
+assert (10 < 20)
+assert (10 <= 10)
+assert (not (10 < 9))
+assert (not (10 <= 9))
 
 =======================
 print "all finished!"

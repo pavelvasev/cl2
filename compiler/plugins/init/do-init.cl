@@ -14,19 +14,23 @@ if ( (os.exist @init_file) or (os.exist @init_file_2)) { cp fil|
   os.stop 1
 } else {
   print "generating new project: main.cl init.js"
-  os.write( "main.cl",
-`# Название проекта
+
+  os.write( "README.md",
+"# Название проекта
 Чтобы использовать этот проект, добавьте в init.js его подключение:
-\`\`\`
+
+```
 export var modules={
-  myproj: {git:"https://github.com/name/myproj"},  
+  myproj: {git:'https://github.com/name/myproj'},
 }
-\`\`\`
+```
+
 и затем импортируйте его в слон-файлах:
-\`\`\`
-import mp="myproj"
-\`\`\`
-`)
+```
+import mp='myproj'
+```
+")
+
   os.write( "main.cl",
 `/* это главный файл пакета. он получает управление при подключении пакета. 
 здесь можно указать определения процессов, функций, выполнить разные действия.

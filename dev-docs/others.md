@@ -11,4 +11,4 @@
 * DMS - пример краткой стандартной библиотеки https://www.w3.org/2019/11/dms/
 * Rust - утилита командной строки cargo похожая на нашу.  И пакеты называются коробками, crates.
 https://doc.rust-lang.org/cargo/guide/dependencies.html
-* Julia - именуют модули name.jl и хорошо описан манифест зачем мы это сделали https://github.com/alanedelman/18.337_2018/tree/master/Lectures/Lecture01_0905_Why_Julia
+* Julia - именуют модули name.jl и хорошо описан манифест зачем мы это сделали https://julialang.org/blog/2012/02/why-we-created-julia/

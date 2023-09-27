@@ -21,6 +21,7 @@ import * as P from "./lang-parser.js"
      import_map - таблица преобразований вида id -> dir для работы инструкций import в рамках текущего модуля
      modules_conf - конфигурации загруженных модулей (init-файлы)
      generated_ids - список сгенерированных объектов на текущем уровне вложенности. Надо для F-RETVAL-LAST
+        // да и для child_mode функций тоже
 */
 
 export function create_state( env={}, current={},dir="", tool ) {
@@ -539,7 +540,7 @@ export function default_obj2js( obj,state ) {
 }
 
 function obj_str( str ) {
-	if (/\r|\n/.exec( str )) return "`" + str + "`"
+	if (/\r|\n/.exec( str )) return "`" + str.replaceAll("`","\\`") + "`"
 	return "'"+str+"'"
 }
 

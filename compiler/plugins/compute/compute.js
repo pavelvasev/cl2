@@ -127,8 +127,10 @@ export function func( obj, state )
 		return generate_func_object( self_objid, code)
 	}
 	
-	//console.log('fn name=',name,'dir=',state.dir,state)
+	//console.log('fn name=',name,'dir=',state.dir,"state.is_seq_wait=",state.is_seq_wait)
+
 	let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? 'export ' : '' // todo перенести это в bundle-2
+	//console.log("export_flag=",export_flag)
 	let strs = [`${export_flag}function ${name}(${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
   strs.push( `CL2.attach( self,"${name}",${name} )` )
 
@@ -164,7 +166,8 @@ export function cocode_to_code( v,state, is_return_scope, is_exit_scope ) {
 		let modified = C.modify_parent( state, "arg_obj" )	
 		v.pos_args.map(x => modified.static_values[x] = true )
 		let s = C.objs2js( v.code,modified )
-		let strs = [`// children from ${v.locinfo?.short}`, s, "return true" ]
+		// F-CHILDFUNC-OBJS-RETURN для интереса сделано что чилдрен-функция возвращает список созданных объектов
+		let strs = [`// children from ${v.locinfo?.short}`, s, `return [${modified.generated_ids.join(',')}]` ]
 	  let txt = C.strarr2str( strs )
    	return { code: txt, pos_args: ["arg_obj",...v.pos_args] }
 	}
@@ -451,7 +454,9 @@ export function wait( obj, state )
 	let ch = obj.params[0]
 
 	let mod_state = C.modify_parent(state,objid)
-	let code = COMPUTE.cocode_to_code( ch,state,false,false )
+	//mod_state.is_seq_wait = true
+	// работа в mod_state с измененным struc_parent_id - уберет export-ы. что нам и надо. (после ==== экспорт это странно)
+	let code = COMPUTE.cocode_to_code( ch,mod_state,false,false )
 	//console.log(code)
 	//state.auto_return_disabled = true
 

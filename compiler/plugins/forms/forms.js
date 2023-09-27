@@ -156,10 +156,11 @@ export function get_obj_params( obj ) {
 			if (k.$name.endsWith("&")) {
 					k.$name_modified = k.$name.slice(0,-1)
 					children_param = k.$name_modified
+					params[ children_param ] = true // т.е. параметр доступен и через обычные параметры
 				}	
 		  else
-			if (k.$name.endsWith("~")) {
-					k.$name_modified = k.$name.slice(0,-1)
+			if (k.$name.endsWith("~")) {				  
+					k.$name_modified = k.$name.slice(0,-1)					
 					next_obj_param = k.$name_modified
 				}
 		}		

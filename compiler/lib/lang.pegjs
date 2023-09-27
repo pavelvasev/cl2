@@ -488,10 +488,10 @@ feature_operator_name  // разрешим еще больше в имени ч�
   / "-" { return text(); }
   / "*" { return text(); }
   / "/" { return text(); }
+  / ">=" { return text(); } // указывается перед < и > чтобы первым срабатывало
+  / "<=" { return text(); }        
   / "<" { return text(); }
   / ">" { return text(); }
-  / ">=" { return text(); }
-  / "<=" { return text(); }    
   / "==" { return text(); }
   / "!=" { return text(); }
   / "and" { return text(); }

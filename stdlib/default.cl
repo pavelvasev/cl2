@@ -440,7 +440,7 @@ alias "less_equal" "<="
 
 func "more" {: ...values |
    for (let i=1; i<values.length; i++)
-     if (!(values[i-1] >= values[i])) return false
+     if (!(values[i-1] > values[i])) return false
    return true
 :}
 alias "more" ">"
