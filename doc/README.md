@@ -5,6 +5,6 @@
 
 * Как создать [nodejs-проект](nodejs.md)
 * Как создать [веб-проект](web.md)
-* Как создать [Electron-проект](eletron.md)
+* Как создать [electron-проект](electron.md)
 
 * Как использовать [модули](modules.md)
