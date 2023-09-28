@@ -121,16 +121,7 @@ func "stop" {: code |
 // чтение файла
 func "read" {: url opts |
   // todo приделать сюда таки мб http и прочее
-
-  return new Promise( (resolve,reject) => {
-
-     //let path = file.slice(7);
-     fs.readFile(url, 'utf8', (err, data) => {
-       if (err) reject(err);
-       resolve( data );
-     });
-
-  });
+  return fs.readFile(url, 'utf8')
 :}
 
 // запись файла
