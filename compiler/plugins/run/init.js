@@ -4,7 +4,7 @@ import {spawn} from 'node:child_process'
 
 export function init( state, tool ) {
 
-	tool.add_command( "run", (file="main.cl") => {
+	tool.add_command( "run", (file="main.cl",...args) => {
 
 		// todo сделать компиляцию с учетом времен файлов
 		tool.get_command("compile")( file ).then( (out_file) => {
@@ -12,7 +12,7 @@ export function init( state, tool ) {
 			let node_path = process.execPath // "node"
 			//console.log("inspect!")
 			
-			let s = spawn( node_path, [out_file],{ stdio: 'inherit' })
+			let s = spawn( node_path, [out_file].concat(args),{ stdio: 'inherit' })
 			// также можно запускать через import...
 			s.on('exit',(code) => {
 				process.exit(code)

@@ -37,6 +37,8 @@ func "exist" {: path |
 
 func "env" {: return process.env :}
 
+func "args" {: return process.argv.slice(1) :}
+
 // https://nodejs.org/api/fs.html#fspromisescpsrc-dest-options
 func "cp" {: src tgt opts| 
   opts ||= {recursive:true,errorOnExist:true,force:false}

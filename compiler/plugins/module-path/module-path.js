@@ -27,6 +27,9 @@ function resolve_module_path( src_id, state ) {
 		//console.log("qqqq", state.dir, src_id)
 		return path.resolve( path.join(state.dir,src_id) )
 	}
+	if (first == "http:" || first == "https:")
+		return src_id
+
 	let basedir_or_file = state.default_import_map[ first ]
 	let import_map = {}
 	if (!basedir_or_file) {

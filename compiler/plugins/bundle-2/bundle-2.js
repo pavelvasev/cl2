@@ -45,7 +45,7 @@ export function init( st ) {
 
 	function path_to_var( srcfile ) {
 		let p1 = path.basename(srcfile,".cl")
-		let p2 = p1.replace( /[^a-z0-9\-\_]/i,"_")
+		let p2 = p1.replaceAll( /[^a-z0-9\-\_]/gi,"_")
 		let p3 = p2 + "_" + (module_counter++).toString()
 		return p3
 	}

@@ -12,7 +12,7 @@ let default_modules = [
 	"defaults/init.js",	
 	"compile/init.js",
 	"run/init.js","test/init.js","nest/init.js", "init/init.js", "init-web/init.js", "init-electron/init.js",
-	"watch"
+	"watch", "add"
 	]
 
 // командной строки компилятор
