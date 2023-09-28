@@ -111,17 +111,24 @@ export function func( obj, state )
 	if (obj.params[1]) { // вариант func "name" code
 		name = obj.params[0]
 		state.static_values[ name ] = true // надо сделать до cocode_to_code чтобы там уже могли тоже ссылаться
-		fn_code = cocode_to_code( obj.params[1],state,true,true )
+		fn_code = obj.params[1]
 		anonymous_mode = false
 	}
 	else
 	{  
+		// вариант name: func {...} хотя я вроде такое не приветствую почему-то
 		name = obj.$name_modified || obj.$name		
-		fn_code = cocode_to_code( obj.params[0],state,true,true )
+		fn_code = obj.params[0]
 	}
 
+	// надо вызвать до cocode_to_code, чтобы зарегистрировать в state объект вызова. 
+	// тогда рекурсия в функции доступна.
+	let caller = generate_func_caller( name, state )
+
+	fn_code = cocode_to_code( fn_code,state,true,true )
+
 	if (anonymous_mode) {
-		//console.log("func: anonymous_mode is prohibited")
+		console.log("func: anonymous_mode is prohibited")
 		let self_objid = C.obj_id( obj, state )
 		let code = [`function (${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
 		return generate_func_object( self_objid, code)
@@ -139,7 +146,7 @@ export function func( obj, state )
   // todo это надо как-то соптимизировать. по сути нам надо сгенерировать объект
   // что-то типа define_obj_from_func "${name}" ${name}
   //console.log("GGG",name)
-  let caller = generate_func_caller( name, state )
+  
 	strs.push( caller.main )
 	return {main:strs,bindings:[]}
 }

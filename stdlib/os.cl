@@ -140,6 +140,29 @@ func "write" {: url content |
   return fs.writeFile( url, content )
 :}
 
+func "watch" {: path once |
+
+  let ch = CL2.create_cell()
+  //console.log("iter=",iter, iter.next)
+  const ac = new AbortController();
+  const { signal } = ac;  
+
+  let iter = fs.watch( path, {recursive: true, signal} )  
+
+  function process_once() {
+    let nx = iter.next()
+    nx.then( rec => {
+      ch.submit( rec )
+      if (once) ac.abort(); else process_once()
+    })
+  }
+  process_once()
+
+  //return CL2.create_cell( ch )
+  return ch
+:}
+
+
 /* вроде бы оно по духу и функция.. но должно вернуть объект..
 func "exec" {: ...args |
 :}

@@ -574,10 +574,10 @@ one_env_obj_wait "environment record wait"
   }
   //finalizer: (__ ";")*
 
-one_env_obj_callstyle "environment record with ()"
+one_env_obj_callstyle "environment record with () syntax"
   =
   envid: (__ @(@attr_name ws ":")?)
-  __ first_feature_name:feature_name "(" __ // F-SKOBKI-NOSPACE чтобы вернуть перед "(" добавить __
+  __ first_feature_name:feature_name "(" __ // F-SKOBKI-NOSPACE чтобы вернуть надо перед "(" добавить __
   env_modifier0:(__ @env_modifier_callstyle)?
   env_modifiers:(__ "," __ @env_modifier_callstyle)* __ ")"
   cl_cofunc:(__ @cl_cofunc)?

@@ -11,7 +11,8 @@ let default_modules = [
 	"../../stdlib/init.js",
 	"defaults/init.js",	
 	"compile/init.js",
-	"run/init.js","test/init.js","nest/init.js", "init/init.js", "init-web/init.js", "init-electron/init.js"
+	"run/init.js","test/init.js","nest/init.js", "init/init.js", "init-web/init.js", "init-electron/init.js",
+	"watch"
 	]
 
 // командной строки компилятор
@@ -139,7 +140,7 @@ class Tool {
 	}
 	get_command( name ) {
 		if (!this.commands[name])
-			throw new Error("tool: command not found! ",name)
+			throw new Error("tool: command not found! "+name)
 		return this.commands[name]
 	}
 
