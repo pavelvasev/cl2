@@ -17,24 +17,30 @@ if ((len @existing_files) > 0) { cp arg |
   os.stop 1
 } else {
   print "generating new web project"
-  os.write( "README.md",
-'# Название проекта
-Чтобы запустить проект, выполните трансляцию и запустите какой-нибудь веб-сервер: 
-```
-clon && http-server
-```
+  ====
+  print "* writing files"
+  ====
+  readme_content := '# Название проекта
 
-Чтобы использовать компоненты этого проекта, добавьте в init.js его подключение:
+* Исходный код проекта находится в файле main.cl
+* Веб-страница записана в файл index.html
+
+Запуск проекта
+==============
+
+Чтобы запустить проект, выполните трансляцию файла main.cl и запустите любой веб-сервер, 
+например командой `clon && npx http-server`
+
+Для упрощения, добавлен скрипт
 ```
-export var modules={
-  myproj: {git:"https://github.com/name/myproj"},
-}
-```
-и затем импортируйте его в слон-файлах:
-```
-import mp="myproj"
-```
-')
+web-dev.cl
+``` 
+которая
+- запускает веб-сервер и открывает браузер с веб-страницей
+- при изменении файлов перекомпилирует проект и обновляет веб-страницу.
+
+'
+  os.write( "README.md",@readme_content)
   os.write( "main.cl",
 `/* это главный файл проекта. он получает управление при его подключении к другим проектам.
 здесь можно указать определения процессов, функций, выполнить разные действия.
@@ -113,5 +119,28 @@ os.write("index.html",
 </body>
 `)
 
-os.spawn "clon" "nest" stdio="inherit"
+os.write("web-dev.cl",
+`#!/usr/bin/env -S clon run
+
+print "starting web dev"
+
+import os="std/os.cl"
+
+// запускаем лайв-сервер который обновляет веб-страницу при изменении файлов
+// проект https://github.com/tapio/live-server
+os.spawn "npx" "--yes" "live-server" stdio="inherit"
+
+// запускаем перекомпиляцию при изменении файлов
+os.spawn "clon" "watch" stdio="inherit"
+`)
+=====
+print "* setting permissions to web-dev.cl"
+os.chmod "web-dev.cl" "755"
+=====
+print "* installing modules 2"
+r: os.spawn "clon" "nest" stdio="inherit"
+react @r.exitcode {
+  //print (os.read "README.md")
+  print @readme_content
+}
 }

@@ -127,7 +127,7 @@ func "read" {: url opts |
      //let path = file.slice(7);
      fs.readFile(url, 'utf8', (err, data) => {
        if (err) reject(err);
-       resolve( r );
+       resolve( data );
      });
 
   });
@@ -160,6 +160,10 @@ func "watch" {: path once |
 
   //return CL2.create_cell( ch )
   return ch
+:}
+
+func "chmod" {: file perm |
+   return fs.chmod( file, perm )
 :}
 
 
