@@ -18,7 +18,7 @@ git clone git@github.com:pavelvasev/clon-lang.git
 ```
 * Войдите в папку clon-lang и выполните
 ```
-npm link
+su npm link
 ```
 которая добавить ссылку на clon в системные пути.
 
