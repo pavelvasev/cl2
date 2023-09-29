@@ -112,7 +112,7 @@ os.write("index.html",
 <script type="module">
   import * as M from "./main.cl.js"
   M.create_main({}).output.changed.subscribe( elem => {
-    document.documentElement.appendChild( elem )
+    document.body.appendChild( elem )
   })
 </script>
 

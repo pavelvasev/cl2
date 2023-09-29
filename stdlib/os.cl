@@ -139,8 +139,13 @@ func "watch" {: path once |
   let ch = CL2.create_cell()
   //console.log("iter=",iter, iter.next)
   const ac = new AbortController();
-  const { signal } = ac;  
+  const { signal } = ac;
+  console.log("started watch",path)
 
+  
+  // что-то вотч рекурсивно не работает.. рекомендуют
+  // https://github.com/paulmillr/chokidar
+  // https://github.com/nodejs/node/pull/45098 вроде с ноды 19.1
   let iter = fs.watch( path, {recursive: true, signal} )  
 
   function process_once() {
