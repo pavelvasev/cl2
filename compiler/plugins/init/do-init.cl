@@ -125,6 +125,9 @@ export function init( state, tool ) {
 print "* setting permissions"
 os.chmod "main.cl" "755"  
 =====
+print "* copy other things"
+os.cp (+ (__dirname) "template") "."
+=====
 print "done\n"
 =====
 print (os.read "README.md")
