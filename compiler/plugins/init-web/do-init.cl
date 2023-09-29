@@ -139,6 +139,9 @@ os.spawn "clon" "watch" stdio="inherit"
 print "* setting permissions to web-dev.cl"
 os.chmod "web-dev.cl" "755"
 =====
+print "* copy favicon"
+os.cp (+ (__dirname) "template") "."
+=====
 print "* installing modules 2"
 r: os.spawn "clon" "nest" stdio="inherit"
 react @r.exitcode {

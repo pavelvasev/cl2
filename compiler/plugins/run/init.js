@@ -8,7 +8,7 @@ export function init( state, tool ) {
 
 		// todo сделать компиляцию с учетом времен файлов
 		tool.get_command("compile")( file ).then( (out_file) => {
-			// console.log("spawning",out_file)
+			console.log("running",out_file)
 			let node_path = process.execPath // "node"
 			//console.log("inspect!")
 			

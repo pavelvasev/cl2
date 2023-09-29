@@ -78,7 +78,7 @@ export function init( state, tool ) {
 			return new Promise( (resolve,reject) => {
 				fs.writeFile( out_file_mjs, code,(err) => {
 			  	if (err) console.log(err)
-			  	//console.log("done: ",file,"-->",out_file_mjs)
+			  	console.log("done: ",file,"-->",out_file_mjs)
 			    resolve( out_file_mjs )
 			  } )
 			})	  
@@ -93,7 +93,7 @@ export function init( state, tool ) {
 			return new Promise( (resolve,reject) => {
 				fs.writeFile( out_file, code,(err) => {
 			  	if (err) console.log(err)
-			  	//console.log("done: ",file,"-->",out_file)
+			  	console.log("done: ",file,"-->",out_file)
 			    resolve( out_file)
 			  } )		  
 			})	  

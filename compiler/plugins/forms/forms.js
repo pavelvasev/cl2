@@ -28,7 +28,8 @@ export var tablica = {
 	alias: { make_code: alias, check_params: default_cp},
 	assert: { make_code: assert, check_params: default_cp},
 	locinfo: { make_code: locinfo, check_params: default_cp},
-	pipe: { make_code: pipe, check_params: default_cp}
+	pipe: { make_code: pipe, check_params: default_cp},
+	__dirname: { make_code: dirname, check_params: default_cp},
 }
 
 /*
@@ -650,3 +651,18 @@ export function locinfo( obj, state )
 	return { main: obj.locinfo.toString(), bindings: [] }
 }
 
+// F-DIRNAME
+export function dirname( obj, state )
+{
+	let base = { main: [], bindings: [] }
+
+	let id = C.obj_id(obj,state)
+	base.main.push( `let ${id} = CL2.create_item()`)
+	let val_str = C.objToString(state.dir,0,state)
+	base.main.push( `CL2.attach( ${id},'output', CL2.create_cell( ${val_str} ))` )
+
+  if (state.next_obj_cb)
+		state.next_obj_cb(obj,id,base.main,base.bindings,{})	
+
+	return base
+}

@@ -41,6 +41,7 @@ func "argv" {: return process.argv.slice(1) :}
 
 // https://nodejs.org/api/fs.html#fspromisescpsrc-dest-options
 func "cp" {: src tgt opts| 
+  console.log("cp src=",src,"tgt=",tgt)
   opts ||= {recursive:true,errorOnExist:true,force:false}
   return fs.cp( src,tgt, opts )
 :}
