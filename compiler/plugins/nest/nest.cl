@@ -24,8 +24,18 @@ func "download" { spec dir |
   }
 }
 
+/* spec - ссылка на модуль в форму { git: ... } или строчки
+   dir - целевой каталог для установки модуля
+   root_dir - папка проекта
+   nested - список уже установленных папок
+   need_download - признак что надо загружать
+
+   1. возможно загружает модуль (need_download)
+   2. считывает его конфигурацию
+   3. проходит по модулям указанным в конфигурации и пытается их установить
+*/
 func "nest" { spec dir root_dir nested need_download|
-  print "nest" @dir
+  print "******* nest dir=" @dir
 
   if (get @nested @dir) {
     // уже обработали
@@ -38,17 +48,18 @@ func "nest" { spec dir root_dir nested need_download|
       return @d
   }
   =====
-  print "checking conf dir=" @dir
+  //print "checking conf dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
   conf := apply {: dir | return util.load_module_config(dir) :} @dir
-  // print "conf = " @conf
-  print "see modules: " (get @conf "modules")
+  //print "conf = " @conf
+  //print "see modules: " (get @conf "modules")
 
   subnested := concat @nested (dict @dir true)
 
   s2 := reduce (get @conf "modules") @subnested { value key acc |
-    dir := get (get @conf "import_map") @key
-    return (apply @nest @value @dir @root_dir @acc true)
+    submodule_dir := get (get @conf "import_map") @key
+    //print "s2 subnest dir=" @dir "key=" @key "submodule_dir=" @submodule_dir 
+    return (apply @nest @value @submodule_dir @root_dir @acc true)
   }
   #print "s2=" @s2
   #print "subnested=" @subnested
@@ -60,7 +71,7 @@ init_dir := or (get(os.env(),"DIR")) (os.cwd)
 init_file := os.join @init_dir "clon.mjs"
 
 if (os.exist @init_file) {
-  print "running"
+  print "running nest"
   result := nest( dict(), @init_dir, os.join(@init_dir,"modules"), dict(), false)
   //print "result = " @result
   react @result { val |

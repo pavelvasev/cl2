@@ -541,7 +541,7 @@ export function default_obj2js( obj,state ) {
 
 function obj_str( str ) {
 	if (/\r|\n/.exec( str )) return "`" + str.replaceAll("`","\\`") + "`"
-	return "'"+str+"'"
+	return "'"+str.replaceAll("'","\\'")+"'"
 }
 
 export function objToString(obj, ndeep, state,parent_obj ) {

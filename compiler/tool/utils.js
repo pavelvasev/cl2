@@ -2,16 +2,19 @@ import * as path from 'node:path';
 
 export function get_module_dir0(r) {
 			if (typeof(r) === "string") return r
+
 			if (r.dir) return r.dir
-			// todo это .git не очень уместно тут. надо в драйвер выносить.
+			// todo это r.git не очень уместно тут. надо в драйвер выносить.
+			// т.е. это некая частность
 			if (r.git) {
-				return r.git.split("/").slice(-1)[0].split(".git").slice(-1)[0]
+				return r.git.split("/").slice(-1)[0].split(".git")[0]
 			}
 			return null
 		}
 
 export function get_module_dir1(r, current_dir) {
 			let dir0 = get_module_dir0( r )
+			//console.log("dir0=",dir0,"r=",r)
 			if (dir0 [0] == ".") { // относительно файла
 				return path.join( current_dir, dir0 )
 			}
