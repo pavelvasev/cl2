@@ -91,5 +91,19 @@ assert (10 <= 10)
 assert (not (10 < 9))
 assert (not (10 <= 9))
 
+=====================
+print "stage 8 numbers"
+n1 := 0xFFFFFF
+assert( @n1 == 16777215)
+
+n2 := 0b1010
+print "n2=" @n2
+assert( @n2 == 10)
+
+n3 := 0o70
+print "n3=" @n3
+assert( @n3 == 56 )
+
+
 =======================
 print "all finished!"

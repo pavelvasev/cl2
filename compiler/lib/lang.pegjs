@@ -1100,8 +1100,14 @@ array
 
 // ----- 6. Numbers -----
 
-number "number"
-  = minus? int frac? exp? { return parseFloat(text()); }
+number "number"  
+  = "0x" HEXDIG+ { return parseInt(text(),16); }
+  / "0b" digits:([0-1]+) { return parseInt(digits.join(""),2); }
+  / "0o" digits:([0-8]+) { return parseInt(digits.join(""),8); }
+  / minus? int frac? exp? { return parseFloat(text()); }
+
+//   "0x" HEXDIG+ { return Number(text()); }
+// todo можно также двоичные и 8-ричные
 
 decimal_point
   = "."
