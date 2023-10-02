@@ -134,32 +134,57 @@ func "write" {: url content |
   return fs.writeFile( url, content )
 :}
 
-func "watch" {: path once |
+obj "watch" { 
 
-  let ch = CL2.create_cell()
-  //console.log("iter=",iter, iter.next)
-  const ac = new AbortController();
-  const { signal } = ac;
-  console.log("started watch",path)
-
-  
-  // что-то вотч рекурсивно не работает.. рекомендуют
-  // https://github.com/paulmillr/chokidar
-  // https://github.com/nodejs/node/pull/45098 вроде с ноды 19.1
-  let iter = fs.watch( path, {recursive: true, signal} )  
-
-  function process_once() {
-    let nx = iter.next()
-    nx.then( rec => {
-      ch.submit( rec )
-      if (once) ac.abort(); else process_once()
-    })
+  in {
+    path: cell
+    once: cell false
   }
-  process_once()
 
-  //return CL2.create_cell( ch )
-  return ch
-:}
+  output: channel
+
+  react (when_all @path @once) {:
+    let path = self.path.get()
+    let once = self.once.get()
+  
+    //console.log("iter=",iter, iter.next)
+    const ac = new AbortController();
+    const { signal } = ac;
+    
+    // что-то вотч рекурсивно не работает.. рекомендуют
+    // https://github.com/paulmillr/chokidar
+    // https://github.com/nodejs/node/pull/45098 вроде с ноды 19.1
+    let iter = fs.watch( path, {recursive: true, signal, persistent: true} )  
+
+    let my_id = Math.random()*10000
+
+    console.log("started watch",path, once, my_id)
+
+    function process_once() {
+      let nx = iter.next()
+      // console.log({nx})
+      nx.then( rec => {
+        //console.log("nx then! my_id=",my_id,rec)
+        //console.log("submitting")
+        self.output.submit( rec.value )
+        if (once) {
+          //console.log("after watch, stopping")
+          ac.abort(); 
+        } else {
+          //console.log("after watch, restarting")
+          process_once()
+        }  
+      })
+      nx.catch( err => {
+        console.log("nx err",err)
+      })
+    }
+    process_once()
+
+    //return CL2.create_cell( ch )
+  :}
+
+}
 
 func "chmod" {: file perm |
    return fs.chmod( file, perm )

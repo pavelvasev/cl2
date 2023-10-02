@@ -1,4 +1,4 @@
-import os="std/os.cl"
+import os="std/os.cl" std="std"
 
 func "action" { arg |
   //print "compiling" @arg
@@ -10,12 +10,18 @@ func "action" { arg |
 
 func "watch" {
   // создаем однократный вотч (второй параметр true = однократный)
-  os.watch "." true | react { val | 
-      print "watch reaction! " @val 
-      action "watch" // выполним действие
-      ====
-      watch // будем смотреть опять.
-      // итого мы отключаем вотч на момент компиляции и это правильно.
+  // трындоз нода 20 если меньше 5 секунд то срабатывает на старых файлах, которые еще до того как
+  // были сделаны
+  // видимо какая-то реализация
+  react (std.timer period=5000 n=1) {
+    os.watch "." true | react { val | 
+        print "watch reaction! " @val
+        xt:= action "watch" // выполним действие
+        print "action finished xt=" @xt
+        ====
+        watch // будем смотреть опять.
+        // итого мы отключаем вотч на момент компиляции и это правильно.
+    }
   }
 }
 
