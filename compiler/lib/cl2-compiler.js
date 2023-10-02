@@ -415,7 +415,7 @@ export function default_obj2js( obj,state ) {
   	//console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)
   	let named_rest_name = `${objid}_${named_rest.name}`
   	if (named_rest.length > 0) {
-  		bindings_hash[ named_rest.name ] = named_rest_name
+  		// F-REST-REACT-ASAP bindings_hash[ named_rest.name ] = named_rest_name
 
   		let named_cells = {}
 			for (let j=0; j<named_rest.length; j++) {
@@ -439,9 +439,9 @@ export function default_obj2js( obj,state ) {
 				// стало быть это ссылки типа binding..
 			}
 			//console.log("named_cells=",named_cells)
-			bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
-			bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
-			//bindings.push( `${named_rest.name}.submit( ${named_rest}`)
+			//bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
+			//bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
+			bindings.push( `${objid}.${named_rest.name}.submit( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
 
   	}
   	else {
