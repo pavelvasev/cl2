@@ -29,6 +29,14 @@ function resolve_module_path( src_id, state ) {
 	}
 	if (first == "http:" || first == "https:")
 		return src_id
+	/*
+	// F-NODE-IMPORT
+	if (src_id.startsWith("node:"))
+		return src_id
+	// F-IMPORT-JS
+	if (src_id.startsWith("js:"))
+		return src_id.slice(3)
+	*/	
 
 	let basedir_or_file = state.default_import_map[ first ]
 	let import_map = {}
