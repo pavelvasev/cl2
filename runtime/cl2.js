@@ -854,6 +854,8 @@ export class DelayedEater() {
 // проблема - если в src не ячейки а другие примитивы, то сборка ломается
 export function monitor_rest_values( src,tgt ) {
 
+	//console.log("monitor_rest_values inner!")
+
 	let unsub = () => {}
 
 	let dtgt = create_channel()
@@ -861,16 +863,20 @@ export function monitor_rest_values( src,tgt ) {
 	dtgt.attached_to = src
 	let db = create_binding_delayed( dtgt, tgt )
 
-		src.changed.subscribe( f )
+		//src.changed.subscribe( f )
+
+		src.assigned.subscribe( f ) // F-REST-REACT-ASAP
 		f()
 		function f() {
 			unsub()
+			//console.log("f-call")
 
 			if (!src.is_set) {
 				return
 			}
 
 			let comms = src.get()
+			//console.log("mmm coms=",comms)
 
 			let rest_names // F-NAMED-REST
 			if (comms && !Array.isArray(comms)) {

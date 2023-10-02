@@ -375,7 +375,7 @@ export function default_obj2js( obj,state ) {
 	if (pos_rest.name) {
 		let rest_name = `${objid}_${pos_rest.name}`
 		if (pos_rest.length > 0) {			
-			bindings_hash[ pos_rest.name ] = rest_name
+			// F-REST-REACT-ASAP bindings_hash[ pos_rest.name ] = rest_name
 			let pos_cells = []
 			for (let j=0; j<pos_rest.length; j++) {
 				let name = pos_rest[j]		
@@ -398,8 +398,12 @@ export function default_obj2js( obj,state ) {
 				// стало быть это ссылки типа binding..
 			}
 			
-			bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
-			bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
+			// F-REST-REACT-ASAP bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
+			// F-REST-REACT-ASAP bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
+
+			// F-REST-REACT-ASAP
+			bindings.push( `${objid}.${pos_rest.name}.submit( [${pos_cells.join(',')}] )`)
+
 			//init_consts[ pos_rest.name ] = pos_cells
 		} else {
 			init_consts[ internal_name(pos_rest.name) ] = []
@@ -437,6 +441,7 @@ export function default_obj2js( obj,state ) {
 			//console.log("named_cells=",named_cells)
 			bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
 			bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
+			//bindings.push( `${named_rest.name}.submit( ${named_rest}`)
 
   	}
   	else {

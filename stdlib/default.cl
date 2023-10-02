@@ -103,7 +103,8 @@ obj "extract" {
 
     init {: obj |
       let p = CL2.monitor_rest_values( input, o2 )
-      obj.release.on( p )
+      //console.log("mon rest vals!", input.get() )
+      obj.release.subscribe( p )
     :}
 }
 

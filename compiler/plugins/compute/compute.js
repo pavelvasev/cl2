@@ -66,7 +66,7 @@ function generate_func_caller(name, state) {
 	let code = `
 	 obj "${name}" func_caller=true {
 	 	  in {
-	 	  	rest*: cell
+	 	  	rest*: channel // было cell но тогда медленно отрабатывают включения. а мы хотим F-REST-REACT-ASAP
 	 	  }
 	 	  output: cell
 	 	  vals: extract @rest

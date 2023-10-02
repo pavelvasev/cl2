@@ -382,7 +382,25 @@ export function channel( obj,state )
 	let strs = [`let ${name} = CL2.create_channel()`]
 	strs.push( `CL2.attach( self,"${name}",${name} )` )
 
-	return {main:strs,bindings:[]}
+	// F-CHANNEL-INIT-CONST
+	let initial_value = 'CL2.NOVALUE'
+  let p0 = obj.params[0]
+  if (p0 != null) {
+  	if (typeof(p0) == 'object' && p0.link) {
+  		initial_value = p0.from
+  	}
+  	else {  		
+  	  initial_value = C.objToString(p0)  	
+  	}
+  } 
+
+	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
+	let bindings = [
+		`let ${name}_initial = ${value_str}`,
+		`if (${name}_initial != CL2.NOVALUE) CL2.schedule( () => ${name}.submit( ${name}_initial ), ${name} )`
+	]
+
+	return {main:strs,bindings:bindings}
 }
 
 export function _init( obj, state )
