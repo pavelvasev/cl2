@@ -305,7 +305,7 @@ export function default_obj2js( obj,state ) {
 	// поэтому в принципе obj.links это может быть просто список имен например
 
 	//console.log("obj.$name=",obj.$name,"assigned_names=",assigned_names,"bindings_hash=",bindings_hash)//obj=",obj)
-	let {normal, renamed, pos_rest,named_rest,children_param} = basis_record.check_params( assigned_names, obj.locinfo )
+	let {normal, renamed, pos_rest,named_rest,children_param, pos_splat, named_splat} = basis_record.check_params( assigned_names, obj.params, obj.locinfo )
 	
 	// renamings - преобразует старое имя в имя, которое надо подавать
 	// используется для преобразования имен позиционных параметров
@@ -320,6 +320,8 @@ export function default_obj2js( obj,state ) {
 	normal ||= []
 	pos_rest ||= []
 	named_rest ||= []
+	pos_splat ||= []
+	named_splat ||= []
 
 	let init_consts = {}
 	let bindings = []
@@ -352,7 +354,7 @@ export function default_obj2js( obj,state ) {
 				// то скажем, что этот позиционный надо посылать в имя, в котором принимают children_param
 				renamed[ obj.positional_params_count-1 ] = children_param
 				v.children_mode = true // подсказка для генератора
-			}	
+			}
 		}	
 	}
 
@@ -447,6 +449,25 @@ export function default_obj2js( obj,state ) {
   	else {
   		init_consts[ internal_name(named_rest.name) ] = {}
   	}
+  }
+
+  if (named_splat.length > 0) {
+  	 let ns = named_splat[0]
+  	 // создаем процесс мониторинга
+  	 bindings.push( `let ${ns.name}_controlled_names = {${Object.keys(ns.controlled_names).map(k=>`"${k}":true`).join(',')}}`)
+  	 bindings.push( `let ${ns.name}_named_rest = ${named_rest.name ? objid + '.' + named_rest.name : null}`)
+  	 bindings.push( `${ns.source}.subscribe( (values) => {
+  	 	 let rest_acc = {}
+  	 	 for (let name in values) {
+  	 	 	if (${ns.name}_controlled_names.hasOwnProperty(name)) {
+  	 	 		${objid}[name].submit( values[name] )
+  	 	 	} else 
+  	 	 	  if (${ns.name}_named_rest)
+  	 	 	  	  rest_acc[ name ] = CL2.create_cell( values[name] )
+  	 	 }
+  	 	 if (${ns.name}_named_rest)
+  	 	 	${ns.name}_named_rest.submit( rest_acc )
+  	 })` )
   }
 
 	////////////

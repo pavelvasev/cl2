@@ -96,16 +96,20 @@ obj "extract" {
     input: cell // можно channel но монитору нужна ячейка
   }
   
-  output: cell
+  output: cell fast=true
+  //output: channel // а что если? что-то не выходит но вариант же
 
     o2: channel
     bind @o2 @output
+    //bind @o2 @output.changed
 
     init {: obj |
       let p = CL2.monitor_rest_values( input, o2 )
       //console.log("mon rest vals!", input.get() )
       obj.release.subscribe( p )
     :}
+
+    //react @o2 {: v | console.log('xtract return:',v) :}
 }
 
 // ну вроде как нам не надо прямо чтобы вот процесс.. функция тоже норм теперь 
@@ -283,14 +287,17 @@ obj "when_all" {
   output: channel
   init {: 
     let unsub = () => {}
-    rest.subscribe( (list) => {      
+    rest.subscribe( (list) => {
       unsub()
+      //console.log("when-all subscribe")
       let q = CL2.when_all( list )
       // вот все-таки порты LF и наши каналы это разное. 
       // ибо порты их держат сооощение 1 такт. и это прикольно.
       // а нас пока спасает что там внутри - delayed стоит.
       let b = CL2.create_binding( q, output )
       unsub = () => { q.destroy(); b.destroy() }
+
+      //q.subscribe( qqq => console.log("when-all sending",qqq))
     })
     self.release.subscribe( () => unsub() )
   :}

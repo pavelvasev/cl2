@@ -87,8 +87,9 @@
 
          if (m.positional_rest)
              env.positional_rest_param = m.name
-         if (m.named_rest)
+         if (m.named_rest) 
              env.named_rest_param = m.name
+         
       }
 
       if (m.feature) {                                  // фича
@@ -607,10 +608,10 @@ function peg$parse(input, options) {
       return { param: true, name: name, value: value }
     };
   var peg$f2 = function(name) {
-      return { param: true, name: name, positional_rest: true,value:[] }
+      return { param: true, name: name, positional_rest: true,value:{positinal_splat: true,source:name} }
     };
   var peg$f3 = function(name) {
-      return { param: true, name: name, named_rest: true,value:{} }
+      return { param: true, name: name, named_rest: true, value:{named_splat:true,source:name} }
     };
   var peg$f4 = function(value) {
       // todo посмотреть че сюда попадает

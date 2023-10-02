@@ -235,17 +235,23 @@ export function create_reaction(x) {
 export class Cell extends Comm {
 	value = null
 	// большой вопрос. мы не можем получается задать значение null по умолчанию
-	constructor( initial_value=NOVALUE ) {
+	// fast = не заниматься задержками с поеданием значений, а посылать сигнал changed сразу же
+	// оказалось надо для коррекного сбора rest-значений (чтобы они там не задерживались)
+	constructor( initial_value=NOVALUE,fast=false ) {
 		// оказывается если послать сюда undefined то оно бодро превращается в NOVALUE..
 		//console.log('cell constructor',initial_value)
 		super()
+		
 		attach( this,"changed_emit",create_channel())
 		// idea: this.changed_emit = attach( create_channel(),this )
 		
 		attach( this,"changed",create_channel())
 		//this.changed = create_channel(`${title}.changed`)
 		// создает процесс передачи на следующий такт с поеданием дублей
-		this.changed_emit_binding = create_binding_delayed( this.changed_emit, this.changed )
+		this.changed_emit_binding = fast 
+		            ? create_binding( this.changed_emit, this.changed )
+		            : create_binding_delayed( this.changed_emit, this.changed )
+
 		attach( this,"assign",create_channel())
 		attach( this,"assigned",create_channel())
 		//this.assign = create_channel(`${title}.assign`)
@@ -353,8 +359,8 @@ export class Cell extends Comm {
 	
 }
 
-export function create_cell(value) {
-	let k = new Cell(value)
+export function create_cell(value,fast=false) {
+	let k = new Cell(value,fast)
 	return k
 }
 
@@ -640,6 +646,7 @@ export function when_all( list ) {
 
 	enter_mode_1()
 
+	// mode 1 - набираем чтобы сработали все
 	function enter_mode_1() {
 		let counter = list.length
 		let index = 0
@@ -662,12 +669,15 @@ export function when_all( list ) {
 		}
 	}
 
+    // mode 2 - теперь реагируем на любого
 	function enter_mode_2() {
+		//console.log("mode 2 emit to q",values)
 		q.emit( values )
 
 		unsubs = list.map( (s,index) => s.subscribe( (val) => ff(val,index)))
 
 		function ff( value, index) {
+			//console.log("mode 2 emit to q index=",index,value)
 			values[index] = value
 			q.emit( values )
 		}
@@ -887,10 +897,12 @@ export function monitor_rest_values( src,tgt ) {
 
 			// это после преобразования F-NAMED-REST
 			if (comms == null || comms.length == 0) {
+				//console.log("comms empty",comms)
 				dtgt.emit( rest_names ? {} : [] )
 				unsub = () => {}
 				return
-			}			
+			}
+			//console.log("comms non empty",comms)
 
 
 			if (comms.some( elem => elem == null)) {
@@ -922,6 +934,7 @@ export function monitor_rest_values( src,tgt ) {
 					values = result
 				}
 
+				//console.log("emitting collected",values)
 				dtgt.emit( values )
 			})
 

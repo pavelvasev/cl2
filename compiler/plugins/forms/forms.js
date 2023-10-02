@@ -271,7 +271,7 @@ export function _obj( obj, state )
 			
 			return res
 		},
-		check_params: ( param_names, locinfo ) => {
+		check_params: ( param_names, param_values, locinfo ) => {
 			//console.log("check_params of id",id,"param_names=",param_names,"obj_params=",obj_params)
 			// задача - по каждому указанному входному параметру дать информацию
 			// как его следует подавать
@@ -287,11 +287,23 @@ export function _obj( obj, state )
 			*/
 			let named = [], pos_rest_names = [], named_rest_names=[]
 			let renamed = {}
+			let named_splat = [], pos_splat = []
+
 			pos_rest_names.name = rest_param
 			named_rest_names.name = named_rest_param
 			// obj_params это словарь параметров из описания объекта (типа то бишь)
 			// positional_names - массив имен позиционных параметров из описания
 			for (let k of param_names) {
+				let val = param_values[ k ]
+				//if (!val) console.log( "strange! param_values=",param_values,"name=",k)
+				if (val?.named_splat) {
+					named_splat.push( {name: k, source: val.source, controlled_names: obj_params} )
+					continue
+				}
+				if (val?.pos_splat) {
+					pos_splat.push( {name: k, source: val.source, controlled_names: positional_names.slice(k+1)} )
+					continue
+				}				
 				// k - имя очередного параметра указанное внешне. может быть числом, для позционных.				
 				if (obj_params.hasOwnProperty( k )) {
 					// k встречается в списке параметров объекта - значит это именованный
@@ -320,7 +332,9 @@ export function _obj( obj, state )
 				console.error(`object ${id} has no parameter ${k}. obj.params=`,obj_params, locinfo)
 				throw new Error( `object ${id} has no parameter ${k}`)
 			}
-			return {normal:named,renamed,pos_rest:pos_rest_names, named_rest: named_rest_names, children_param}
+			return {normal:named,renamed,pos_rest:pos_rest_names, 
+			   named_rest: named_rest_names, children_param, 
+			   pos_splat, named_splat}
 		},
 		get_params: () => {
 			return obj_params
@@ -366,11 +380,11 @@ export function cell( obj, state )
   	else {  		
   	  initial_value = C.objToString(p0)  	
   	}
-  } 
+  }
 
 	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 
-	let strs = [`let ${name} = CL2.create_cell(${value_str})`]
+	let strs = [`let ${name} = CL2.create_cell(${value_str},${obj.params.fast})`]
 	strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	return {main:strs,bindings:[]}
