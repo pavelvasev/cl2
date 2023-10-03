@@ -617,7 +617,7 @@ export function when_all_once( list ) {
 		let unsub
 		let need_unsub
 		if (!k.subscribe) {
-			console.error("when-all: list element have no subscribe method. index=",index,"k=", k+"","list=",list)
+			console.error("when-all: list element have no subscribe method. index=",index,"k=", k+"","list=",list,"q=",q+'')
 		}
 		k.once( (v) => {
 			counter--
@@ -655,7 +655,7 @@ export function when_all( list ) {
 			let unsub
 			let need_unsub
 			if (!k.subscribe) {
-				console.error("when-all: list element have no subscribe method. index=",index,"k=", k+"","list=",list)
+				console.error("when-all: list element have no subscribe method. index=",index,"k=", k+"","list=",list,"q2=",q2+'')
 			}
 			k.once( (v) => {
 				counter--
@@ -762,7 +762,7 @@ export function create_binding_delayed( src, tgt ) {
 				res.scheduled = false; 
 				console.channel_verbose("delayed-binding real pass",src+""," ---> ",tgt+"")
 				//console.channel_verbose("delayed-binding real pass",src+""," ---> ",tgt+"","value",res.value+"")
-				tgt.emit( res.value )
+				tgt.submit( res.value )
 			}, src)
 		} //else console.log("delayed-binding shield! not scheduling")
 		res.value = value

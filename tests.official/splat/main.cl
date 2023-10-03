@@ -6,14 +6,14 @@ obj "foo" {
     b: cell
     c**: cell
   }
-  cvals:= extract @c
+  //cvals:= extract @c
   output: cell
   /*
   react (when_all @a @b @cvals) {
     print "a=" @a "b=" @b "cvals=" @cvals
   }
   */
-  react (when_all @a @b @cvals) {: args |
+  react (list @a @b @c) {: args |
     console.log('hello',args)
     output.submit( [ args[0],args[1], args[2].d, args[2].e, args[2].hh ] )
   :}

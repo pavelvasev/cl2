@@ -68,7 +68,7 @@ obj "spawn" {
   print "spawn std=" @stdio
 */  
 
-  rr: react (when_all (extract @cmd_args) @stdio @dir) {: values |
+  rr: react (list @cmd_args @stdio @dir) {: values |
     let args = values[0]
     //console.log("os.spawn spawning",JSON.stringify(values))
     rr.destroy() // больше чтобы не запускать
@@ -143,7 +143,7 @@ obj "watch" {
 
   output: channel
 
-  react (when_all @path @once) {:
+  react (list @path @once) {:
     let path = self.path.get()
     let once = self.once.get()
   

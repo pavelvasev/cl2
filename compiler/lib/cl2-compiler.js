@@ -400,11 +400,13 @@ export function default_obj2js( obj,state ) {
 				// стало быть это ссылки типа binding..
 			}
 			
-			// F-REST-REACT-ASAP bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
-			// F-REST-REACT-ASAP bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
+			bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
+			bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
+			// F-REST-AUTO-EXTRACT
+			bindings.push( `${objid}.release.subscribe( CL2.monitor_rest_values( ${rest_name}, ${objid}.${pos_rest.name} ) )` )
 
 			// F-REST-REACT-ASAP
-			bindings.push( `${objid}.${pos_rest.name}.submit( [${pos_cells.join(',')}] )`)
+			// bindings.push( `${objid}.${pos_rest.name}.submit( [${pos_cells.join(',')}] )`)
 
 			//init_consts[ pos_rest.name ] = pos_cells
 		} else {
@@ -414,10 +416,13 @@ export function default_obj2js( obj,state ) {
 
   // F-NAMED-REST
   let named_cells = {}
+  let named_rest_name 
   if (named_rest.name) {
-  	//console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)
-  	let named_rest_name = `${objid}_${named_rest.name}`
-  	if (named_rest.length > 0) {
+  	
+  	console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)  	
+  	if (named_rest.length > 0 || named_splat.length > 0) {
+  		// если есть named_splat.length > 0 то нам понадобится ячейка named_rest для работы named-splat
+  		named_rest_name = `${objid}_${named_rest.name}`
   		// F-REST-REACT-ASAP bindings_hash[ named_rest.name ] = named_rest_name
   		
 			for (let j=0; j<named_rest.length; j++) {
@@ -441,9 +446,11 @@ export function default_obj2js( obj,state ) {
 				// стало быть это ссылки типа binding..
 			}
 			//console.log("named_cells=",named_cells)
-			//bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
-			//bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
-			bindings.push( `${objid}.${named_rest.name}.submit( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
+			bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
+			bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
+			//bindings.push( `let ${objid}_named_rest = CL2.${named_rest.name}.submit( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
+			// F-REST-AUTO-EXTRACT
+			bindings.push( `${objid}.release.subscribe( CL2.monitor_rest_values( ${named_rest_name}, ${objid}.${named_rest.name} ) )` )
 
   	}
   	else {
@@ -456,7 +463,8 @@ export function default_obj2js( obj,state ) {
   	 let ns = named_splat[0]
   	 // создаем процесс мониторинга
   	 bindings.push( `let ${ns.name}_controlled_names = {${Object.keys(ns.controlled_names).map(k=>`"${k}":true`).join(',')}}`)
-  	 bindings.push( `let ${ns.name}_named_rest = ${named_rest.name ? objid + '.' + named_rest.name : null}`)
+  	 // F-REST-AUTO-EXTRACT
+  	 bindings.push( `let ${ns.name}_named_rest = ${named_rest_name ? named_rest_name : null}`)
   	 // начальное значение для rest_acc задается такое же, как было для named_rest выше..
   	 bindings.push( `${ns.source}.subscribe( (values) => {
   	 	 let rest_acc = {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}}

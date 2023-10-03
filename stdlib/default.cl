@@ -1,4 +1,5 @@
 // F-DEFAULT-CL
+// содержимое которое доступно всем безо всяких пакетов
 
 // таки мысли что надо сделать Cl2.create_reaction( comm, code )
 obj "react" {
@@ -62,6 +63,8 @@ obj "react" {
   :}
 }
 
+func "list" {: ...values | return values :}
+
 /* // реакция в стиле ЛФ
 obj "react" {
   in {
@@ -91,7 +94,7 @@ obj "react" {
 */
 
 // в extract складывается массив ячеек, а на выходе он дает массив значений этих ячеек..
-obj "extract" {
+obj "xtract" {
   in {
     input: cell // можно channel но монитору нужна ячейка
   }
@@ -280,7 +283,18 @@ obj "block" {
 }
 
 
-obj "when_all" {
+// вход - список каналов/ячеек
+obj "when_all2" {
+  in {
+    rest*: cell
+  }
+  output: cell
+
+  bind @rest @output
+}
+
+
+obj "when_all3" {
   in {
     rest*: cell
   }
@@ -303,6 +317,7 @@ obj "when_all" {
   :}
 }
 
+
 // read нам нужна.. чтобы работало f := 10
 func "read" {: x | return x :}
 
@@ -311,16 +326,20 @@ obj "apply" {
     action: cell
     rest*: cell
   }
-  u: extract @rest
+  //u: extract @rest
   output: cell
 
-  xx: react (when_all @action @u.output) {:
-      
+  //react @action {: console.log("see action") :}
+  //react @rest {: console.log("see rest") :}
+
+  xx: react (list @action @rest) {:
+      //console.log("main reaction!")
       let f = action.get()
-      let args = u.output.get()
+      let args = rest.get()
       //console.log("x-apply",f,args)
 
       if (f && args) {
+        //console.log("calling")
         let res = f( ...args )
         //console.log("apply res=",res,"f=",f)
         // типа если вернули канал - то зацепку за его значение нам обеспечит react
@@ -576,6 +595,7 @@ func "arrays_equal" {: a b |
 ///////////////////////
 
 // кандидат на вылет ибо dict так щас научен делать
+/*
 func "list_to_dict" {: nodes |
    let h = {}
    for (let k of nodes) {
@@ -583,7 +603,7 @@ func "list_to_dict" {: nodes |
    }
    return h   
 :}
-
+*/
 
 func "keys" {: obj |
   if (Array.isArray(obj)) return [...Array( obj.length ).keys()]
@@ -666,14 +686,12 @@ obj "dict" {
         h[ list[i] ] = list[i+1]
 
       return h
-  :} (extract @rest_pos) (extract @rest_all)
+  :} @rest_pos @rest_all
 
   //merged := concat @xtracted_pos @xtracted
 
   bind @merged @output
 }
-
-func "list" {: ...values | return values :}
 
 // ну а если там ячейка?
 func "get" {: src field | 

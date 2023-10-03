@@ -1,3 +1,5 @@
+// содержимое пакета std
+
 
 // сортировка по умолчанию получается.. ф-ю критерия если передавать, то надо arr.sort менять т.к. он с промисами не работает
 func "sort" {: arr | return arr.sort() :}
@@ -131,7 +133,7 @@ obj "reaction" {
 
 
 
-
+/*
 obj "add" {
   // rest* : cell
   // output: channel
@@ -155,6 +157,7 @@ obj "add" {
 
     //bind @rest @output   
 }
+*/
 
 
 

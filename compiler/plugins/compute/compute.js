@@ -69,12 +69,15 @@ function generate_func_caller(name, state) {
 	 	  	rest*: channel // было cell но тогда медленно отрабатывают включения. а мы хотим F-REST-REACT-ASAP
 	 	  }
 	 	  output: cell
-	 	  vals: extract @rest
-  	  r: react @vals.output {: args |
+	 	  
+  	  r: react @rest {: args |
+  	    //console.log("func called ${name}")
   	    if (self.task_mode) {
   	    	// console.log('ok taskj')
-  	    	//r.destroy() // один раз отреагировали и хватит. но это странно 
-  	    	vals.destroy() // попробем вот что отменить.. F-FUNC-ONCE
+  	    	// r.destroy() // один раз отреагировали и хватит. но это странно 
+  	    	// todo - надо отменить сборку внешних аргументов.. не к чему.. rest F-REST-AUTO-EXTRACT
+  	    	// это 
+  	    	//vals.destroy() // попробем вот что отменить.. F-FUNC-ONCE
   	    	if (self.started)
   	    		 console.log('FUNC duplicate call!! ${name} args=',args,'prev-args=',self.started)
   	    	self.started = args
