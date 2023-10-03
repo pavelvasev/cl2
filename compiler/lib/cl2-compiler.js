@@ -419,7 +419,7 @@ export function default_obj2js( obj,state ) {
   let named_rest_name 
   if (named_rest.name) {
   	
-  	console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)  	
+  	//console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)  	
   	if (named_rest.length > 0 || named_splat.length > 0) {
   		// если есть named_splat.length > 0 то нам понадобится ячейка named_rest для работы named-splat
   		named_rest_name = `${objid}_${named_rest.name}`
