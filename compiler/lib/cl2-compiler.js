@@ -413,13 +413,13 @@ export function default_obj2js( obj,state ) {
   }
 
   // F-NAMED-REST
+  let named_cells = {}
   if (named_rest.name) {
   	//console.log("see named rest!",named_rest.name,"names=",...named_rest,named_rest.length)
   	let named_rest_name = `${objid}_${named_rest.name}`
   	if (named_rest.length > 0) {
   		// F-REST-REACT-ASAP bindings_hash[ named_rest.name ] = named_rest_name
-
-  		let named_cells = {}
+  		
 			for (let j=0; j<named_rest.length; j++) {
 				let name = named_rest[j]		
 				if (!bindings_hash[ name ]) {
@@ -451,13 +451,15 @@ export function default_obj2js( obj,state ) {
   	}
   }
 
+  // F-NAMED-SPLAT
   if (named_splat.length > 0) {
   	 let ns = named_splat[0]
   	 // создаем процесс мониторинга
   	 bindings.push( `let ${ns.name}_controlled_names = {${Object.keys(ns.controlled_names).map(k=>`"${k}":true`).join(',')}}`)
   	 bindings.push( `let ${ns.name}_named_rest = ${named_rest.name ? objid + '.' + named_rest.name : null}`)
+  	 // начальное значение для rest_acc задается такое же, как было для named_rest выше..
   	 bindings.push( `${ns.source}.subscribe( (values) => {
-  	 	 let rest_acc = {}
+  	 	 let rest_acc = {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}}
   	 	 for (let name in values) {
   	 	 	if (${ns.name}_controlled_names.hasOwnProperty(name)) {
   	 	 		${objid}[name].submit( values[name] )

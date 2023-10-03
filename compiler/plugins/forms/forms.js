@@ -384,7 +384,8 @@ export function cell( obj, state )
 
 	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 
-	let strs = [`let ${name} = CL2.create_cell(${value_str},${obj.params.fast})`]
+	let fast_part = obj.params.fast ? ",true" : ""
+	let strs = [`let ${name} = CL2.create_cell(${value_str}${fast_part})`]
 	strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	return {main:strs,bindings:[]}

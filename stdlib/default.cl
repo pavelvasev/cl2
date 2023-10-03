@@ -183,7 +183,7 @@ obj "if"
       if (current_parent.is_set) {
           let cp = current_parent.get()
           cp.destroy()
-          current_parent.set( null )
+          current_parent.set( CL2.NOVALUE )
         }
     :}
 

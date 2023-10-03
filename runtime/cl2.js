@@ -378,7 +378,7 @@ export class ClObject extends Comm {
 					if (obj !== this.release && obj.destroy) 
 					    obj.destroy()
 				})
-			}			
+			}
 		})
 	}
 	destroy() {
@@ -505,7 +505,7 @@ export function get_title( obj ) {
 	}
 	if (obj.attached_to)
 		return get_title( obj.attached_to ) + "." + (obj.$title || "unknown")
-	if (obj.parent && obj.parent.is_set)
+	if (obj.parent && obj.parent.is_set && obj.parent.get())
 		return get_title( obj.parent.get() ) + "." + (obj.$title || "unknown")	
 	return obj.$title || "unknown"
 }

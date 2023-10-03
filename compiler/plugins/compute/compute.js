@@ -260,9 +260,14 @@ export function _return( obj, state )
   	if (typeof(p0) == 'object' && p0.link) {
   		initial_value = p0.from
   		if (state.static_values[p0.from])
+  			// вроде бы так можно потому что там функция поймет что это канал..
   			base.main.push( `return_scope.output.submit( ${p0.from} )` )
   		else
   			base.main.push( `${p0.from}.once( val => return_scope.output.submit( val ) )` )
+  		// тут можно поставить subscribe
+  		// но тогда надо следить за удалением return-объекта т.к. в данном случае он 
+  		// является процессом..
+  		// ну или надо к кому мы там приаттачимся - на release цепляться..
   	}
   	else {  		
   	  initial_value = C.objToString(p0,1,state,obj)  	
