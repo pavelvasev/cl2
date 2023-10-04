@@ -156,22 +156,7 @@ obj "if"
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
   current_parent: cell
 
-  //bind @_else.value @else_value  
-  // _else является ячейкой, содержащей объект
-  // мы в выражениях пока не умеем обратиться к значению этой ячейки, увы
-  // да и bind является статической вещью. т.е. это не объект, который отслеживает свои аргументы
-  // но он мог бы быть таким, если ввести модификатор для параметра - что надо не связывать,
-  // а класть сам синхро-канал в значение
-  // но в целом получается что выражение типа cellname.a.b.c является процессом
-  // типа geta cellname a b c
-  /*
-  react @_else { |_else_obj|
-    bind @_else_obj.value @else_value
-  }
-  */
-
-  //print "else=" @_else
-
+  // прислали блок else 
   r_else_obj: react @_else {: val |
     // if (debug)
     // console.log("r1")
@@ -182,7 +167,7 @@ obj "if"
   :}
 
   func "cleanup_current_parent" {:
-    //console.log("cleanup_current_parent",current_parent.get())
+      console.log("cleanup_current_parent",current_parent.get())
       if (current_parent.is_set) {
           let cp = current_parent.get()
           cp.destroy()
@@ -222,12 +207,14 @@ obj "if"
       }
   :}
 
+  // заменили then-блок
   r_on_then_val: react @then_branch {: value |
     if (current_state.get() == 1) {
       activate_branch( then_branch.get(), condition.get() )
     }
   :}
 
+  // заменили else-block
   r_on_else_val: react @else_branch {: value |
     //console.log("else_value changed:",else_value.get(),"current_state.get()=",current_state.get(),"condition=",condition.get())
     if (current_state.get() == 2) {

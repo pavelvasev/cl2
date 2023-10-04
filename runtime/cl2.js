@@ -28,7 +28,7 @@ console.channel_verbose = (...args) => {}
 let fmtval = () => {}
 
 // process мб не определён
-if (typeof(process) !== "undefined" && process.env.VERBOSE) {
+if ( (typeof(process) !== "undefined" && process.env.VERBOSE) || globalThis.verbose) {
 	console.channel_verbose = (...args) => {
 		console.log("\t",...args)
 		//return true
@@ -72,7 +72,7 @@ export class Comm {
 		if (this.attached_to?.get_m_priority)
 			return this.attached_to.get_m_priority()
 		return 0
-	}	
+	}
 	// так то тут понижение может стоит всем подчиненным передать..
 	// и не только на момент связи
 	set_m_priority(v) {
@@ -534,12 +534,20 @@ export class Binding {
 
 		tgt.set_m_priority( src )
 
+		this.src = src
+		this.tgt = tgt
+
 		//this.unsub = tgt.bind( src )
 	}
 	destroy() {
+		console.log("binding destroyed. src=",this.src+'', "tgt=",this.tgt+'')//xxx
+
 		this.unsub()
 		this.unsub = null
 	}
+	toString() {
+		return `${this.constructor.name}:${get_title( this )}[id:${this.$cl_id}]`
+	}	
 }
 
 export function create_binding( src, tgt ) {
