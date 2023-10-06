@@ -431,13 +431,15 @@ obj "if"
   :}
 
   func "cleanup_current_process" {:
-      //console.log("cleanup_current_process",current_process.get())
+      console.log("cleanup_current_process",current_process.get())
       if (current_process.is_set) {
           let cp = current_process.get()
           cp.destroy()
           current_process.set( CL2.NOVALUE )
         }
     :}
+
+  react @self.release @cleanup_current_process  
 
   func "activate_branch" {: branch_value arg |
       cleanup_current_process()

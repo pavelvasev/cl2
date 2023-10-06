@@ -502,7 +502,7 @@ export function bind( obj, state )
 	// но и в биндах зажержки есть. подумать об этом.
 
 	let strs = [`let ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`]
-	strs.push( `CL2.attach( self,"${name}",${name} )` )
+	strs.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )` )
 
 	return {main:strs,bindings:[]}
 }
