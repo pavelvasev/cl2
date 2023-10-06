@@ -376,6 +376,11 @@ export class ClObject extends Comm {
 		attach( this,"release",create_channel())
 		//this.release = create_channel(`${title}.release`)
 
+/* не катит подписываться самим на релиз
+   потому что там реакции вида react @self.release
+   и если мы тут подписываемся то мы реакции - стираем
+   ибо эта подписка первой срабатывает
+
 		this.release.subscribe( () => {
 			//console.log('t2',this+"")
 			// удалим объекты прикрепленные к этому...
@@ -386,10 +391,20 @@ export class ClObject extends Comm {
 				})
 			}
 		})
+*/		
 	}
 	destroy() {
 		//console.log('destory called',this+"", "emitting release",this.release+"")
 		this.release.submit()
+
+		// удалим объекты прикрепленные к этому...
+			if (this.subobjects) {
+				this.subobjects.forEach( obj => {
+					if (obj !== this.release && obj.destroy) 
+					    obj.destroy()
+				})
+			}
+		
 		this.release.destroy() // надо его отдельно, а то он подписки свои вычищает
 	}
 

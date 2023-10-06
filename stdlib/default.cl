@@ -93,10 +93,12 @@ obj "tree_child" {
   // ссылка на parent-а, вдруг кому-то надо
   // но кстати а лифту то надо? или он как?
 
-  react @self.release {: 
+  react @self.release {:
+     console.log('child release!',self+'','parent=',self.parent.get() + '')
      if (self.parent.is_set) {
        let p = self.parent.get()
-       p.tree.forget( self )
+       console.log("thus calling parent forget of",self.attached_to+'')
+       p.tree.forget( self.attached_to )
      }
   :}
 }
@@ -473,7 +475,24 @@ obj "if"
       // Comm и ClObject вместе отработают
       if (res instanceof CL2.ClObject) {
         current_process.set( res )
-        tree.append( res )
+        tree.append( res ) 
+        
+        /* когда таким образом мы добавляем контекст функции res в свое дерево tree,
+           то не происходит связи по теме parent-child.
+           и как следствие при удалении res дерево tree все еще считает
+           res подавшим заявку.
+
+           значит объект должен хранить ссылку на того кому он подал заявку.
+           и уведомлять его. а до парента дойдет как-нибудь..
+
+           todo!
+        */
+
+        res.release.subscribe( ()=>tree.forget(res))
+        
+        // а что плохого в том что наше tree выставит себя парентом res?
+        // даже если оно лифт.. ну потому что оно лифт..
+        // а идея лифтов - проталкивать детей к узлам..
       }
   :}
 
