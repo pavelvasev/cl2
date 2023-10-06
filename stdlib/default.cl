@@ -89,15 +89,27 @@ func "list" {: ...values | return values :}
 ////////////////////////////////////////////////
 
 obj "tree_child" {
-  parent: cell
+  parent: cell  
   // ссылка на parent-а, вдруг кому-то надо
   // но кстати а лифту то надо? или он как?
+  //lift_parent: cell
+  // ссылка на лифт-парент
+  // но кстати нужна ли она? проще же в attached_to постучаться..
 
   react @self.release {:
      console.log('child release!',self+'','parent=',self.parent.get() + '')
-     if (self.parent.is_set) {
-       let p = self.parent.get()
-       console.log("thus calling parent forget of",self.attached_to+'')
+     
+     let p = self.parent.get() 
+     // todo сделать таки тему чтобы эта штука себя из лифта удаляла
+     // а лифт себя удалял из ноды
+     /*
+     let my_mb_lift_host = self.attached_to?.attached_to
+     if (my_mb_lift_host && my_mb_lift_host.tree && my_mb_lift_host !== p)
+        my_mb_lift_host.tree.forget( self.attached_to )
+      else
+     */ 
+     if (self.parent.is_set) {       
+       //console.log("thus calling parent forget of",self.attached_to+'')
        p.tree.forget( self.attached_to )
      }
   :}
@@ -489,7 +501,8 @@ obj "if"
         */
 
         res.release.subscribe( ()=>tree.forget(res))
-        
+        // todo см tree_child
+
         // а что плохого в том что наше tree выставит себя парентом res?
         // даже если оно лифт.. ну потому что оно лифт..
         // а идея лифтов - проталкивать детей к узлам..
