@@ -36,6 +36,9 @@ export function init( st ) {
 		if (state.tree_parent_id == null) {
 			state.current.exported ||= []
 			state.current.exported.push( id )
+		} else {
+			//console.log("skip export id",id,"due to state.tree_parent_id",state.tree_parent_id)
+			//console.trace()
 		}
 		return strs
 	}
@@ -64,6 +67,7 @@ export function init( st ) {
 		/// используется метод https://habr.com/ru/articles/583130/
 		//let names = Object.keys(substate.current).map(n => `create_${n}`).join(",")
 		substate.current.exported ||= []
+		//console.log('substate.current.exported=',substate.current.exported,srcfile)
 		let names = substate.current.exported.map(n => `create_${n}`).join(",")
 
 		let module_var_name = path_to_var( srcfile )

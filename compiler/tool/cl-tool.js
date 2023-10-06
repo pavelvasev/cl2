@@ -213,6 +213,10 @@ state.env["import"] = {
 
 				  module_state = C.modify_dir( state, path.dirname( file ) + "/")
 
+				  // надо забыть о внешнем.. новый мир тут.
+				  module_state = C.modify_parent( module_state,"self",null )
+				  // переменная self добавляется в bundle-2 register_import
+
 				  module_state.import_map = state.space.resolve_module_import_map( src, state )
 
 				  // и todo - надо карту импортов свою им подгрузить

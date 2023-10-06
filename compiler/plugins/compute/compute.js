@@ -64,26 +64,17 @@ function generate_func_caller(name, state) {
 	// хотя не совсем.. еще сигнатуру соблюсти надо.
 	// но тогда это и не rest
 	let code = `
-	 obj "${name}" func_caller=true {
+	 obj "${name}" {
 	 	  in {
 	 	  	rest*: channel // было cell но тогда медленно отрабатывают включения. а мы хотим F-REST-REACT-ASAP
 	 	  }
 	 	  output: cell
 	 	  
   	  r: react @rest {: args |
-  	    //console.log("func called ${name}")
-  	    if (self.task_mode) {
-  	    	// console.log('ok taskj')
-  	    	// r.destroy() // один раз отреагировали и хватит. но это странно 
-  	    	// todo - надо отменить сборку внешних аргументов.. не к чему.. rest F-REST-AUTO-EXTRACT
-  	    	// это 
-  	    	//vals.destroy() // попробем вот что отменить.. F-FUNC-ONCE
-  	    	if (self.started)
-  	    		 console.log('FUNC duplicate call!! ${name} args=',args,'prev-args=',self.started)
-  	    	self.started = args
-  	    }
-
-  	    return ${name}( ...args ) 
+  	    console.channel_verbose("co-func called '${name}'. self=",self+'')
+  	    let rr = ${name}( ...args )
+  	    console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
+  	    return rr
   	  :}
   	  //react @output {: self.destroy() :}
 
@@ -96,6 +87,19 @@ function generate_func_caller(name, state) {
 
 	return {main:strs,bindings:[]}	
 }
+
+/*
+  	    if (self.task_mode) {
+  	    	// console.log('ok taskj')
+  	    	// r.destroy() // один раз отреагировали и хватит. но это странно 
+  	    	// todo - надо отменить сборку внешних аргументов.. не к чему.. rest F-REST-AUTO-EXTRACT
+  	    	// это 
+  	    	//vals.destroy() // попробем вот что отменить.. F-FUNC-ONCE
+  	    	if (self.started)
+  	    		 console.log('FUNC duplicate call!! ${name}. self=',self+'',' args=',args,'prev-args=',self.started)
+  	    	self.started = args
+  	    }
+*/
 
 
 let ccc = 0
@@ -172,6 +176,7 @@ export function cocode_to_code( v,state, is_return_scope, is_exit_scope ) {
 		}
 	if (!v.cofunc) return v
 
+/* F-TREE
 	if (v.children_mode) { // F-CHILDREN-PARAM
 		let modified = C.modify_parent( state, "arg_obj" )	
 		v.pos_args.map(x => modified.static_values[x] = true )
@@ -181,18 +186,22 @@ export function cocode_to_code( v,state, is_return_scope, is_exit_scope ) {
 	  let txt = C.strarr2str( strs )
    	return { code: txt, pos_args: ["arg_obj",...v.pos_args] }
 	}
+*/	
 
 	// поменяем особые формы
 	// func_self а не self потому, чтобы можно было через self все еще ссылаться на родительский объект
 	// если функция определена внутри объекта
 
 	// вот тут надо не null а arg_obj
-	let modified = C.modify_parent( state, "func_self",null )
+	// F-TREE
+	let modified = C.modify_parent( state, "func_self" )
 
+/* F-TREE вроде как не надо стало.. у нас таки там процесс образовался.. ну пока так..
 	modified.next_obj_cb2 = ( obj, objid, strs, bindings, bindings_hash_before_rest, basis_record ) => {
 		strs.push(`${objid}.task_mode = true`)
 		return
 	}
+*/	
 	
 	// ссылки на параметры идут по значению а не по ссылкам типа binding
 	v.pos_args.map(x => modified.static_values[x] = true )
@@ -204,7 +213,7 @@ export function cocode_to_code( v,state, is_return_scope, is_exit_scope ) {
 	//let last_obj_id = C.obj_id( v.code[ v.code.length-1 ], state )
 	// не прокатило. потому что у нас else поедается if-ом и т.п.
 	let last_obj_id = modified.generated_ids[ modified.generated_ids.length-1 ]
-	let connect_last = modified.generated_ids.length == 1 && last_obj_id ? `CL2.create_binding( ${last_obj_id}.output, output ) // F-RETVAL-LAST` : ``
+	let connect_last = modified.generated_ids.length == 1 && last_obj_id ? `if (${last_obj_id}.output) CL2.create_binding( ${last_obj_id}.output, func_self.output ) // F-RETVAL-LAST` : ``
 
 	if (modified.disable_retval_last) connect_last = ''
 
@@ -216,14 +225,24 @@ export function cocode_to_code( v,state, is_return_scope, is_exit_scope ) {
 	//let args_cells = v.pos_args.map(x => `let ${x} = CL2.create_cell( __${x} )`)	
 
 	// F-FUNC-EXIT
+	// F-TREE - все функции несут неявный процесс и его же и возвращают
 
-	let output_things = [
-		`let func_self = {$title: 'cofunc_action'}`,
+/*
+	let output_things = [		
+		`let func_self = { $title: 'cofunc_action' }`, 
 		is_return_scope ? `let return_scope = func_self` : '',
 		is_exit_scope ? `let exit_scope = func_self` : '',
 		"let output = CL2.create_cell();",
 		"CL2.attach( func_self,'output',output )"]
-	let strs = [`// cofunc from ${v.locinfo?.short}`, output_things, s, connect_last, "return output"]
+*/		
+
+  // func_process записан в default.cl. надо бы сюда перенести.		
+	let output_things = [		
+		`let func_self = create_func_process({})`, 
+		is_return_scope ? `let return_scope = func_self` : '',
+		is_exit_scope ? `let exit_scope = func_self` : '',
+	]		
+	let strs = [`// cofunc from ${v.locinfo?.short}`, output_things, s, connect_last, "return func_self"]
 
 	// некрасиво получается. подумать чтобы код мог быть массивом, тогда будут отступы.
 	let txt = C.strarr2str( strs )

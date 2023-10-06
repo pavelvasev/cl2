@@ -200,7 +200,9 @@ export function _obj( obj, state )
 	//strs.push(`/// type ${id}`,s,"{")
 
 	let strs2 = []
-	strs2.push(`let self=CL2.create_item(); self.$title=initial_values.$title`)
+	// F-TREE
+	let base_code = obj.params.base_code || "CL2.create_object()"
+	strs2.push(`let self=${base_code}; self.$title=initial_values.$title`)
 	// чтобы можно было давать ссылки на self
 	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)
@@ -378,7 +380,7 @@ export function cell( obj, state )
   		initial_value = p0.from
   	}
   	else {  		
-  	  initial_value = C.objToString(p0)  	
+  	  initial_value = C.objToString(p0,0,state)
   	}
   }
 
@@ -493,7 +495,13 @@ export function bind( obj, state )
 {
 	let name = obj.$name
 
-	let strs = [`let ${name} = CL2.create_binding(${obj.params[0].from},${obj.params[1].from})`]
+	let overwrite_mode = obj.params.overwrite_mode
+	let bst = overwrite_mode ? "CL2.create_binding_delayed" : "CL2.create_binding"
+
+	// в ЛФ этим занимается особый вид ячейки-ретрансмиттер называется action
+	// но и в биндах зажержки есть. подумать об этом.
+
+	let strs = [`let ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`]
 	strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	return {main:strs,bindings:[]}

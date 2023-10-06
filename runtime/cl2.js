@@ -27,13 +27,8 @@ console.log = (...args) => {
 console.channel_verbose = (...args) => {}
 let fmtval = () => {}
 
-// process мб не определён
-if ( (typeof(process) !== "undefined" && process.env.VERBOSE) || globalThis.verbose) {
-	console.channel_verbose = (...args) => {
-		console.log("\t",...args)
-		//return true
-	}
-	fmtval = ( value ) => {
+console.fmt_verbose = fmtval	
+console.fmt = ( value ) => {
 	  let s = (value + "")
 	  if (s.length > 0) {
 	  	if (s.length > 50) return "<<<" + s.substring(0,50) + "...>>>"
@@ -41,6 +36,16 @@ if ( (typeof(process) !== "undefined" && process.env.VERBOSE) || globalThis.verb
 	  }
 	  return value
 	}
+
+
+// process мб не определён
+if ( (typeof(process) !== "undefined" && process.env.VERBOSE) || globalThis.verbose) {
+	console.channel_verbose = (...args) => {
+		console.log("\t",...args)
+		//return true
+	}
+	fmtval = console.fmt
+	console.fmt_verbose = console.fmt	
 }
 
 
@@ -50,7 +55,7 @@ export class Comm {
 		this.$cl_id = (global_thing_counter++)		
 	}
 	toString() {
-		return `${this.constructor.name}:${get_title( this )}[id:${this.$cl_id},pr:${this.get_m_priority()}]`
+		return `${this.constructor.name}:${get_title( this )}`
 	}
 	// становится потребна
 	// subscribe на однократное срабатывание.
@@ -364,6 +369,7 @@ export function create_cell(value,fast=false) {
 	return k
 }
 
+// а зачем он Comm? ну этим map в итоге пользуются ок..
 export class ClObject extends Comm {
 	constructor() {
 		super()
@@ -411,8 +417,8 @@ export class ClObject extends Comm {
 }
 
 // embed_list массив вида имя, объект, имя, объект..
-export function create_object( title, embed_list ) {
-	let k = new Object(title)
+export function create_object( title ) {
+	let k = new ClObject(title)
 	return k
 }
 
@@ -503,11 +509,15 @@ export function get_title( obj ) {
 		//console.error("get_title: title is not assigned to obj",obj)
 		//console.trace()
 	}
+
+	//let own_title = `${obj.$title || "unknown"}[id:${obj.$cl_id},pr:${obj.get_m_priority()}]`
+	let own_title = `${obj.$title || "unknown"}[#${obj.$cl_id}]`
+
 	if (obj.attached_to)
-		return get_title( obj.attached_to ) + "." + (obj.$title || "unknown")
-	if (obj.parent && obj.parent.is_set && obj.parent.get())
-		return get_title( obj.parent.get() ) + "." + (obj.$title || "unknown")	
-	return obj.$title || "unknown"
+		return get_title( obj.attached_to ) + "." + own_title
+	//if (obj.parent && obj.parent.is_set && obj.parent.get())
+	//	return get_title( obj.parent.get() ) + "." + (obj.$title || "unknown")	
+	return own_title
 }
 
 export function attach_anonymous( target_object, embedded_object )
@@ -529,6 +539,10 @@ export class Binding {
 			console.error("binding src is null! tgt=", tgt + "")
 		if (!src.subscribe)
 			console.error("binding src have no subscribe method. src=", src + "","tgt=", tgt + "")
+		if (!tgt)
+			console.error("binding tgt is null! src=", src + "","tgt=", tgt + "")					
+		if (!tgt.submit)
+			console.error("binding tgt have no submit method. src=", src + "","tgt=", tgt + "")		
 
 		this.unsub = src.subscribe( tgt.submit.bind(tgt) )
 
@@ -540,23 +554,29 @@ export class Binding {
 		//this.unsub = tgt.bind( src )
 	}
 	destroy() {
-		console.log("binding destroyed. src=",this.src+'', "tgt=",this.tgt+'')//xxx
+		//console.log("binding destroyed. src=",this.src+'', "tgt=",this.tgt+'')//xxx
 
 		this.unsub()
 		this.unsub = null
 	}
 	toString() {
 		return `${this.constructor.name}:${get_title( this )}[id:${this.$cl_id}]`
-	}	
+	}
 }
 
 export function create_binding( src, tgt ) {
+	console.channel_verbose("create_binding:",src+"","~~>",tgt+"")
 	if (src === tgt) {
 		console.trace()
 		console.log(src+'')
 		throw "binding src == tgt!"
+	}	
+	if (typeof(tgt) == "function") {
+		console.trace()
+		console.log(src+'')
+		throw "binding tgt is function! use react instead."		
 	}
-	console.channel_verbose("create_binding:",src+"","~~>",tgt+"")
+	
 	let k = new Binding( src,tgt )
 	return k
 }
@@ -780,14 +800,14 @@ export function create_binding_delayed( src, tgt ) {
 
 // F-COHERENT-MIND
 let next_tick = []
-export function schedule( fn, priority_holder_object ) {
+export function schedule( fn, priority_holder_object, force_priority ) {
 
 	if (!priority_holder_object) {
 		console.trace()
 		throw "schedule: no priority_holder_object"
 	}
 
-	let fn_priority = priority_holder_object ? priority_holder_object.get_m_priority() : 0
+	let fn_priority = force_priority ? force_priority : (priority_holder_object ? priority_holder_object.get_m_priority() : 0)
 	fn.priority = fn_priority
 	fn.priority_holder_object = priority_holder_object
 
@@ -974,7 +994,7 @@ export function mark_task_function( fn ) {
 // необходимо перечислить все вышеперечисленное для доступа
 // по идентификатору CL2 при встройке этого файла.
 // вещи типа CL2=this и CL2=import.meta что-то не сработали.
-let CL2={ create_binding, 
+let CL2={ create_binding, create_object,
   create_cell, create_channel, create_item,
   NOVALUE, Cell, Channel, ClObject, Comm, attach,
   attach_anonymous, monitor_rest_values, when_all, when_all_once,

@@ -18,45 +18,64 @@ obj "react" {
   output: channel
 
   init {: obj |
-    //console.channel_verbose('------------- react: ',self+'','listening',input+'')
+    self.pending_finish = CL2.create_cell(1)
+    console.channel_verbose('------------- react: ',self+'','listening',input+'')
     let unsub = input.on( (value) => {
-      let fn = action.get()      
-      //console.log('react input changed. scheduling!',self+'','value=',value)
+      let fn = action.get()
+
+      // F-REACT-ORDER
+      let finish = CL2.create_cell()
+      let pending_finish = self.pending_finish
+      self.pending_finish = finish // теперь другие эту будут читать
+
+      pending_finish.once( () =>       //console.log('react input changed. scheduling!',self+'','value=',value)
       CL2.schedule( () => { // принципиальный момент - чтобы реакция не срабатывала посреди другой реакции
-        //console.log('react invoking scheduled action.',self+'')
-        //console.log('react scheduled call !!!!!!!!!!!!',fn,self+'')
-        let result
-        //if (fn.is_block_function)
-        //  result = fn( self, CL2.create_cell(value) )
-        //else  
+        console.channel_verbose('react got scheduled control. invoking scheduled action. self=',self+'')
 
-        result = fn( value )
+        let result = fn( value )
 
-        //console.log('react result=',result+'')
+        console.channel_verbose('react result=',console.fmt_verbose( result+'' ),'self=',self+'')
 
         // мега-идея промис js в том, что если результат это канал, то процесс продолжается..
         // т.е. нам как бы вернули информацию, что процесс еще идет и результаты уже у него
 
         if (result instanceof CL2.Comm) {
-          // console.log('see channel, subscribing once')
+          console.channel_verbose('react see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
           // но вообще это странно.. получается мы не можем возвращать каналы..
           // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
+
+          // ну и еще странно что - получается будем запускать следующую реакцию пока даже 
+          // эта еще не закончилась. и начнут спутываться значения (их очередность)
+          // возможно, реакцию стоит брать в работу, когда ее предыдущий процесс закончился
+          // а пока не закончился копить? какое правило?
+
           let unsub = result.once( (val) => {
-            // console.log('once tick',val,output+'')
+            console.channel_verbose('react got once tick. val=',val+'',typeof(val),'result(channel)=',result+'','self=',self+'')
             output.submit( val )
+            finish.submit(true)
           })
         }
         else if (result instanceof Promise) {
           result.then( val => {
             output.submit(val)
+            finish.submit(true)
           })
         }
+        /*
+        else if (result.once) { ползьуемся тем что ClObject это Comm
+          result.once( val => {
+            output.submit(val)
+          })
+        }
+        */
         else {
           //console.log('submitting result to output',output+'')
           output.submit( result )
+          finish.submit(true)
         }
       }, obj)
+      )
     })
 
     self.release.on( () => unsub() )
@@ -64,6 +83,249 @@ obj "react" {
 }
 
 func "list" {: ...values | return values :}
+
+////////////////////////////////////////////////
+//////////////////////////////////////////////// деревья
+////////////////////////////////////////////////
+
+obj "tree_child" {
+  parent: cell
+  // ссылка на parent-а, вдруг кому-то надо
+  // но кстати а лифту то надо? или он как?
+
+  react @self.release {: 
+     if (self.parent.is_set) {
+       let p = self.parent.get()
+       p.tree.forget( self )
+     }
+  :}
+}
+
+
+// сборщик
+obj "tree_lift" base_code="create_tree_child({})"{
+  in {
+    allow_default: cell true
+  }
+
+  req: cell     // храним тут заявки
+  children: cell  // а тут результат сбора
+
+  gather_request: channel
+  gather_request_action: channel
+  bind @gather_request @gather_request_action overwrite_mode=true
+
+  init {:
+    self.req.submit( new Set() )
+    self.is_tree_lift = true
+
+    //self.gather_request.submit( true )
+    //console.log("______ self.allow_default.get()=",self.allow_default.get(),'self=',self+'')
+    if (self.allow_default.is_set && self.allow_default.get())
+    CL2.schedule( () => {      
+      if (!self.children.is_set) {
+         //console.log("------------------> tree gather default pre-request",self+'')
+         //self.children.set( [] )
+         self.gather_request.submit()
+      }
+      },self)    
+  :}
+
+  func "append" {: child |
+    let r = self.req.get()
+    if (r.has( child )) return
+
+    r.add( child )
+    // мы получается и лифтов добавляем. ок.
+
+    //console.log("submit gather-request - due to tree_lift append. self=",self+'',"child=",child+'')
+    self.gather_request.submit()
+  :}
+
+  func "forget" {: child |
+    let r = self.req.get()
+    r.delete( child )
+    //console.log("submit gather-request - due to tree_lift forget",self+'')
+    self.gather_request.submit()
+  :}
+
+  /// процесс сборки
+
+  func "gather_list" {: elems | // elems = array or set
+    let result = []
+    let monitor = []
+
+    //console.log("~~~~ gather_list for tree=",self+'')
+
+    elems.forEach( element => {
+      //console.log("checking elem=",element+'',"is_lift=",element.tree?.is_tree_lift)
+      if (element.tree?.is_tree_lift) {
+
+        if (element.tree.children.is_set)
+            result = result.concat( element.tree.children.get() )
+        else {
+          // важный момент. там еще не собрали же
+          //console.log("!!!!!!!!!!!!!!! this sublift children pending!")
+          result.pending = true
+        }
+
+        monitor.push( element.tree.children.changed )
+        // важно реагировать на changed а не на просто.
+        // потому что если на просто то зацикливание
+        // ибо мы там делаем подписку subscribe, а children будучи ячейкой
+        // сразу же высылает результат. и мы пере-стартуем сборку. так не надо.
+
+      } else {
+        result.push( element )
+      }
+    })
+
+    //console.log("!!!!!!!!!!!!!!!!! finished gather_list for tree=",self+'')
+    return { result, monitor }
+  :}
+
+  r_gather: react @gather_request_action {:
+    //console.log("tree_lift see gather request ",self+'')
+    let r = self.req.get()
+    let {result, monitor } = gather_list( r )
+
+    self.stop_listen_lifts.get()()
+    let stop_lifts = []
+    monitor.forEach( co => {
+      //let b = CL2.create_binding( co, self.gather_request )
+      //let unsub = co.subscribe( self.gather_request.submit.bind( self.gather_request ) )
+      let unsub = co.subscribe( (val) => {
+        //console.log("sumb gather-request - due to sub-lift output changed, self=",self+'',"sublift channel =",co+'')
+        self.gather_request.submit( val)
+      })
+      stop_lifts.push( unsub )
+    })
+    self.stop_listen_lifts.submit( () => {
+      stop_lifts.forEach( cb => cb() )
+      self.stop_listen_lifts.submit( () => {} )
+     } )
+
+    //console.log("children collected, self=",self+'',"result=",result.length,'pending?',result.pending ? true : false)
+
+    if (!result.pending) // какие-то лифты еще не готовы
+        self.children.submit( result )
+
+    return true
+  :}
+
+  stop_listen_lifts: cell {: return true :}
+  r_release: react @self.release {:
+      self.stop_listen_lifts.get()() 
+      // решено обнулить чилдренов чтобы парент реальный их забыл
+      //console.log('react self.children clear',self+'')
+      self.children.submit( [] ) // а не возникнет ли излишняя галиматься?
+      return true
+  :}
+
+}
+
+// узел
+
+obj "tree_node" base_code="create_tree_lift({})" {
+
+  init {:
+    self.is_tree_lift = false
+    // закончим формирование списка детей но не сразу
+    CL2.schedule( () => {
+      if (!self.children.is_set) {
+         //console.log("------------------> []",self+'')
+         //self.children.set( [] )
+         //self.gather_request.submit()
+      }   
+      },self)
+  :}
+
+  r_set_parent: react @self.children {: arr |
+     let parent_object = self.attached_to // к чему прицеплен tree_node
+     // решил хранить ссылку на родителя объекта, а не tree_node/tree_lift.
+
+     //console.log("ok tree node : children=",arr.map( x => x+''),self+'')
+
+     arr.forEach( elem => elem.tree.parent.set( parent_object ))
+     return true
+  :}
+
+}
+
+// надо для compute.js но и связано с tree-штуками нашими
+obj "func_process" {
+    tree: tree_lift // сборщек детей
+    output: cell    // и обычный результат
+
+    init {: 
+      self.subscribe = self.output.subscribe.bind( self.output )
+      self.once = self.output.once.bind( self.output )
+      self.$title = "cofunc_process"
+    :}
+}
+
+obj "apply_children" {
+  in {
+    action: cell
+    rest*: cell
+  }
+
+  init {:
+    CL2.schedule( () => {
+    if (!action.is_set) {
+      self.tree.gather_request.submit();
+      //console.log("ISSUED DEFAULT GATHER REQUEST",self+'')
+    }
+    },self) // я думал приоритета по умолчанию не хватит но хватает
+  :}
+  //u: extract @rest
+  output: cell
+
+  tree: tree_lift allow_default=false // сборщик чилдренов
+
+  //react @action {: console.log("see action") :}
+  //react @rest {: console.log("see rest") :}
+
+  result := react (list @action @rest) {:
+      //console.log("************************ apply_children action! self=",self+'')
+      let f = action.get()
+      let args = rest.get()
+      
+      stop_result_process()
+
+      if (f && args) {
+        //console.log("calling")
+        //console.log("-------------- apply_children call! self=",self+'')
+        let res = f( ...args )
+        // console.log( "apply_children: appending result",self+'',res)
+        // тут у нас гарантированно процесс прислали
+        if (res?.tree) {
+          self.tree.append( res ) // усе поехала сборка
+          res.attached_to = self // чтобы имена разруливать
+          //return CL2.create_cell( res ) // екранируем
+        } else {
+          // ну пусть чего-то там собирают тогда
+          self.tree.gather_request.submit()
+        }
+      }
+    :}
+
+  func "stop_result_process" {: // это все заради бонуса чтобы аргументы передавать
+    if (self.result.is_set) {
+      let p = self.result.get()
+      p.destroy()
+      self.result.set( CL2.NOVALUE )
+    }
+  :}
+  react @self.release @stop_result_process
+
+  bind @tree.children @output
+}
+
+////////////////////////////////////////////////
+//////////////////////////////////////////////// другое
+////////////////////////////////////////////////
+
 
 /* // реакция в стиле ЛФ
 obj "react" {
@@ -154,7 +416,9 @@ obj "if"
   }
   output: cell
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
-  current_parent: cell
+  current_process: cell
+
+  tree: tree_lift
 
   // прислали блок else 
   r_else_obj: react @_else {: val |
@@ -166,21 +430,21 @@ obj "if"
     })
   :}
 
-  func "cleanup_current_parent" {:
-      console.log("cleanup_current_parent",current_parent.get())
-      if (current_parent.is_set) {
-          let cp = current_parent.get()
+  func "cleanup_current_process" {:
+      //console.log("cleanup_current_process",current_process.get())
+      if (current_process.is_set) {
+          let cp = current_process.get()
           cp.destroy()
-          current_parent.set( CL2.NOVALUE )
+          current_process.set( CL2.NOVALUE )
         }
     :}
 
   func "activate_branch" {: branch_value arg |
-      cleanup_current_parent()
+      cleanup_current_process()
 
       //console.log("activate-branch: ",branch_value)
       if (branch_value === CL2.NOVALUE) {
-        self.output.submit()
+        self.output.submit() // может тож новалую?
         return
       }
 
@@ -191,19 +455,18 @@ obj "if"
         return
       }
 
-      let cp = CL2.create_item()
-      self.append( cp )
-      current_parent.set( cp )
-
       //let arg_cell = CL2.create_cell( arg )
       //CL2.attach_anonymous( cp, arg_cell )
 
-      let res = branch_value( cp, arg )
+      let res = branch_value( arg ) // может им не надо таки arg то. а то это значение жеж.
       // cp то надо или нет уже
       if (res instanceof CL2.Comm) {
         let b = CL2.create_binding( res, self.output )
-        CL2.attach_anonymous( cp, b )
         // по идее при удалении биндинг удалится
+      }
+      if (res instanceof CL2.ClObject) {
+        current_process.set( res )
+        tree.append( res )
       }
   :}
 
@@ -696,6 +959,7 @@ func "map" {: arr f |
   function process_elem(e,index) {
     return new Promise( (resolve,reject) => {
     let result = f( e,index )
+    //console.log('map process_elem result=',result+'')
     if (result instanceof CL2.Comm) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
@@ -707,24 +971,32 @@ func "map" {: arr f |
           })
         }
         else {
-          //console.log('submitting result to output',output+'')
+          //console.log('submitting result',result+'')
           resolve( result )
         }
     })
   }
 
   function process_arr( arr,i=0 ) {
-    if (i >= arr.length) return Promise.resolve([])
+    //..console.log('map process_arr called, i=',i)
+    if (i >= arr.length) {
+      //console.log('map process_arr: resolved finish')
+      return Promise.resolve([])
+    }
 
     return process_elem( arr[i],i ).then( (result) => {
+      //console.log('map process_arr: resolved iter result=',result+'')
       return process_arr( arr,i+1 ).then( (rest_result) => {
+        // дорогая передача..
         return [result,...rest_result]
       })      
     })
   }
 
   function process_dict( arr,names,i=0 ) {
-    if (i >= arr.length) return Promise.resolve([])
+    //console.log('map process_dict')
+    if (i >= arr.length) return Promise.resolve([]) 
+    // ? получается map @dict это массив значений??
 
     return process_elem( arr[i],names[i] ).then( (result) => {
       return process_dict( arr,names, i+1 ).then( (rest_result) => {
@@ -733,16 +1005,24 @@ func "map" {: arr f |
     })
   }  
 
-  let output = CL2.create_cell()
+  let output = CL2.create_cell(); //output.attached_to = self
+  output.$title = "map_fn_output"
   // [...arr] переводит в массив принудительно, если там было Set например
   if (!Array.isArray(arr)) {
     if (arr instanceof Set)
         arr = [...arr]
   }
-  if (typeof(arr) == "object") 
+
+  //console.log("START map typeof(arr) =",typeof(arr),'self=',self+'' ,'arr=',arr)
+  //console.log('start_MAP. self=',self+'')
+
+  if (!Array.isArray( arr )) 
     process_dict( Object.values(arr), Object.keys(arr) ).then( values => output.submit( values ))
   else  
-    process_arr( arr ).then( values => output.submit( values ))
+    process_arr( arr ).then( values => {
+      //console.log('map done. values=',values)
+      output.submit( values )
+    })
   return output
 :}
 
@@ -783,7 +1063,10 @@ func "filter" {: arr f |
     })
   }
 
-  let output = CL2.create_cell()
+
+  let output = CL2.create_cell(); //output.attached_to = self
+  output.$title = "filter_fn_output"
+
   if (!Array.isArray(arr)) arr = [...arr]
   process_arr( arr ).then( values => output.submit( values ))
   return output
@@ -831,7 +1114,9 @@ func "reduce" {: arr acc_init f |
     })
   }  
 
-  let output = CL2.create_cell()
+  let output = CL2.create_cell(); //output.attached_to = self
+  output.$title = "titles_fn_output"
+
   // [...arr] переводит в массив принудительно, если там было Set например
   if (!Array.isArray(arr)) {
     if (arr instanceof Set)
