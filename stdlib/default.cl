@@ -431,7 +431,7 @@ obj "if"
   :}
 
   func "cleanup_current_process" {:
-      console.log("cleanup_current_process",current_process.get())
+      //console.log("cleanup_current_process",current_process.get())
       if (current_process.is_set) {
           let cp = current_process.get()
           cp.destroy()
@@ -443,6 +443,7 @@ obj "if"
 
   func "activate_branch" {: branch_value arg |
       cleanup_current_process()
+      //console.log("activatre bra",branch_value)
 
       //console.log("activate-branch: ",branch_value)
       if (branch_value === CL2.NOVALUE) {
@@ -461,11 +462,15 @@ obj "if"
       //CL2.attach_anonymous( cp, arg_cell )
 
       let res = branch_value( arg ) // может им не надо таки arg то. а то это значение жеж.
+      //console.log("res=",res+'')
       // cp то надо или нет уже
       if (res instanceof CL2.Comm) {
         let b = CL2.create_binding( res, self.output )
-        // по идее при удалении биндинг удалится
+        //console.log("b created")
+        // по идее при удалении res биндинг удалится
+        // почему? раззабскрайбится разве что..
       }
+      // Comm и ClObject вместе отработают
       if (res instanceof CL2.ClObject) {
         current_process.set( res )
         tree.append( res )

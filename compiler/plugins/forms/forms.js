@@ -384,7 +384,7 @@ export function cell( obj, state )
   	}
   }
 
-	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
+	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 
 	let fast_part = obj.params.fast ? ",true" : ""
 	let strs = [`let ${name} = CL2.create_cell(${value_str}${fast_part})`]
@@ -411,7 +411,8 @@ export function channel( obj,state )
   	}
   } 
 
-	let value_str = `initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
+  // todo оптимизировать проверку initial_values.. например по state.tree_parent_id или типа того
+	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 	let bindings = [
 		`let ${name}_initial = ${value_str}`,
 		`if (${name}_initial != CL2.NOVALUE) CL2.schedule( () => ${name}.submit( ${name}_initial ), ${name} )`

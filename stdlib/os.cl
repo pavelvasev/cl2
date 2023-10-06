@@ -158,7 +158,7 @@ obj "watch" {
 
     let my_id = Math.random()*10000
 
-    console.log("started watch",path, once, my_id)
+    //console.log("started watch",path, once, my_id)
 
     function process_once() {
       let nx = iter.next()
@@ -176,7 +176,7 @@ obj "watch" {
         }  
       })
       nx.catch( err => {
-        console.log("nx err",err)
+        console.log("watch nx err",err)
       })
     }
     process_once()
