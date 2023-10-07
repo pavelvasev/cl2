@@ -92,14 +92,14 @@ obj "tree_child" {
   parent: cell  
   // ссылка на parent-а, вдруг кому-то надо
   // но кстати а лифту то надо? или он как?
-  //lift_parent: cell
+  lift_parent: cell
   // ссылка на лифт-парент
   // но кстати нужна ли она? проще же в attached_to постучаться..
 
   react @self.release {:
-     console.log('child release!',self+'','parent=',self.parent.get() + '')
+     //console.log('child release!',self+'','parent=',self.parent.get() + '')
      
-     let p = self.parent.get() 
+     let p = self.lift_parent
      // todo сделать таки тему чтобы эта штука себя из лифта удаляла
      // а лифт себя удалял из ноды
      /*
@@ -108,9 +108,11 @@ obj "tree_child" {
         my_mb_lift_host.tree.forget( self.attached_to )
       else
      */ 
-     if (self.parent.is_set) {       
+     if (p.is_set) {
        //console.log("thus calling parent forget of",self.attached_to+'')
-       p.tree.forget( self.attached_to )
+       let pp = p.get()
+       pp.tree.forget( self.attached_to )
+       // self.attached_to это узел где размещен tree_child
      }
   :}
 }
@@ -151,6 +153,8 @@ obj "tree_lift" base_code="create_tree_child({})"{
 
     r.add( child )
     // мы получается и лифтов добавляем. ок.
+
+    child.tree.lift_parent.set( self.attached_to )
 
     //console.log("submit gather-request - due to tree_lift append. self=",self+'',"child=",child+'')
     self.gather_request.submit()
@@ -487,7 +491,7 @@ obj "if"
       // Comm и ClObject вместе отработают
       if (res instanceof CL2.ClObject) {
         current_process.set( res )
-        tree.append( res ) 
+        tree.append( res )
         
         /* когда таким образом мы добавляем контекст функции res в свое дерево tree,
            то не происходит связи по теме parent-child.
@@ -500,7 +504,7 @@ obj "if"
            todo!
         */
 
-        res.release.subscribe( ()=>tree.forget(res))
+        //res.release.subscribe( ()=>tree.forget(res) )
         // todo см tree_child
 
         // а что плохого в том что наше tree выставит себя парентом res?
