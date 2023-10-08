@@ -22,11 +22,14 @@ export function get_module_dir1(r, current_dir, root_dir) {
 				return dir0
 			// все остальные считаются от проекта
 			// return path.join( state.dir, "modules",dir_0 )
+			// F-SINGLE-MODULES-DIR
 			return path.join( root_dir, "modules",dir0 )
 		}
 
 // по спецификации рассчитывает каталог модуля
 // r это спецификатор модуля из записей init.js
+// current_dir это "текущая папка" для расчета относительных путей
+// root_dir это папка проекта, F-SINGLE-MODULES-DIR
 export function get_module_dir( r, current_dir, root_dir=current_dir ) {
 	return path.resolve( get_module_dir1( r, current_dir, root_dir ))
 }
