@@ -500,7 +500,7 @@ export function wait( obj, state )
 	base.main.push( 
 		`let ${objid}_waiting_items = ${ids}.filter( x => x.output ? true : false).map( x => x.output )`,
 		`let ${objid}_done = CL2.when_all_once( ${objid}_waiting_items )`,
-		`let ${objid}_unsub = ${objid}_done.once( (vvv) => { console.log('done-once',vvv); if (return_scope.output.is_set) return; `,code.code,` })`,
+		`let ${objid}_unsub = ${objid}_done.once( (vvv) => { if (return_scope.output.is_set) return; `,code.code,` })`,
 		`return_scope.output.once( ${objid}_unsub )` // мол нечего ждать если return сказали
 	)
 

@@ -35,7 +35,7 @@ func "download" { spec dir |
    3. проходит по модулям указанным в конфигурации и пытается их установить
 */
 func "nest" { spec dir root_dir nested need_download|
-  print "******* nest dir=" @dir
+  print "******* nest dir=" @dir "root_dir=" @root_dir
 
   if (get @nested @dir) {
     // уже обработали
@@ -50,7 +50,7 @@ func "nest" { spec dir root_dir nested need_download|
   =====
   //print "checking conf dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
-  conf := apply {: dir | return util.load_module_config(dir) :} @dir
+  conf := apply {: dir root_dir | return util.load_module_config(dir,root_dir) :} @dir @root_dir
   //print "conf = " @conf
   //print "see modules: " (get @conf "modules")
 
@@ -72,7 +72,7 @@ init_file := os.join @init_dir "clon.mjs"
 
 if (os.exist @init_file) {
   print "running nest"
-  result := nest( dict(), @init_dir, os.join(@init_dir,"modules"), dict(), false)
+  result := nest( dict(), @init_dir, @init_dir, dict(), false)
   //print "result = " @result
   react @result { val |
     print "finished" @val

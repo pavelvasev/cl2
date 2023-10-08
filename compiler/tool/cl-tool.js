@@ -42,13 +42,13 @@ class Tool {
 
   // загружает init.js-файлы по списку спецификаторов указанных в arr
   // dir - массив путей, где каждый путь это каталог или файл .js
-	load_modules( arr, state, current_dir="" ) {
+	load_modules( arr, state, current_dir="", root_dir ) {
 		//console.log("load_modules: ",arr)
 		if (arr.length == 0) return Promise.resolve(true)
 		try {
-			let next = this.load_module( arr[0], state, current_dir )
+			let next = this.load_module( arr[0], state, current_dir,root_dir )
 			return next.then( (result) => {
-				return this.load_modules( arr.slice(1), state, current_dir )
+				return this.load_modules( arr.slice(1), state, current_dir,root_dir )
 			})
 		} catch (err) {			
 			console.error("load_modules: error loading module",arr[0])
@@ -60,18 +60,18 @@ class Tool {
 	loaded_modules = {}
 	// загружает 1 модуль находящийся в указанной папке
 	// папка указывается через record - спецификацию модуля
-	load_module( record, state, current_dir="" ) {
+	load_module( record, state, current_dir="", root_dir ) {
 
-		let dir = U.get_module_dir( record, current_dir )
+		let dir = U.get_module_dir( record, current_dir, root_dir )
 		//console.log("\nload_module, path=",dir,"current_dir=",current_dir)
 		//console.trace()
 		
-		this.loaded_modules[dir] ||= U.load_module_config( dir ).then( conf => {
+		this.loaded_modules[dir] ||= U.load_module_config( dir, root_dir ).then( conf => {
 			state.modules_conf[ dir ] = conf
 			// 1 загрузим под-модули этого модуля
 			// 2 передадим управление на инициализацию этого модуля
 
-			return this.load_modules( Object.values(conf.modules), state, conf.dir ).then( () => {
+			return this.load_modules( Object.values(conf.modules), state, conf.dir,root_dir ).then( () => {
 				return Promise.resolve( conf.init ? conf.init( state, this ) : true ).then( () => conf)
 			})
 		})

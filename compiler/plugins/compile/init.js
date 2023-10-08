@@ -13,12 +13,14 @@ export function init( state, tool ) {
 		}
 		
 		// надо полный путь а то получаются короткие имена вида some/init.js и оно начинает думать что some это имя модуля
-		let config_file = path.resolve( path.dirname( file ) + "/clon.mjs" )
+		// F-SINGLE-MODULES-DIR
+		let project_dir = path.dirname( file )
+		let config_file = path.resolve( project_dir + "/clon.mjs" )
 
 		let mmm0 = access(config_file, constants.R_OK)
 		let config = {}
 		let mmm = mmm0.then( () => {
-			return tool.load_module( config_file,state ).then( conf => {
+			return tool.load_module( config_file,state,"",project_dir ).then( conf => {
 				//console.log("loaded conf",conf)
 				tool.config = conf
 				config = conf
