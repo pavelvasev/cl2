@@ -30,6 +30,7 @@ export var tablica = {
 	locinfo: { make_code: locinfo, check_params: default_cp},
 	pipe: { make_code: pipe, check_params: default_cp},
 	__dirname: { make_code: dirname, check_params: default_cp},
+	form: { make_code: form, check_params: default_cp},
 }
 
 /*
@@ -707,4 +708,32 @@ export function dirname( obj, state )
 		state.next_obj_cb(obj,id,base.main,base.bindings,{})	
 
 	return base
+}
+
+// F-DIRNAME
+import * as CO from "../compute/compute.js"
+export function form( obj, state )
+{
+	let name = obj.params[0]
+	let	fn_code = obj.params[1]
+
+	// но кстати шутка - это можно на Слоне писать формы?
+	fn_code = CO.cocode_to_code( fn_code,state,true,true )
+
+	//let f = eval( fn_code )
+	console.log("fn_code =",fn_code )
+
+	let f = new Function( ...fn_code.pos_args, fn_code.code )
+	
+
+	state.current[ name ] = {
+		basis: name,
+		make_code: (obj,state) => {
+			return f( obj,state )
+		},
+		check_params: default_cp
+  }
+  // но кстати вопрос.. а если оно ну там что-то поделает и вернет опять obj-запись?
+
+	return { main: [], bindings: [] }
 }
