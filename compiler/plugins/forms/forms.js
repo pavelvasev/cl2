@@ -208,6 +208,20 @@ export function _obj( obj, state )
 	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)
 
+	//console.log( "obj.decorators=",id,obj.params.decorators,obj )
+
+	let decorators = obj.params.decorators?.code || []
+	if (decorators.length > 0) {
+		let b = obj.params[1]?.code
+		for (let d of decorators) {
+			//console.log("ddd=",d.basis, C.get_record(state,d.basis))
+			let rec = C.get_record(state,d.basis)
+			obj = rec.make_code( obj, state )
+			// todo 1 make_code мб transform
+			// таки мб не обжа
+		}
+  }
+
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
 	let {params,rest_param,named_rest_param, children_param,next_obj_param} = get_obj_params( obj )
 	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
@@ -712,6 +726,9 @@ export function dirname( obj, state )
 
 // F-DIRNAME
 import * as CO from "../compute/compute.js"
+
+// на самом деле какой смысл делать его прям вот отдельной формой
+// если его можно представить просто функцией...
 export function form( obj, state )
 {
 	let name = obj.params[0]
@@ -721,7 +738,7 @@ export function form( obj, state )
 	fn_code = CO.cocode_to_code( fn_code,state,true,true )
 
 	//let f = eval( fn_code )
-	console.log("fn_code =",fn_code )
+	// console.log("fn_code =",fn_code )
 
 	let f = new Function( ...fn_code.pos_args, fn_code.code )
 	
