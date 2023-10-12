@@ -79,6 +79,10 @@ class Tool {
 		return this.loaded_modules[dir]
 	}
 
+	// надо трансформерам
+	parse( str ) {
+		return C.code2obj( str )
+	}
 
 	compile_string( str, state )
 	{
@@ -163,6 +167,7 @@ class Tool {
 
 let tool = new Tool()
 let state = C.create_state()
+state.tool = tool
 
 //let modules_to_import = default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x)
 let mmm = tool.load_modules( default_modules.map( x => path.join(DEFAULT_PLUGINS_DIR,x) ), state)

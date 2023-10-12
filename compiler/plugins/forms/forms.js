@@ -31,6 +31,7 @@ export var tablica = {
 	pipe: { make_code: pipe, check_params: default_cp},
 	__dirname: { make_code: dirname, check_params: default_cp},
 	form: { make_code: form, check_params: default_cp},
+	transform: { transform: transform, check_params: default_cp},
 }
 
 /*
@@ -753,4 +754,35 @@ export function form( obj, state )
   // но кстати вопрос.. а если оно ну там что-то поделает и вернет опять obj-запись?
 
 	return { main: [], bindings: [] }
+}
+
+// todo мб это multimacro или даже macro.. ну что-то такое..
+export function transform( i, objs, state )
+{
+	let obj = objs[i]
+
+	let name = obj.params[0]
+	let	fn_code = obj.params[1]
+
+	// но кстати шутка - это можно на Слоне писать формы?
+	fn_code = CO.cocode_to_code( fn_code,state,true,true )
+
+	//let f = eval( fn_code )
+	// console.log("fn_code =",fn_code )
+
+	let f = new Function( ...fn_code.pos_args, fn_code.code )
+
+	state.current[ name ] = {
+		basis: name,
+		transform: (i,objs,state) => {
+			let res = f( i,objs,state )
+			//console.log("TTTTTT res=",res)
+			return res
+		},
+		check_params: default_cp
+  }
+  // но кстати вопрос.. а если оно ну там что-то поделает и вернет опять obj-запись?
+
+	objs.splice(i,1)
+	return objs
 }

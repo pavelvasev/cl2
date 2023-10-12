@@ -126,8 +126,31 @@ export function code2obj( str, base_url="?" )
 // ну и вот их, 2 и 3, можно кажется состыковать, чтобы не путаться
 // сообразно 2е умеют преобразовывать вход ... а 3и это финальные...
 // ну и 2я преобразовала и надо рестартовать процесс с нее же..
-export function objs2obj( objs )
+
+export function objs2obj( objs, state )
 {
+	//return objs
+
+	// todo генераторам (или как их там) надо уметь вызвать процесс преобразования
+	// после себя (т.е. objs2obj) -  чтобы например реализовать цепочки декораторов.
+
+	let i = 0;	
+	while (i < objs.length) {
+		let obj = objs[i]
+		let env_rec = get_record( state,obj.basis_path, obj, true, false )
+		if (env_rec?.transform) {
+			 console.log("transform found! i=", i, env_rec)
+			 let result = env_rec.transform( i, objs, state )
+			 //console.log("===== result=",result)
+			 // возвращает: 1) на что заменила next_record, список, 2) на что заменила objs
+			 // ну на самом деле то есть заменяет objs в некотором смысле
+			 objs = result
+			 // todo - тут можно зациклиться
+		} else {
+			i++
+		}
+	}
+	//console.log("after transform, objs=",objs)
 	return objs; // пока так..
 
 	//console.log("objs2obj called",objs)
@@ -170,7 +193,7 @@ export function obj2obj( obj, objs, index )
 
 
 // возвращает запись из текущего окружения определения по идентификатору id
-export function get_record(state,id,obj_info,allow_defaults=true) {
+export function get_record(state,id,obj_info,allow_defaults=true, error_if_not_found=true) {
 	//console.log("get_Record",id,obj_info)
 
 	let id_arr = Array.isArray(id) ? id : id.split(".")
@@ -182,12 +205,14 @@ export function get_record(state,id,obj_info,allow_defaults=true) {
 
 		let y = allow_defaults ? state.env[id_arr[0]] : false
 		if (!y) {
-			console.error("env have no basis record for basis=",id)
-			//console.error("state.env=",state.env,"allow_defaults=",allow_defaults)
-			console.error(obj_info?.locinfo)
-			console.error(obj_info)
-			//console.error("env=",state.env)
-			throw new Error( `env have no basis: ${id}`)
+			if (error_if_not_found) {
+				console.error("env have no basis record for basis=",id)
+				//console.error("state.env=",state.env,"allow_defaults=",allow_defaults)
+				console.error(obj_info?.locinfo)
+				console.error(obj_info)
+				//console.error("env=",state.env)
+				throw new Error( `env have no basis: ${id}`)
+			}
 		}
 		return y
   }
@@ -222,7 +247,7 @@ export function objs2js( objs,state )
 	//console.error("going via objs=",objs)
 	//console.trace()
 
-	objs = objs2obj( objs ) // особые формы 2го уровня применяем
+	objs = objs2obj( objs, state ) // особые формы 2го уровня применяем
 
 	for (let k of objs) //todo массив там..
 	{
@@ -561,7 +586,7 @@ export function default_obj2js( obj,state ) {
 		let mod_state = modify_parent(state,objid)
 		//let mod_state = modify_prefix( modify_parent(state,obj), `${state.prefix}${obj.$name}` )
 		//strs.push("{") // нужна своя область видимости чтобы идентификаторы не путались..
-		let fl_objs = objs2obj( get_nested(obj) )
+		let fl_objs = objs2obj( get_nested(obj), state )
 
 		for (let f of fl_objs) {
 			let o = one_obj2js_sp( f, mod_state )
