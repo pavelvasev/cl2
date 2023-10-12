@@ -217,14 +217,18 @@ export function get_record(state,id,obj_info,allow_defaults=true, error_if_not_f
 		return y
   }
 
-  let next_state = get_record( state, id_arr[0], obj_info, false )
+  let next_state = get_record( state, id_arr[0], obj_info, false, error_if_not_found )
+  //console.log("next_state=",next_state)
 
-  if (next_state == null) {
-  	console.error("current_state=",state)
-  	throw new Error(`get_record: name part ${id_arr[0]} cannot be resolved in current state`)
+  if (!next_state) {
+  	if (error_if_not_found) {
+  		console.error("current_state=",state)
+  		throw new Error(`get_record: name part ${id_arr[0]} cannot be resolved in current state`)
+  	}
+  	return null
   }
 
-  return get_record( next_state, id_arr.slice(1), obj_info, false) // todo slice дорого, надо индекс передавать
+  return get_record( next_state, id_arr.slice(1), obj_info, false, error_if_not_found) // todo slice дорого, надо индекс передавать
 }
 
 // F-ALIAS
