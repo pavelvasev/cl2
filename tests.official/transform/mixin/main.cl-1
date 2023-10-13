@@ -1,0 +1,60 @@
+transform "mixin" {: i objs state C|
+
+  let obj = objs[i]
+  let next_objs = C.objs2objs( objs.slice(i+1), state )
+  let next_obj = next_objs[0] //objs[i+1]
+
+  //next_obj.params.base_code = `create_${obj.params[0]}({})`
+
+  function setup_mixin( mx_name, target_obj ) 
+  {
+    //let mx_name = obj.params[0]
+    let code = `create_${mx_name}({base_obj:self})`
+    let gen = state.tool.parse( `paste "${code}"` ) // todo optimize
+    let next_obj_code = target_obj.params[1].code
+    //console.log("next_obj=",next_obj)
+    next_obj_code.unshift( ...gen )
+  }
+
+
+  //console.log(obj)
+  // F-MIXIN-MULTI
+  for (let i=obj.positional_params_count-1; i>=0; i--)
+    setup_mixin( obj.params[i], next_obj )
+
+  //console.log( next_obj_code )
+  //console.log( "NNNNN=",next_objs[0].params[1])
+
+  let res = objs.slice( 0,i ).concat( next_objs )
+  //console.log(res)
+  return res
+:}
+
+obj "foo0" {
+  init {:
+    console.log("foo0 created")
+  :}
+}
+
+
+obj "foo1" {
+  alfa: cell 5
+  init {:
+    console.log("foo1 created")
+  :}
+}
+
+mixin "foo0" "foo1"
+obj "foo2" {
+  init {:
+    console.log("foo2 created")
+    self.alfa.submit( 10 )
+  :}
+}
+//base_code="create_foo1({})" {
+
+f: foo2
+print "f.alfa=" @f.alfa
+
+=============
+print "so"

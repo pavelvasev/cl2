@@ -204,13 +204,15 @@ export function _obj( obj, state )
 	let strs2 = []
 	// F-TREE
 	let base_code = obj.params.base_code || "CL2.create_object()"
-	strs2.push(`let self=${base_code}; self.$title=initial_values.$title`)
+	// получается base_obj оверрайдит base_code. да уж.
+	strs2.push(`let self= initial_values.base_obj || ${base_code}; self.$title=initial_values.$title`)
 	// чтобы можно было давать ссылки на self
 	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)
 
 	//console.log( "obj.decorators=",id,obj.params.decorators,obj )
 
+/*
 	let decorators = obj.params.decorators?.code || []
 	if (decorators.length > 0) {
 		let b = obj.params[1]?.code
@@ -222,6 +224,7 @@ export function _obj( obj, state )
 			// таки мб не обжа
 		}
   }
+*/  
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
 	let {params,rest_param,named_rest_param, children_param,next_obj_param} = get_obj_params( obj )
@@ -236,6 +239,7 @@ export function _obj( obj, state )
 
 	let c_state = C.modify_parent( state, "self" )
 	let body = C.objs2js( C.get_children( obj,1 ), c_state )
+	// console.log("ch=",C.get_children( obj,1 ),"body=",body)
 	//strs2.push( body )
 
 	strs2.push( "// inner children",body )
@@ -775,7 +779,7 @@ export function transform( i, objs, state )
 	state.current[ name ] = {
 		basis: name,
 		transform: (i,objs,state) => {
-			let res = f( i,objs,state )
+			let res = f( i,objs,state,C )
 			//console.log("TTTTTT res=",res)
 			return res
 		},
