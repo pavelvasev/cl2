@@ -6,7 +6,7 @@ transform "base_class" {: i objs state C|
 
   next_obj.params.base_code = `create_${obj.params[0]}({})`
 
-  return objs.slice( 0,i ).concat( next_objs )
+  return [i, objs.slice( 0,i ).concat( next_objs )]
 :}
 
 

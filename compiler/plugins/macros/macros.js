@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function init( state, tool ) {
-    state.env.macro = { 
+    state.env.transform = { 
        transform: transform, 
        check_params: FORMS.default_cp
     }

@@ -31,7 +31,7 @@ export var tablica = {
 	pipe: { make_code: pipe, check_params: default_cp},
 	__dirname: { make_code: dirname, check_params: default_cp},
 	form: { make_code: form, check_params: default_cp},
-	transform: { transform: transform, check_params: default_cp},
+	//transform: { transform: transform, check_params: default_cp},
 }
 
 /*

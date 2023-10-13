@@ -11,7 +11,7 @@ transform "iff" {: i objs state|
   // переделали в if
 
   let next_obj = objs[i + 1]
-  console.log("NX=",next_obj )
+  //console.log("NX=",next_obj )
   if (next_obj.basis == "else")
   {
     obj.params.else_branch = next_obj.params[0]
@@ -23,7 +23,7 @@ transform "iff" {: i objs state|
   }
   
   //console.log("transform iff helo returning slice!",objs.length,s.length,s);
-  return objs
+  return [i,objs]
 :}
 
 print 1

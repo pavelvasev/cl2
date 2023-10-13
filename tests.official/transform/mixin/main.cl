@@ -8,7 +8,7 @@ transform "foo_master" {: i objs state C|
   }
 
   objs.splice( i,1,me )
-  return objs
+  return [i,objs]
 :}
 
 // создание трансформаций путем приписывания
@@ -51,11 +51,11 @@ transform "simple_transform" {: i objs state C|
    }
    else // вариант T obj
      a_objs.splice( i,1,...new_commands )
-   return a_objs
+   return [i,a_objs]
   }
   }
   objs.splice( i,1 )
-  return objs
+  return [i,objs]
 :}
 
 // но так же не будешь каждый раз делать
@@ -123,7 +123,7 @@ transform "mixin" {: i objs state C|
   //let res = objs.slice( 0,i ).concat( next_objs )
   //console.log(res)
   //return res
-  return objs
+  return [i,objs]
 :}
 
 obj "foo0" {

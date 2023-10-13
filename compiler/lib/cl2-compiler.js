@@ -147,6 +147,13 @@ export function objs2objs( objs, state )
 			 // ну на самом деле то есть заменяет objs в некотором смысле
 			 objs = result[1]
 			 i = result[0]
+
+			 if (!objs) {
+			 	console.error("transform returned null objs!")
+			 }
+			 if (!Array.isArray(objs)) {
+			 	console.error("transform returned not array of objs! transform name:",obj.basis)	
+			 }
 			 // todo - тут можно зациклиться
 		} else {
 			i++
@@ -255,6 +262,8 @@ export function objs2js( objs,state )
 	//console.trace()
 
 	objs = objs2objs( objs, state ) // особые формы 2го уровня применяем
+
+	//sconsole.log("objs=",objs)
 
 	for (let k of objs) //todo массив там..
 	{
