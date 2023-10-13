@@ -6,7 +6,7 @@ export function init( state ) {
 	state.env = {...state.env,...tablica}
 }
 
-let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[]} }
+export let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[]} }
 
 export var tablica = {
 	let: { make_code: _let, check_params: default_cp },

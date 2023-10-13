@@ -8,10 +8,13 @@ let default_modules = [
 	"compute/compute.js",
 	"bundle-2/bundle-2.js",
 	"module-path/module-path.js",
+	"macros/macros.js",
 	"../../stdlib/init.js",
 	"defaults/init.js",	
 	"compile/init.js",
-	"run/init.js","test/init.js","nest/init.js", "init/init.js", "init-web/init.js", "init-electron/init.js",
+	"run/init.js","test/init.js",
+	"nest/init.js", 
+	"init/init.js", "init-web/init.js", "init-electron/init.js",
 	"watch", "add"
 	]
 

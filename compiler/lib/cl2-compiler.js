@@ -127,6 +127,7 @@ export function code2obj( str, base_url="?" )
 // сообразно 2е умеют преобразовывать вход ... а 3и это финальные...
 // ну и 2я преобразовала и надо рестартовать процесс с нее же..
 
+// F-MACROS
 export function objs2objs( objs, state )
 {
 	//return objs
@@ -144,7 +145,8 @@ export function objs2objs( objs, state )
 			 //console.log("===== result=",result)
 			 // возвращает: 1) на что заменила next_record, список, 2) на что заменила objs
 			 // ну на самом деле то есть заменяет objs в некотором смысле
-			 objs = result
+			 objs = result[1]
+			 i = result[0]
 			 // todo - тут можно зациклиться
 		} else {
 			i++

@@ -5,7 +5,7 @@
 obj "react" {
   in {
     input: channel
-    action: cell
+  action: cell
   }
   // output: channel
   // нам надо биндится к результатам тасков.. таски выражаются react-ами.. поэтому надо ячейки
@@ -430,6 +430,7 @@ obj "else" {
 obj "if"
   {
   in {
+    //input: cell
     condition: cell // если канал то тогда константы не получается подставлять..
     then_branch: cell
     else_branch: cell
