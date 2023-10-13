@@ -270,7 +270,8 @@ export function _return( obj, state )
   if (C.get_nested(obj)) {
 		//let mod_state = C.modify_parent(state,obj.$name)
 		let mod_state = state
-		for (let f of C.get_nested(obj)) {
+		let objs = C.objs2objs( C.get_nested(obj),state )
+		for (let f of objs) {
 			let o = C.one_obj2js_sp( f, mod_state )
 			base.main.push( o.main )
 			//bindings.push("// bindings from feature-list")

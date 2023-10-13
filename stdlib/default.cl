@@ -420,21 +420,37 @@ obj "print" {
 
 // if @cond (block { }) (block { })
 
-obj "else" {
-  in {
-    value: cell
-  }  
-}
+transform "if" {: i objs state|
+
+  let obj = objs[i]
+  obj.basis = "__if"
+  obj.basis_path = [ "__if" ]
+  // переделали в if
+
+  let next_obj = objs[i + 1]
+  //console.log("NX=",next_obj )
+  if (next_obj?.basis == "else")
+  {
+    obj.params.else_branch = next_obj.params[0]
+    // todo так-то надо и подвыражения переносить
+    // но в будущем я надесюь что они будут упакованы в значение параметра.
+    
+    // удаляем етот else
+    objs.splice( i+1, 1 )
+  }
+  
+  //console.log("transform iff helo returning slice!",objs.length,s.length,s);
+  return [i,objs]
+:}
 
 // if cond then-func [else] else-func
-obj "if"
+obj "__if"
   {
   in {
     //input: cell
     condition: cell // если канал то тогда константы не получается подставлять..
     then_branch: cell
     else_branch: cell
-    _else~: cell
   }
   output: cell
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
@@ -442,15 +458,6 @@ obj "if"
 
   tree: tree_lift
 
-  // прислали блок else 
-  r_else_obj: react @_else {: val |
-    // if (debug)
-    // console.log("r1")
-    let s1 = val.value.subscribe( (ev) => {
-      //console.log("r2",ev)
-      else_branch.set( ev )
-    })
-  :}
 
   func "cleanup_current_process" {:
       //console.log("cleanup_current_process",current_process.get())
