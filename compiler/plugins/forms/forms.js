@@ -161,11 +161,13 @@ export function get_obj_params( obj ) {
 					children_param = k.$name_modified
 					params[ children_param ] = true // т.е. параметр доступен и через обычные параметры
 				}	
-		  else
-			if (k.$name.endsWith("~")) {				  
+			/*	
+		  else // todo удалить фичу next_obj_param т.к. она вроде как и не нужна, появились F-TRANSFORM
+			if (k.$name.endsWith("~")) {
 					k.$name_modified = k.$name.slice(0,-1)					
 					next_obj_param = k.$name_modified
 				}
+			*/	
 		}		
 	
 	//console.log("get-obj-params obj=",obj.$name, "in=",in_p,{params,rest_param,named_rest_param})

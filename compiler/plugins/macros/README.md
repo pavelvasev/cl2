@@ -1,1 +1,3 @@
-Реализует F-MACROS.
+Реализует F-TRANSFORM.
+
+todo переименовать этот плагин в transform.
