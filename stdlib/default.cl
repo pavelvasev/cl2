@@ -599,12 +599,14 @@ func "find_return_scope" {: start |
 
 
 // исп: block { some things } -> output_func где output_func функция создания содержимого блока
+// убрал - по факту не используется
+/*
 obj "block" {
   in {
     output&: cell
   }
 }
-
+*/
 
 // вход - список каналов/ячеек
 obj "when_all2" {
@@ -728,6 +730,7 @@ func "div" {: ...values |
 alias "div" "/"
 
 // ----------------------- логика
+// todo перевести это на формы...
 
 func "and" {: ...values |   
    for (let i=0; i<values.length; i++)

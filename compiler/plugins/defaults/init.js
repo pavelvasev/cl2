@@ -9,4 +9,3 @@ export function init( state, tool ) {
 	f( "std/default-transforms.cl")
 	f( "std/default.cl")
 }
-

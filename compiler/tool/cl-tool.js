@@ -99,13 +99,13 @@ class Tool {
 	// file это путь к файлу
 	compile_file( file, state ) 
 	{
-			let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
+		let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
 
-		  let module_state = C.modify_dir( state, path.dirname( file ) + "/")
-		  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
-			let code = this.compile_string( content, module_state )
+		let module_state = C.modify_dir( state, path.dirname( file ) + "/")
+		// мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
+		let code = this.compile_string( content, module_state )
 
-			return {code,state:module_state}
+		return {code,state:module_state}
 	}
 
 	compile_file_p( file, state ) 

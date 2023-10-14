@@ -22,6 +22,7 @@ export var tablica = {
 	bind: { make_code: bind, check_params: default_cp },
 	init: { make_code: _init, check_params: default_cp },
 	paste: { make_code: paste, check_params: default_cp },
+	paste_file: { make_code: paste_file, check_params: default_cp },
 	in: { make_code: _in, check_params: default_cp},
 //	react_orig: { make_code: react, check_params: default_cp},
 	nop: { make_code: () => { return { main: [], bindings: [] } }, check_params: default_cp},
@@ -460,9 +461,25 @@ export function paste( obj, state )
 	let strs = []
 	strs.push( obj.params[0] )
 
-	return {main:strs,bindings:[]}
+	return {main:strs,bindings:obj.params[1] || []}
 }
 
+import * as path from 'node:path';
+
+export function paste_file( obj, state )
+{
+	let params_count = obj.positional_params_count
+
+	let strs = []
+  for (let i=0; i<params_count; i++) {
+    let file = path.join( state.dir, obj.params[ i ] )
+    let res = state.tool.compile_file( file,state )
+    strs.push( res.code )
+    state.env = {...state.env, ...res.state.current}
+  }
+
+	return {main:strs,bindings:[]}
+}
 
 let ccc = 0
 // действие типа "функция"
@@ -761,35 +778,4 @@ export function form( obj, state )
   // но кстати вопрос.. а если оно ну там что-то поделает и вернет опять obj-запись?
 
 	return { main: [], bindings: [] }
-}
-
-// todo мб это multimacro или даже macro.. ну что-то такое..
-export function transform( i, objs, state )
-{
-	let obj = objs[i]
-
-	let name = obj.params[0]
-	let	fn_code = obj.params[1]
-
-	// но кстати шутка - это можно на Слоне писать формы?
-	fn_code = CO.cocode_to_code( fn_code,state,true,true )
-
-	//let f = eval( fn_code )
-	// console.log("fn_code =",fn_code )
-
-	let f = new Function( ...fn_code.pos_args, fn_code.code )
-
-	state.current[ name ] = {
-		basis: name,
-		transform: (i,objs,state) => {
-			let res = f( i,objs,state,C )
-			//console.log("TTTTTT res=",res)
-			return res
-		},
-		check_params: default_cp
-  }
-  // но кстати вопрос.. а если оно ну там что-то поделает и вернет опять obj-запись?
-
-	objs.splice(i,1)
-	return objs
 }

@@ -1,11 +1,6 @@
 // тут трансформации языка, включенные по умолчанию. 
 
-// paste_file f1 f2 f3
-/*
-transform "paste_file" {: i objs state C|
-  let obj = objs[i]  
-} 
-*/ 
+
 
 // миксины
 /*
@@ -151,14 +146,17 @@ transform "base_class" {: i objs state C|
    simple_transform "a_tree_lift" {
      mixin "tree_lift"
    }
-   алгоритм:
+   и тогда: a_tree_lift obj "foo"
+
+   т.е. ползоваться так:
    
    simple_transform T { commands }
-   
    T obj
    
+   алгоритм:
    записать вместо T указанные команды commands
-   при этом если у T есть аргументы - то подставить их последней из commands
+   при этом если у T есть {}-аргументы - то подставить их последней из commands
+   это дает возможность пользоваться так: T { obj1 obj2 }
 */
 transform "simple_transform" {: i objs state C|
 
