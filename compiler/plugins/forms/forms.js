@@ -207,7 +207,8 @@ export function _obj( obj, state )
 	// F-TREE
 	let base_code = obj.params.base_code || "CL2.create_object()"
 	// получается base_obj оверрайдит base_code. да уж.
-	strs2.push(`let self= initial_values.base_obj || ${base_code}; self.$title=initial_values.$title`)
+	strs2.push(`let self= initial_values.base_obj || ${base_code};`)
+	strs2.push( `self.$title= initial_values.base_obj ? initial_values.base_obj + "(" + initial_values.$title + ")" : initial_values.$title`)
 	// чтобы можно было давать ссылки на self
 	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)
@@ -327,7 +328,7 @@ export function _obj( obj, state )
 				if (val?.pos_splat) {
 					pos_splat.push( {name: k, source: val.source, controlled_names: positional_names.slice(k+1)} )
 					continue
-				}				
+				}
 				// k - имя очередного параметра указанное внешне. может быть числом, для позционных.				
 				if (obj_params.hasOwnProperty( k )) {
 					// k встречается в списке параметров объекта - значит это именованный

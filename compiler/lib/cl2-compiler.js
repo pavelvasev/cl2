@@ -526,21 +526,23 @@ export function default_obj2js( obj,state ) {
 	// init_consts["parent"] = state.struc_parent?.$name || "self"
 	let obj_title = objid.indexOf( obj.basis ) < 0 ? `${objid}[${obj.basis}]` : `${objid}`
 	init_consts['$title'] = obj_title
+	if (obj.base_obj)  // hack F-MIXIN-INTERNAL
+	    init_consts['base_obj'] = obj.base_obj
 	
   strs.push( `let ${objid} = ${obj.modul_prefix}create_${get_basis(basis_record)}( ${objToString(init_consts,1,state,obj)} )`)
   // тоже чтобы можно было на него ссылаться напрямую, по значению
   state.static_values[ objid ] = true
 
 	//strs.push( objid.indexOf( obj.basis ) < 0 ? `${objid}.$title = "${objid}[${obj.basis}]"` : `${objid}.$title = "${objid}"`)
-	if (state.tree_parent_id) {
+	if (state.tree_parent_id && !obj.skip_attach) {
 		  // древовидная иерархия.. но там объекты у нас могут путешествовать туды сюды
 		 // F-TREE
-	    bindings.push( `if (${state.tree_parent_id}.tree && ${objid}.tree) ${state.tree_parent_id}.tree.append(${objid})` )	    
+	    bindings.push( `if (${state.tree_parent_id}.is_tree_element && ${objid}.is_tree_element) ${state.tree_parent_id}.append(${objid})` )
   }
   // оказалось что нам надо пропускать append но делать attach_anonymous
   // используем для этого struc_parent_id (оно вроде как по смыслу то что надо)
-  if (state.struc_parent_id) {
-		  // вторая иерархия, статическая на момент создания
+  if (state.struc_parent_id && !obj.skip_attach) {
+		 // вторая иерархия, статическая на момент создания
 
   		 // для tree: tree_node решил сделать таки чтобы не анонимно добавляли
   		 // F-TREE
@@ -631,7 +633,10 @@ function obj_str( str ) {
 
 export function objToString(obj, ndeep, state,parent_obj ) {
   if(obj == null) { return String(obj); }
-  if (obj.this_is_env_list) return paramEnvToFunc( obj, state)
+
+  // todo это навылет
+      if (obj.this_is_env_list) return paramEnvToFunc( obj, state)
+
   if (obj.code && obj.pos_args) return value_to_arrow_func( obj,state,parent_obj )
   if (obj.link && obj.from) return obj.from // F-STATIC-VALUES
 

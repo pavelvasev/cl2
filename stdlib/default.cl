@@ -91,6 +91,10 @@ func "list" {: ...values | return values :}
 // todo совместить попробовать tree-узлы и собственно объекты
 // а то они сейчас вынесены, см dom.cl и "if"
 
+// include "tree.cl" или load "tree.cl" ?
+// ну к тому что удобно файл бы разбивать на части
+// а сейчас получается это не очень то возможно.
+
 obj "tree_child" {
   parent: cell  
   // ссылка на parent-а, вдруг кому-то надо
@@ -98,6 +102,14 @@ obj "tree_child" {
   lift_parent: cell
   // ссылка на лифт-парент
   // но кстати нужна ли она? проще же в attached_to постучаться..
+  // но технически оказалось что элемент принадлежит и паренту, и лифт-паренту
+  // и "вычеркивать" при удалении надо именно из лифт-парента, а то он иначе опять собирает.
+  // хотя конечо последний как правило это attached_to но 
+
+  //tree_element: cell 1 // на параметр заменить
+  init {:
+    self.is_tree_element = true
+  :}
 
   react @self.release {:
      //console.log('child release!',self+'','parent=',self.parent.get() + '')
@@ -114,7 +126,7 @@ obj "tree_child" {
      if (p.is_set) {
        //console.log("thus calling parent forget of",self.attached_to+'')
        let pp = p.get()
-       pp.tree.forget( self.attached_to )
+       pp.forget( self.attached_to )
        // self.attached_to это узел где размещен tree_child
      }
   :}
@@ -122,7 +134,9 @@ obj "tree_child" {
 
 
 // сборщик
-obj "tree_lift" base_code="create_tree_child({})"{
+mixin "tree_child"
+obj "tree_lift" //base_code="create_tree_child({})"{
+{
   in {
     allow_default: cell true
   }
@@ -157,7 +171,7 @@ obj "tree_lift" base_code="create_tree_child({})"{
     r.add( child )
     // мы получается и лифтов добавляем. ок.
 
-    child.tree.lift_parent.set( self.attached_to )
+    child.lift_parent.set( self.attached_to )
 
     //console.log("submit gather-request - due to tree_lift append. self=",self+'',"child=",child+'')
     self.gather_request.submit()
@@ -180,17 +194,17 @@ obj "tree_lift" base_code="create_tree_child({})"{
 
     elems.forEach( element => {
       //console.log("checking elem=",element+'',"is_lift=",element.tree?.is_tree_lift)
-      if (element.tree?.is_tree_lift) {
+      if (element.is_tree_lift) {
 
-        if (element.tree.children.is_set)
-            result = result.concat( element.tree.children.get() )
+        if (element.children.is_set)
+            result = result.concat( element.children.get() )
         else {
           // важный момент. там еще не собрали же
           //console.log("!!!!!!!!!!!!!!! this sublift children pending!")
           result.pending = true
         }
 
-        monitor.push( element.tree.children.changed )
+        monitor.push( element.children.changed )
         // важно реагировать на changed а не на просто.
         // потому что если на просто то зацикливание
         // ибо мы там делаем подписку subscribe, а children будучи ячейкой
@@ -247,7 +261,8 @@ obj "tree_lift" base_code="create_tree_child({})"{
 
 // узел
 
-obj "tree_node" base_code="create_tree_lift({})" {
+mixin "tree_lift"
+obj "tree_node" {
 
   init {:
     self.is_tree_lift = false
@@ -267,15 +282,16 @@ obj "tree_node" base_code="create_tree_lift({})" {
 
      //console.log("ok tree node : children=",arr.map( x => x+''),self+'')
 
-     arr.forEach( elem => elem.tree.parent.set( parent_object ))
+     arr.forEach( elem => elem.parent.set( parent_object ))
      return true
   :}
 
 }
 
 // надо для compute.js но и связано с tree-штуками нашими
+mixin "tree_lift"
 obj "func_process" {
-    tree: tree_lift // сборщек детей
+    //tree: tree_lift // сборщек детей
     output: cell    // и обычный результат
 
     init {: 
@@ -285,6 +301,7 @@ obj "func_process" {
     :}
 }
 
+//mixin "tree_lift"
 obj "apply_children" {
   in {
     action: cell
@@ -294,7 +311,7 @@ obj "apply_children" {
   init {:
     CL2.schedule( () => {
     if (!action.is_set) {
-      self.tree.gather_request.submit();
+      self.gather_request.submit();
       //console.log("ISSUED DEFAULT GATHER REQUEST",self+'')
     }
     },self) // я думал приоритета по умолчанию не хватит но хватает
@@ -302,7 +319,9 @@ obj "apply_children" {
   //u: extract @rest
   output: cell
 
-  tree: tree_lift allow_default=false // сборщик чилдренов
+  imixin { tree_lift allow_default=false }
+
+  //tree: tree_lift allow_default=false // сборщик чилдренов
 
   //react @action {: console.log("see action") :}
   //react @rest {: console.log("see rest") :}
@@ -320,13 +339,13 @@ obj "apply_children" {
         let res = f( ...args )
         // console.log( "apply_children: appending result",self+'',res)
         // тут у нас гарантированно процесс прислали
-        if (res?.tree) {
-          self.tree.append( res ) // усе поехала сборка
+        if (res?.is_tree_element) {
+          self.append( res ) // усе поехала сборка
           res.attached_to = self // чтобы имена разруливать
           //return CL2.create_cell( res ) // екранируем
         } else {
           // ну пусть чего-то там собирают тогда
-          self.tree.gather_request.submit()
+          self.gather_request.submit()
         }
       }
     :}
@@ -340,7 +359,7 @@ obj "apply_children" {
   :}
   react @self.release @stop_result_process
 
-  bind @tree.children @output
+  bind @self.children @output
 }
 
 ////////////////////////////////////////////////
@@ -456,8 +475,7 @@ obj "__if"
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
   current_process: cell
 
-  tree: tree_lift
-
+  imixin { tree_lift }
 
   func "cleanup_current_process" {:
       //console.log("cleanup_current_process",current_process.get())
@@ -502,7 +520,8 @@ obj "__if"
       // Comm и ClObject вместе отработают
       if (res instanceof CL2.ClObject) {
         current_process.set( res )
-        tree.append( res )
+        if (res.is_tree_element)
+            self.append( res )
         
         /* когда таким образом мы добавляем контекст функции res в свое дерево tree,
            то не происходит связи по теме parent-child.

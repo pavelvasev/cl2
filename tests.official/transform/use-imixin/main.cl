@@ -10,25 +10,14 @@ obj "foo1" {
   output := + "hello " @ownname
 }
 
-mixin "foo1"
-obj "foo2" {
-  print "foo2"
-}
-
-f2: foo2
-
-print "f2.output=" @f2.output
-
-assert (@f2.output == "hello just1")
-
-/* пока убрал заменил на imixin
+print "start"
 ================
 print "------- internal mixin with const"
 ===============
 
 obj "foo3" {
   print "foo3"
-  mixin {
+  imixin {
     foo1 ownname="smiley"
   }
 }
@@ -45,7 +34,7 @@ obj "foo4" {
     name: cell
   }
   print "foo4"
-  mixin {
+  imixin {
     foo1 ownname=@name
   }
 }
@@ -53,4 +42,15 @@ obj "foo4" {
 f4: foo4 "znak"
 print "f4.output=" @f4.output
 assert (@f4.output == "hello znak")
-*/
+
+===============
+print "------- internal mixin to obj"
+===============
+
+obj "foo5" {
+  print "foo5"
+}
+
+f5: foo5
+imixin { foo1 ownname="mememe" } @f5
+print "f5.output=" @f5.output
