@@ -1,10 +1,27 @@
+// тут трансформации языка, включенные по умолчанию. 
+
+// paste_file f1 f2 f3
+/*
+transform "paste_file" {: i objs state C|
+  let obj = objs[i]  
+} 
+*/ 
+
 // миксины
 /*
   варианты:
     1 - mixin "name" "name" obj "target" { }
     2 - mixin "name" "name" { obj ... obj .. }
-    3 - obj "name" { mixin { spec1 param=.... spec2 ... } }
 */
+
+// paste_file "mixins.cl"
+// это как бы здорово но.. хотелось бы более большие куски добавлять рандомные
+// не совместимые с синтаксисом.. но это значит что надо на уровне парсера
+// это уметь делать.. хнык
+// ну ладно, хотя бы просто.
+
+// [[= целевой язык ]]
+// [[=! paste_file "mixins.cl" ]]
 
 transform "mixin" {: i objs state C|
 
@@ -72,6 +89,7 @@ transform "mixin" {: i objs state C|
   return [i,objs]
 :}
 
+// новые миксины
 // imixin { spec spec.... }
 // imixin { spec spec... } @target1
 //  цель ток одна потому что иначе много объектов придется создавать а не хотелось бы пока
