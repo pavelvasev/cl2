@@ -10,10 +10,10 @@ let default_modules = [
 	"module-path/module-path.js",
 	"macros/macros.js",
 	"../../stdlib/init.js",
-	"defaults/init.js",	
+	"../../defaults/init.js",
 	"compile/init.js",
 	"run/init.js","test/init.js",
-	"nest/init.js", 
+	"nest/init.js",
 	"init/init.js", "init-web/init.js", "init-electron/init.js",
 	"watch", "add"
 	]
@@ -75,7 +75,10 @@ class Tool {
 			// 2 передадим управление на инициализацию этого модуля
 
 			return this.load_modules( Object.values(conf.modules), state, conf.dir,root_dir ).then( () => {
-				return Promise.resolve( conf.init ? conf.init( state, this ) : true ).then( () => conf)
+				// фича - передаем conf в инит-процедуру указанного модуля
+				// так она сможет узнать текущий каталог. хотя.. а в стейте что ли нету?
+				// есть но пустое.. ех 
+				return Promise.resolve( conf.init ? conf.init( state, this, conf ) : true ).then( () => conf)
 			})
 		})
 
@@ -99,6 +102,7 @@ class Tool {
 	// file это путь к файлу
 	compile_file( file, state ) 
 	{
+		//console.log("compile-file",file)
 		let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
 
 		let module_state = C.modify_dir( state, path.dirname( file ) + "/")
