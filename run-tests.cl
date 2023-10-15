@@ -1,5 +1,6 @@
 #!./clon r
 # можно добавить в файл .git/hooks/pre-commit строку ./run-tests.cl || (echo "commit failed!"; exit 1)
+// todo параллельный запуск уже хочу. это так-то parallel-map по идее. вида parallel_map @data n=4 fn
 
 import os = "std/os.cl" std="std"
 

@@ -217,6 +217,7 @@ export function get_record(state,id,obj_info,allow_defaults=true, error_if_not_f
 		if (!y) {
 			if (error_if_not_found) {
 				console.error("env have no basis record for basis=",id)
+				//console.error("state.current=",state.current)
 				//console.error("state.env=",state.env,"allow_defaults=",allow_defaults)
 				console.error(obj_info?.locinfo)
 				console.error(obj_info)

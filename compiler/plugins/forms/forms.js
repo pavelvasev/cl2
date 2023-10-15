@@ -470,12 +470,21 @@ export function paste_file( obj, state )
 {
 	let params_count = obj.positional_params_count
 
+	//console.log("paste file called",state)
+
 	let strs = []
   for (let i=0; i<params_count; i++) {
     let file = path.join( state.dir, obj.params[ i ] )
-    let res = state.tool.compile_file( file,state )
-    strs.push( res.code )
-    state.env = {...state.env, ...res.state.current}
+
+    // хак по передаче текущего окружения в загружаемый файл
+    // иначе из defaults.cl не удается загрузить кусочки (не определен react и т.п)
+    let p_state = {...state}
+    p_state.env = {...state.env, ...state.current}
+
+    let res = state.tool.compile_file( file,p_state )
+    strs.push( res.code )    
+    // сохраним определения полученные в файле в текущее состояние
+    state.current = {...state.current, ...res.state.current}
   }
 
 	return {main:strs,bindings:[]}
