@@ -24,6 +24,7 @@ react @k.exitcode {
   //t2 := apply {: t | return t.sort() :} @tests
   t2 := std.sort @tests
 
+  // 24 подобрано экспериментально что дает хорошую скорость на 16 ядерах
   summary := parallel.map(@t2,24) { test|
     print "============= running test" @test
     r: os.spawn 'clon' 'r' @test  // stdio='inherit'
