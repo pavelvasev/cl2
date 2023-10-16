@@ -2,7 +2,7 @@
 # можно добавить в файл .git/hooks/pre-commit строку ./run-tests.cl || (echo "commit failed!"; exit 1)
 // todo параллельный запуск уже хочу. это так-то parallel-map по идее. вида parallel_map @data n=4 fn
 
-import os = "std/os.cl" std="std"
+import os = "std/os.cl" std="std" parallel="std/parallel.cl"
 
 dir := or (os.env | get "DIR") "tests.official"
 print "running tests from dir" @dir
@@ -24,7 +24,7 @@ react @k.exitcode {
   //t2 := apply {: t | return t.sort() :} @tests
   t2 := std.sort @tests
 
-  summary := map(@t2) { test|
+  summary := parallel.map(@t2,8) { test|
     print "============= running test" @test
     r: os.spawn 'clon' 'r' @test  // stdio='inherit'
     //react @r.stdout (func { |msg| print @msg })
