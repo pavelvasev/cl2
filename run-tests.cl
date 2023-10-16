@@ -24,7 +24,7 @@ react @k.exitcode {
   //t2 := apply {: t | return t.sort() :} @tests
   t2 := std.sort @tests
 
-  summary := parallel.map(@t2,8) { test|
+  summary := parallel.map(@t2,24) { test|
     print "============= running test" @test
     r: os.spawn 'clon' 'r' @test  // stdio='inherit'
     //react @r.stdout (func { |msg| print @msg })

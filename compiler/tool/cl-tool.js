@@ -10,7 +10,7 @@ let default_modules = [
 	"module-path/module-path.js",
 	"macros/macros.js",
 	"../../stdlib/init.js",
-	"../../defaults/init.js",
+	"../../stdlib/defaults/init.js",
 	"compile/init.js",
 	"run/init.js","test/init.js",
 	"nest/init.js",
