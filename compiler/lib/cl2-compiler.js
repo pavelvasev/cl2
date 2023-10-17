@@ -25,7 +25,9 @@ import * as P from "./lang-parser.js"
 */
 
 export function create_state( env={}, current={},dir="", tool ) {
-	return { env, current, struc_parent_id:null, tree_parent_id: null, 
+	return { env, current, 
+	   is_state: true,
+	   struc_parent_id:null, tree_parent_id: null, 
 	   dir, prefix:'', space:{}, static_values: {}, tool, 
 	   import_map: {}, modules_conf: {},
 	   generated_ids: [] }
@@ -301,9 +303,15 @@ export function one_obj2js_sp( obj, state )
 	let env_rec = get_record(state,obj.basis_path, obj)
 	if (env_rec?.make_code)
 		return env_rec.make_code( obj, state )
+
+	//if (env_rec?.is_state)
+//		throw new Error("note: seems you use name of module!")
+
 	//return one_obj2js( obj,state )
-	console.error(`record ${obj.basis} have no make_code!`)
-	console.error( 'record=',env_rec )
+	console.error(`record ${obj.basis} have no make_code!`, obj.locinfo)
+	//console.error( 'record=',env_rec )
+	if (env_rec?.is_state)
+		console.error("note: seems you use name of module!")
 	throw new Error(`record ${obj.basis} have no make_code!`)
 }
 

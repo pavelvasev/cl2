@@ -15,9 +15,13 @@ export function init( state, tool )
 	state.env.wait = { make_code: wait, check_params: default_cp} // F-FUNC-EXIT
 
 	// todo вообще этот output можно ловить и передавать старшему процессу. для F-RUN
+	/* по факту это приводит к путанице. вызываю exit думая что из реакции выхожу, а по факту иду вот в этот скопе.
+	*/
+	// todo убрать ето
 	tool.add_global_code( ['let return_scope = self; let exit_scope = self;',
 		`CL2.attach( self, 'output', CL2.create_cell() )`
 	])
+	
 
 /* оставлено на память как пример добавки cl-кода из js
 	let task_code = `
@@ -345,7 +349,7 @@ export function _exit( obj, state )
   		else
   			base.main.push( `${p0.from}.once( val => exit_scope.output.submit( val ) )` )
   	}
-  	else {  		
+  	else {
   	  initial_value = C.objToString(p0,1,state,obj)  	
   	  base.main.push( `exit_scope.output.submit( ${initial_value} )` )
   	}

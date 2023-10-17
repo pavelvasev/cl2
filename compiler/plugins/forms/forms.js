@@ -22,6 +22,7 @@ export var tablica = {
 	bind: { make_code: bind, check_params: default_cp },
 	init: { make_code: _init, check_params: default_cp },
 	paste: { make_code: paste, check_params: default_cp },
+	paste_global: { make_code: paste_global, check_params: default_cp },
 	paste_file: { make_code: paste_file, check_params: default_cp },
 	in: { make_code: _in, check_params: default_cp},
 //	react_orig: { make_code: react, check_params: default_cp},
@@ -462,6 +463,14 @@ export function paste( obj, state )
 	strs.push( obj.params[0] )
 
 	return {main:strs,bindings:obj.params[1] || []}
+}
+
+export function paste_global( obj, state )
+{
+	let code = obj.params[0]
+	state.tool.add_global_code( code )
+
+	return {main:[],bindings:[]}
 }
 
 import * as path from 'node:path';
