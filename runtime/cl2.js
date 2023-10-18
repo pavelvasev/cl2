@@ -133,44 +133,7 @@ export class Channel extends Comm {
 			} )
 		return unsub
 	}
-
-	// связывание с другими примитивами синхронизации
-	bind( source_object ) {
-		if (source_object instanceof Channel)
-			return this.connect_to( source_object )
-
-		// дают ячейку?
-		// ну будем слушать для интереса assigned. а если мало - уточняйте что слушать
-		// надо ли установить начальное значение?
-		// кстати вообще идея.. если есть set и есть get то сделать всегда set( get() )
-		// и может быть - метода get это его значение.. хотя это дорого
-		if (source_object instanceof Cell) {
-			// проба интересного
-			/*
-			console.channel_verbose("Channel: schedule copy data from cell (if set)",source_object+"","-->",this+"")
-			schedule( () => {
-			if (source_object.is_set) {
-				console.channel_verbose("Channel: performing scheduled copy data from cell (if set)",source_object+"","-->",this+"")
-				//console.log("source cell is set, passing to channel. this=",this+"","src=",source_object+"","value=",source_object.get())
-				//console.trace()
-				this.emit( source_object.get() )
-			}})
-			*/
-			return this.connect_to( source_object.assigned ) 
-		}
-		// нам дают на вход реакцию - значит мы слушаем её результаты
-		if (source_object instanceof Reaction )
-			return this.connect_to( source_object.output )
-
-		//console.log("source_object instanceof ClObject:",source_object instanceof ClObject)
-		if (source_object instanceof ClObject) {
-			if (source_object.output)
-				return this.bind( source_object.output )
-			throw new Error(`Channel: do not know how to bind source_object=${source_object}. It has no .output field!`)
-		}
-
-		throw new Error(`Channel: do not know how to bind source_object=${source_object}`)
-	}
+	
 }
 
 export function create_channel() {
@@ -205,29 +168,6 @@ export class Reaction extends Comm { // Code?
 		return fn.apply( this, args )
 	}
 
-	// связывание с другими примитивами синхронизации
-	bind( source_object ) {
-		// дают на вход канал - значит мы слушаем канал и вызываем метод
-		//console.log("method connected to input from",source_object)
-		if (source_object instanceof Channel)
-			return this.input.connect_to( source_object )
-		if (source_object instanceof Cell) {
-			let res = this.input.connect_to( source_object.changed )
-			if (source_object.is_set) {
-				this.input.emit( source_object.get() )
-			}
-			return res
-		}
-
-		if (source_object instanceof ClObject || source_object instanceof Comm) {
-			if (source_object.output)
-				return this.bind( source_object.output )
-			throw new Error(`Reaction: do not know how to bind source_object=${source_object}. It has no .output field!`)
-		}
-
-		throw new Error(`Reaction: do not know how to bind source_object=${source_object}`)
-	}
-
 
 }
 
@@ -257,11 +197,23 @@ export class Cell extends Comm {
 		            ? create_binding( this.changed_emit, this.changed )
 		            : create_binding_delayed( this.changed_emit, this.changed )
 
-		attach( this,"assign",create_channel())
+		//attach( this,"assign",create_channel())
 		attach( this,"assigned",create_channel())
+
+		// вопрос а зачем нам assigned ведь мы могли бы создавать ячейки которые
+		// всегда поставляют значения (всегда changed)
+		// ответ: не могли бы, иногда ячейки создаются неявно, например a := ...
+
 		//this.assign = create_channel(`${title}.assign`)
 		//this.assigned = create_channel(`${title}.assigned`)
-		this.assign.on( (value) => this.set(value))
+
+		//this.assign.on( (value) => this.set(value))
+
+		// вопрос а зачем нам assign вообще?
+		// в том смысле что бинд вполне себе с ячейкой работает
+		// для чистоты? что вот же есть канал?..
+		// экспериментально убираю
+
 		// this.set( initial_value )
 		// надо еще создавать ячейки без значений.
 		// например для вычислений. пока не вычислено же нет результата
@@ -282,7 +234,7 @@ export class Cell extends Comm {
 		this.changed_emit.destroy()
 		this.changed.destroy()
 		this.assigned.destroy()
-		this.assign.destroy()
+		//this.assign.destroy()
 	}
 	/* вопрос.. метод set как соотносится с каналом assigned?
 	   т.е запись в канал вызывает set
@@ -310,6 +262,9 @@ export class Cell extends Comm {
 			this.value = new_value
 			//console.log("changed-emit:",new_value)
 			//console.trace()
+
+			// сейчас old_value нигде не фигурирует и никуда не пойдет
+			// вопрос - а может пару посылать?
 			this.changed_emit.emit( new_value, old_value )
 			// вот тут вопрос - а что если ну общее значение emit это кортеж
 			// но он же всегда пусть и передается во все on да и все?
@@ -320,48 +275,6 @@ export class Cell extends Comm {
 	get() {
 		return this.value
 	}
-	// связывание с другими примитивами синхронизации
-	bind( source_object ) {
-		// дают на вход канал - значит мы слушаем канал и вызываем метод
-		//console.log("cell connecting to input from",source_object,"source_object instanceof Method=",source_object instanceof Method)
-		if (source_object instanceof Channel)
-			return this.assign.connect_to( source_object )
-		if (source_object instanceof Cell) {
-			let res = this.assign.connect_to( source_object.changed )
-			// todo xxx продолжить здесь. идея - проверять что присвоено.
-			// ну а если не присвоено ничего не делать. и аналогично в monitor_rest_any проверять..
-			// проверять важно. потому что иначе мы нулл начинаем гонять
-			if (source_object.is_set)
-				this.set( source_object.get() ) // а если там ничего нет?
-			else this.is_set = false
-			// вообще идея - прогонять этот set с non-set по всей глубине, вышибывая значения
-			// и отдельно функции - is_changed проверялка ( а не != ) т.е. пользователь может задать
-			// и is_nonset - проверялка что значение несетовое.. хотя его можно в отдельную константу просто..
-			// а так пока получается что мы вводим состояние для ячейки - установлена она или нет
-			// и дополнительно правила распространения этого состояния
-			// ну пока они распространяются на 1 шаг..
-			return res
-		}
-		if (source_object instanceof Reaction) {
-			return this.assign.connect_to( source_object.output )
-			// надо ли его вызывать?
-			//this.set( source_object.get() ) // а если там ничего нет?
-		}
-		//console.log("source_object instanceof ClObject:",source_object instanceof ClObject)
-		// очень большой вопрос. а хорошо ли это. потому что получается, что тепреь в ячейку
-		// сам объект то и не положить. вероятно это очень даже не фонтан.
-		// очередная удобняшка.
-		if (source_object instanceof ClObject) {
-			if (source_object.output)
-				return this.bind( source_object.output )
-			throw new Error(`Channel: do not know how to bind source_object=${source_object}. It has no .output field!`)
-		}
-
-		//if (source_object instanceof Function) {
-		//	}
-		throw new Error(`Cell: do not know how to bind source_object=${source_object} type=${typeof(source_object)}`)
-	}
-	
 }
 
 export function create_cell(value,fast=false) {
