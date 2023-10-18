@@ -14,6 +14,10 @@ export var tablica = {
 	obj: { make_code: _obj, check_params: (assigned_names) => { 
 		 return {normal: assigned_names, renamed: {'1': 'children'}, pos_rest: [],named_rest:[]} 
 		} },
+	
+	process: { make_code: _obj, check_params: (assigned_names) => { 
+		 return {normal: assigned_names, renamed: {'1': 'children'}, pos_rest: [],named_rest:[]} 
+		} },		
 //	attach: { make_code: attach, check_params: default_cp },
 	channel: { make_code: channel, check_params: default_cp },
 //	func: { make_code: func, check_params: default_cp },

@@ -172,3 +172,6 @@ func "map" {: arr batch_size f| ... :}
 map @data batch_size=10 f
 
 для этого надо научить generate_func_caller использовать аргументы по-нормальному.
+
+-----------
+bind (dom.event @btsearch "click") @do_search
