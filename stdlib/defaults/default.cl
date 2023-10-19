@@ -82,6 +82,33 @@ obj "react" {
   :}
 }
 
+paste "
+function generate_func_caller_js( fun ) {
+"
+
+process "func_caller" {
+  in {
+    rest*: channel // было cell но тогда медленно отрабатывают включения. а мы хотим F-REST-REACT-ASAP
+  }
+  output: cell
+  
+  r: react @rest {: args |
+    console.channel_verbose("co-func called '${name}'. self=",self+'')
+    let rr = fun( ...args )
+    console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
+    return rr
+  :}
+  //react @output {: self.destroy() :}
+
+  bind @r.output @output
+}
+
+paste "
+
+  return (initial_values) => create_func_caller(initial_values)
+}
+"
+
 func "list" {: ...values | return values :}
 
 paste_file "tree.cl"

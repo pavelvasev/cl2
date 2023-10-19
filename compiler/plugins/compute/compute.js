@@ -19,8 +19,34 @@ export function init( state, tool )
 	*/
 	// todo убрать ето
 	tool.add_global_code( ['let return_scope = self; let exit_scope = self;',
-		`CL2.attach( self, 'output', CL2.create_cell() )`
+		`CL2.attach( self, 'output', CL2.create_cell() )`		
 	])
+
+	let name = "NAME_CREATED_FUNC"
+	/*
+	let code = `
+	 obj "${name}" {
+	 	  in {
+	 	  	rest*: channel // было cell но тогда медленно отрабатывают включения. а мы хотим F-REST-REACT-ASAP
+	 	  }
+	 	  output: cell
+	 	  
+  	  r: react @rest {: args |
+  	    console.channel_verbose("co-func called '${name}'. self=",self+'')
+  	    let rr = ${name}( ...args )
+  	    console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
+  	    return rr
+  	  :}
+  	  //react @output {: self.destroy() :}
+
+  	  bind @r.output @output
+	 }
+	`
+	//console.log("autogen",code)
+	let c_obj = C.code2obj( code )
+	let strs = [C.objs2js( c_obj,state )]	
+  */
+	tool.add_global_code( [`// generate_func_caller_js` ])
 	
 
 /* оставлено на память как пример добавки cl-кода из js
@@ -52,12 +78,14 @@ obj "task" {
 }
 
 // создает объект, возвращающий в .output код функции
+/*
 function generate_func_object( self_objid, func_code ) {
 	return { main: [`let ${self_objid} =  CL2.create_item(); ${self_objid}.$title="${self_objid}"`,
 				`let ${self_objid}_output = CL2.create_cell(`,func_code,")",
 				 `CL2.attach( ${self_objid}, 'output',${self_objid}_output )`],
 			     bindings:[] }
 }
+*/
 
 // создает объект name, который вызывает указанную функцию при смене параметров
 // идея - чтобы можно было говорить func "x" а потом писать (x 1 2 3)
@@ -88,6 +116,12 @@ function generate_func_caller(name, state) {
 //console.log("autogen",code)
 	let c_obj = C.code2obj( code )
 	let strs = [C.objs2js( c_obj,state )]
+	// произошла регистрация. прекрасно!
+
+  // сокращаем коды с 200кб до 100! потому что убираем дублирование.
+  // пока решил не делать - разные сигнатуры же у функций.. надо смотреть как это будет себя повести
+  //
+	// strs = `let create_${name} = generate_func_caller_js( ${name} )`
 
 	return {main:strs,bindings:[]}	
 }
