@@ -189,3 +189,15 @@ bind (dom.event @btsearch "click") @do_search
 - созданные объекты
 - но как проверять вещи вида @objid.objcell ?
 F-TODO-CHECK-NAMESPACES
+
+update подтверждаю а то ждал @k.exit_code а ее неиту..
+**********************
+В следующем примере Qq никогда не напечатается.
+Потому что k1 никогда не выдаст ничего наружу.. т.к. inherit не пишет в каналы
+print "starting web dev"
+import os="std/os.cl"
+
+k1: os.spawn "clon" "compile" stdio="inherit"
+print "compiled" @k1.exitcode
+================
+print "Qq"
