@@ -4,7 +4,7 @@
 
 import os = "std/os.cl" std="std" parallel="std/parallel.cl"
 
-dir := or (os.env | get "DIR") "tests.official"
+dir := or (os.env | get "DIR") "platform"
 print "running tests from dir" @dir
 tests := reduce_events (k: os.spawn "find" @dir "-name" "main.cl") [] {: s acc | return acc.concat(s.split("\n").filter(q => q != '')) :}
 

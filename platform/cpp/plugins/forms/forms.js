@@ -1,6 +1,7 @@
 // особые формы CL2 уровня кодо-генерации, для языка Javascript
 
-import * as C from "../../lib/cl2-compiler.js"
+import * as C from "../../../../compiler/lib/cl2-compiler.js"
+import * as CJS from "../compiler/js-compiler.js"
 
 export function init( state ) {
 	state.env = {...state.env,...tablica}
@@ -87,7 +88,7 @@ export function _let( obj, state )
 	for (let k in obj.params) {
 		let val = obj.params[k]
 		//let s = `let ${k} = ${val.toString()}`
-		let val_str = val?.from ? "CL2.NOVALUE" : C.objToString(val,0,state)
+		let val_str = val?.from ? "CL2.NOVALUE" : CJS.objToString(val,0,state)
 		let s = `let ${k} = CL2.create_cell( ${val_str} )`
 		strs.push( s )
 		if (val?.from) {
@@ -130,56 +131,6 @@ export function _let_next( obj, state )
 	return {main: strs, bindings: []}
 }
 
-// по объектовой записи объекта понять кто его параметры включая каналы
-export function get_obj_params( obj ) {
-	let params = {}
-	let rest_param, named_rest_param, children_param, next_obj_param
-	// F-CHAINS-V3 next_obj_param
-
-	let in_p = C.get_children(obj,1).find( c => c.basis == "in")
-	if (!in_p) return {params}
-
-  // вот этим шагом можно параметры будет отдельно рендерить
-	//obj.in_params = in_p
-	//delete obj.children[ in_p.$name ]
-	
-		for (let k of C.get_children( in_p, 0 )) {
-			//console.log("checking k=",k.$name,k.basis)
-			if (k.basis == "cell" || k.basis == "channel" || k.basis == "func")
-			{
-				params[ k.$name ] = true
-				k.$name_modified = k.$name
-			}
-
-			if (k.$name.endsWith("**")) {
-				k.$name_modified = k.$name.slice(0,-2)
-				named_rest_param = k.$name_modified
-				//console.log("!!! named_rest_param=",named_rest_param)
-			}
-			else
-				if (k.$name.endsWith("*")) {
-					k.$name_modified = k.$name.slice(0,-1)
-					rest_param = k.$name_modified
-				}
-			else
-			if (k.$name.endsWith("&")) {
-					k.$name_modified = k.$name.slice(0,-1)
-					children_param = k.$name_modified
-					params[ children_param ] = true // т.е. параметр доступен и через обычные параметры
-				}	
-			/*	
-		  else // todo удалить фичу next_obj_param т.к. она вроде как и не нужна, появились F-TRANSFORM
-			if (k.$name.endsWith("~")) {
-					k.$name_modified = k.$name.slice(0,-1)					
-					next_obj_param = k.$name_modified
-				}
-			*/	
-		}		
-	
-	//console.log("get-obj-params obj=",obj.$name, "in=",in_p,{params,rest_param,named_rest_param})
-
-	return {params,rest_param,named_rest_param,children_param,next_obj_param}
-}
 
 export function _in( obj, state )
 {
@@ -236,7 +187,7 @@ export function _obj( obj, state )
 */  
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
-	let {params,rest_param,named_rest_param, children_param,next_obj_param} = get_obj_params( obj )
+	let {params,rest_param,named_rest_param, children_param,next_obj_param} = C.get_obj_params( obj )
 	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
@@ -278,7 +229,7 @@ export function _obj( obj, state )
 		obj_record: obj,
 		make_code: (obj,state) => { 
 			let self_objid = C.obj_id( obj, state )
-			let res = C.default_obj2js(obj,state)
+			let res = CJS.default_obj2js(obj,state)
 
 			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {
@@ -409,7 +360,7 @@ export function cell( obj, state )
   		initial_value = p0.from
   	}
   	else {  		
-  	  initial_value = C.objToString(p0,0,state)
+  	  initial_value = CJS.objToString(p0,0,state)
   	}
   }
 
@@ -454,7 +405,7 @@ export function _init( obj, state )
 {
 	let strs = []
 	
-	strs.push( `let init = `,C.value_to_arrow_func(obj.params[0],state),`init(${state.tree_parent_id})` )
+	strs.push( `let init = `,CJS.value_to_arrow_func(obj.params[0],state),`init(${state.tree_parent_id})` )
 
 	return {main:strs,bindings:[]}
 }

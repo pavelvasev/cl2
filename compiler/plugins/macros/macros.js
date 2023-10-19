@@ -1,6 +1,9 @@
 import * as C from "../../lib/cl2-compiler.js"
-import * as FORMS from "../forms/forms.js"
-import * as CO from "../compute/compute.js"
+
+//import * as CO from "../compute/compute.js"
+
+export let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[]} }
+
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -11,7 +14,7 @@ const __dirname = path.dirname(__filename);
 export function init( state, tool ) {
     state.env.transform = { 
        transform: transform, 
-       check_params: FORMS.default_cp
+       check_params: default_cp
     }
 
    /*
@@ -31,7 +34,9 @@ export function transform( i, objs, state )
 	let	fn_code = obj.params[1]
 
 	// но кстати шутка - это можно на Слоне писать формы?
-	fn_code = CO.cocode_to_code( fn_code,state,true,true )
+	// пока что убрано чтобы не было зависимости от CO
+	// fn_code = CO.cocode_to_code( fn_code,state,true,true )
+
 
 	//let f = eval( fn_code )
 	// console.log("fn_code =",fn_code )
@@ -45,7 +50,7 @@ export function transform( i, objs, state )
 			//console.log("TTTTTT res=",res)
 			return res
 		},
-		check_params: FORMS.default_cp
+		check_params: default_cp
   }
   // но кстати вопрос.. а если оно ну там что-то поделает и вернет опять obj-запись?
 

@@ -1,6 +1,7 @@
 // F-TASKS
 
-import * as C from "../../lib/cl2-compiler.js"
+import * as C from "../../../../compiler/lib/cl2-compiler.js"
+import * as CJS from "../compiler/js-compiler.js"
 import * as FORMS from "../forms/forms.js"
 
 let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[]} }
@@ -334,7 +335,7 @@ export function _return( obj, state )
   		// ну или надо к кому мы там приаттачимся - на release цепляться..
   	}
   	else {  		
-  	  initial_value = C.objToString(p0,1,state,obj)  	
+  	  initial_value = CJS.objToString(p0,1,state,obj)  	
   	  base.main.push( `return_scope.output.submit( ${initial_value} )` )
   	}
   }
@@ -387,7 +388,7 @@ export function _exit( obj, state )
   			base.main.push( `${p0.from}.once( val => exit_scope.output.submit( val ) )` )
   	}
   	else {
-  	  initial_value = C.objToString(p0,1,state,obj)  	
+  	  initial_value = CJS.objToString(p0,1,state,obj)  	
   	  base.main.push( `exit_scope.output.submit( ${initial_value} )` )
   	}
   }

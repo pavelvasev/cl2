@@ -39,7 +39,7 @@ export function init( state, tool ) {
 
 		// F-EMBED-RUNTIME		
 		mmm = mmm.then( () => {
-			let file_p = "file://" + path.resolve( path.join(tool.clon_dir,"./runtime/cl2.js"))
+			let file_p = "file://" + path.resolve( path.join(tool.platform_dir,"./runtime/cl2.js"))
 			return fetch( file_p ).then( r => r.text() ).then( content => {
 				tool.prepend_global_code(['// clon cl2.js runtime',content])
 			})
@@ -49,7 +49,7 @@ export function init( state, tool ) {
 		// хотя может стоит и разделить. тогда можно нодовый вариант делать с shebang
 		// и +x ключик ставить - запускайте пожалуйста.
 		mmm = mmm.then( () => {
-			let file_p = "file://" + path.resolve( path.join(tool.clon_dir,"./runtime/cl2-browser.js"))
+			let file_p = "file://" + path.resolve( path.join(tool.platform_dir,"./runtime/cl2-browser.js"))
 			return fetch( file_p ).then( r => r.text() ).then( content => {
 				tool.prepend_global_code(['// clon cl2-browser.js runtime',content])
 			})
