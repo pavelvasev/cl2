@@ -554,6 +554,9 @@ export function func( obj, state )
 }
 */
 
+/* bind научена работать с выражениями. не знаю хорошо это или плохо.
+   но удобно: bind (dom.event @btn "click") @do_something_channel
+*/
 export function bind( obj, state )
 {
 	let name = obj.$name
@@ -564,10 +567,24 @@ export function bind( obj, state )
 	// в ЛФ этим занимается особый вид ячейки-ретрансмиттер называется action
 	// но и в биндах зажержки есть. подумать об этом.
 
-	let strs = [`let ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`]
-	strs.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )` )
+  let base = {main:[],bindings:[]}
+	base.bindings.push( `let ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`)
+	base.bindings.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )` )
 
-	return {main:strs,bindings:[]}
+
+	//  и фичеры.. это у нас дети которые не дети	
+	let modified = C.modify_parent( state )
+	if (C.get_nested(obj))
+	{
+		//let mod_state = C.modify_parent(state,obj.$name)
+		for (let f of C.get_nested(obj)) {
+			let o = C.one_obj2js_sp( f, modified )
+			base.main.push( o.main )			
+			base.bindings.push( o.bindings )
+		}
+	}	
+
+	return base
 }
 // bind @func @ch
 

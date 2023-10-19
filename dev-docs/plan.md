@@ -175,3 +175,6 @@ map @data batch_size=10 f
 
 -----------
 bind (dom.event @btsearch "click") @do_search
+
+-----------
+нужно что-то типа action. или подумать как такое делать своими средсвтами.
