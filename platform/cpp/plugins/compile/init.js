@@ -39,20 +39,7 @@ export function init( state, tool ) {
 
 		// F-EMBED-RUNTIME		
 		mmm = mmm.then( () => {
-			let file_p = "file://" + path.resolve( path.join(tool.platform_dir,"./runtime/cl2.js"))
-			return fetch( file_p ).then( r => r.text() ).then( content => {
-				tool.prepend_global_code(['// clon cl2.js runtime',content])
-			})
-		})
-		// встроим пока тоже и браузер, для упрощения
-		// F-JOIN-NODEJS-BROWSER-RUNTIME
-		// хотя может стоит и разделить. тогда можно нодовый вариант делать с shebang
-		// и +x ключик ставить - запускайте пожалуйста.
-		mmm = mmm.then( () => {
-			let file_p = "file://" + path.resolve( path.join(tool.platform_dir,"./runtime/cl2-browser.js"))
-			return fetch( file_p ).then( r => r.text() ).then( content => {
-				tool.prepend_global_code(['// clon cl2-browser.js runtime',content])
-			})
+			tool.prepend_global_code(['// clon runtime',`#include "cl2.h"`])
 		})
 
 		let compiled = mmm.then( () => tool.compile_file_p( file, state ))
@@ -61,15 +48,7 @@ export function init( state, tool ) {
 		// console.log("config.output_dir=",config.output_dir, config,config_file)
 		
 
-		let out_file = file + ".js"
-		let out_file_mjs = file + ".mjs"
-
-/*
-		if (config.output_dir) {
-			out_file = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".js"
-			out_file_mjs = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".mjs"
-		}
-*/		
+		let out_file = file + ".cpp"
 
 		let nodejs = compiled.then( k => {
 			let code = tool.gen_full_code( k.code )
@@ -78,29 +57,14 @@ export function init( state, tool ) {
 			    out_file_mjs = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".mjs"
 
 			return new Promise( (resolve,reject) => {
-				fs.writeFile( out_file_mjs, code,(err) => {
+				fs.writeFile( out_file, code,(err) => {
 			  	if (err) console.log(err)
 			  	console.log("done: ",file,"-->",out_file_mjs)
 			    resolve( out_file_mjs )
 			  } )
 			})	  
 		})
-
-		let browser = compiled.then( k => {
-			let code = tool.gen_full_code( k.code )
-
-			if (config.output_dir)
-				out_file = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".js"
-
-			return new Promise( (resolve,reject) => {
-				fs.writeFile( out_file, code,(err) => {
-			  	if (err) console.log(err)
-			  	console.log("done: ",file,"-->",out_file)
-			    resolve( out_file)
-			  } )		  
-			})	  
-		})
-
+		
 		/// но вернуть нам надо имя файла которое затем смогут запускать
 		/// вернем нодовый вариант
 
