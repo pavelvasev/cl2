@@ -1,0 +1,1 @@
+func "foo" {: arg | console.log("foo called",arg); return arg :}

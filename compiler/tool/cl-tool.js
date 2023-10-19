@@ -244,7 +244,9 @@ state.env["import"] = {
 			  }
 			}
 
+			// F-IMPORTED-STATE
 			state.current[tgt] = module_state
+
 			strs.push( state.space.register_import_use( tgt, file, module_state ) )
 		}
 		return { main: strs, bindings: [], prefix: outers }

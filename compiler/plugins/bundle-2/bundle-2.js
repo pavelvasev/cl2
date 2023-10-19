@@ -4,7 +4,11 @@ export function init( st ) {
 
 	let space = st.space
 
-	// добавляет "экпортируемую сущность" в текущий модуль (пока ток функции)
+	// добавляет "экпортируемую сущность" в текущий модуль (пока ток в форме функции)
+	// ну на самом деле тут генератор текста просто...
+	// плюс добавлятор в state.current.exported
+	// немного неясно, а зачем тут генерировать коды..? типа мы по разному можем это сделать?
+	// и решили решать это тут?
 	space.register_item = ( id, state, strs2 ) => {
 		//console.log('register_item: ',id,'state.tree_parent_id=',state.tree_parent_id, state.struc)
 		let strs = []
@@ -15,23 +19,35 @@ export function init( st ) {
 		strs.push(`/// type ${id}`,s,"{")
 		strs.push( strs2 )
 		strs.push("}")
+		
+		space.register_export( `create_${id}`, state )
+		return strs
+	}
 
-/*
-		s = `${export_flag}function task_${id}( initial_values )`
-		strs.push(`/// type ${id}`,s,"{")
-		let call_code = `
-			let all_params_cells = ....
-			let cell = CL2.wait_all_cells( all_params_cells )
-			let s = cell.subscribe( (values) => {
-				let k = create_${id}( initial_values )
-				for (let i of all_params_cells)
-					k[ i ].set( values[ i ])
+	space.register_export = ( id, state ) => {
+		if (state.tree_parent_id == null) {
+			state.current.exported ||= []
+			state.current.exported.push( id )
+		}
+	}
 
-			})
-		`
-		strs.push("}")
-*/
+	space.get_export_flag = ( state ) => {
+		let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? "export " : ""		
+		return export_flag
+	}
 
+	// добавляет функцию
+	/*
+	space.register_func = ( id, state, args_str, body_str ) => {
+		//console.log('register_item: ',id,'state.tree_parent_id=',state.tree_parent_id, state.struc)
+		let strs = []
+		let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? "export " : ""
+		// todo совместить расчет export_flag с тем что в compute.js для функций
+		//console.log("register_item: id=",id," export_flag=",export_flag,"state.dir=",state.dir)
+		let s = `${export_flag}function ${id}( ${args_str} )`
+		strs.push( s )
+		strs.push( strs2 )
+		strs.push( body_str )
 		
 		if (state.tree_parent_id == null) {
 			state.current.exported ||= []
@@ -42,6 +58,7 @@ export function init( st ) {
 		}
 		return strs
 	}
+	*/	
 
 	let module_var_names = {} // srcfile -> name
 	let module_counter = 0
@@ -68,7 +85,7 @@ export function init( st ) {
 		//let names = Object.keys(substate.current).map(n => `create_${n}`).join(",")
 		substate.current.exported ||= []
 		//console.log('substate.current.exported=',substate.current.exported,srcfile)
-		let names = substate.current.exported.map(n => `create_${n}`).join(",")
+		let names = substate.current.exported.join(",")
 
 		let module_var_name = path_to_var( srcfile )
 		module_var_names[ srcfile ] = module_var_name

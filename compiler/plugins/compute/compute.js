@@ -147,10 +147,13 @@ export function func( obj, state )
 	
 	//console.log('fn name=',name,'dir=',state.dir,"state.is_seq_wait=",state.is_seq_wait)
 
-	let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? 'export ' : '' // todo перенести это в bundle-2
-	//console.log("export_flag=",export_flag)
-	let strs = [`${export_flag}function ${name}(${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
+	//let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? 'export ' : '' // todo перенести это в bundle-2
+	let export_flag = state.space.get_export_flag( state )
+	
+	let strs = [`${export_flag}function ${name}(${fn_code.pos_args.join(',')}) { `,fn_code.code, `}`]
   strs.push( `CL2.attach( self,"${name}",${name} )` )
+
+  state.space.register_export( name,state )
 
 	// .static_values это тема, чтобы на функцию не биндиться а как есть передавать
 

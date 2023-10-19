@@ -230,6 +230,8 @@ export function get_record(state,id,obj_info,allow_defaults=true, error_if_not_f
 		return y
   }
 
+  // запросим стейт для первой части
+  // ну мы полагаем что там - окружение. поэтому там стейт. см F-IMPORTED-STATE
   let next_state = get_record( state, id_arr[0], obj_info, false, error_if_not_found )
   //console.log("next_state=",next_state)
 
@@ -241,6 +243,7 @@ export function get_record(state,id,obj_info,allow_defaults=true, error_if_not_f
   	return null
   }
 
+  // и перейдем в этот стейт, запрашивая оставшиеся части
   return get_record( next_state, id_arr.slice(1), obj_info, false, error_if_not_found) // todo slice дорого, надо индекс передавать
 }
 
@@ -343,6 +346,7 @@ export function default_obj2js( obj,state ) {
 		for (let k of links_names) {
 			if (k == "output_link")	continue; // медленно
 			let link = obj.links[k]
+			// F-TODO-CHECK-NAMESPACES
 			//console.log("checking link",link.from,"is static=",state.static_values[ link.from ])
 			if (state.static_values[ link.from ]) // F-STATIC-VALUES
 				continue
