@@ -18,7 +18,7 @@ export function init( st ) {
 		let s = `${export_flag}class ${id}`
 		strs.push(`/// type ${id}`,s,"{")
 		strs.push( strs2 )
-		strs.push("}")
+		strs.push("};")
 		
 		space.register_export( `create_${id}`, state )
 		return strs

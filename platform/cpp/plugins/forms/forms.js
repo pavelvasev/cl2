@@ -71,7 +71,7 @@ export function _let( obj, state )
 
 	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
 	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
-	base.main.push( `auto ${C.obj_id(obj,state)} = cl2::create_item()`)
+	base.main.push( `auto ${C.obj_id(obj,state)} = cl2::create_object();`)
 
 	//  и фичеры.. это у нас дети которые не дети	
 	if (C.get_nested(obj)) {
@@ -93,7 +93,7 @@ export function _let( obj, state )
 		strs.push( s )
 		if (val?.from) {
 			//let q = `let ${name} = CL2.create_binding(${obj.params[0].from},${obj.params[1].from})`
-			let q = `cl2::create_binding(${val.from},${k}) // from let expr`
+			let q = `cl2::create_binding(${val.from},${k}); // from let expr`
 			base.bindings.push( q )
 		}
 	}
@@ -119,7 +119,7 @@ export function _let_next( obj, state )
 	let prev = state.next_obj_cb
 	//console.log("installin NEXT OBJ PARAM for",self_objid)
 	state.next_obj_cb = (obj2,objid2,strs,bindings,bindings_hash_before_rest) => {
-		bindings.push( `cl2::create_binding( ${objid2}.output, ${name} ) // from let_next` )
+		bindings.push( `cl2::create_binding( ${objid2}.output, ${name} ); // from let_next` )
 		state.next_obj_cb = prev
 		//console.log('CASE, prev restored',prev+"","calling it, str=",strs)
 		if (state.next_obj_cb)
@@ -618,7 +618,7 @@ export function pipe( obj, state )
 			prev_from = `${prev_objid}.output`
 		}
 		// output последнего линкуем на output всей пайпы
-		base.bindings.push(`auto ${objid}_p = cl2::create_binding(${prev_objid}.output,${objid}.output)`)
+		base.bindings.push(`auto ${objid}_p = cl2::create_binding(${prev_objid}.output,${objid}.output);`)
 	}
 
   if (state.next_obj_cb)
@@ -653,13 +653,14 @@ export function react( obj, state )
 		}
 	}
 
-	strs.push( `cl2::react ${name}(${code})`)
+	strs.push( `cl2::react ${name};`)
+	bindings.push(`${name}.action.submit( ${code} );`)
 
 	//let src_param = obj.params[ Object.keys( obj.params )[0] ]
 	let src_param = obj.params[0]
 	let srcname = src_param.from
 	
-	bindings.push( `cl2::create_binding( ${srcname},${name}.input )` )
+	bindings.push( `cl2::create_binding( ${srcname},${name}.input );` )
 
 	return {main:strs,bindings:bindings}
 }

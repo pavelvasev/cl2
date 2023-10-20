@@ -3,6 +3,7 @@
 #include <memory> // shared_ptr
 #include <any>
 #include <iostream>
+#include <algorithm> // для файнд
 
 namespace cl2 {
   int novalue = 337722;
@@ -104,8 +105,8 @@ namespace cl2 {
     cell action;
     channel output;
 
-    react( auto init_action ) {
-      action.submit( init_action );
+    react() {
+      //action.submit( init_action );
 
       input.subscribe( [this](auto val) {
         schedule( [&val,this]() {
@@ -145,9 +146,9 @@ namespace cl2 {
   //channel& create_item() { return *(new item()) }
   io_item& create_io_item() { return *(new io_item()); }
   react& create_react(auto action) { return *(new react(action)); }
-  binding& create_binding(auto src, auto tgt) { return *(new binding(src,tgt)); }
+  binding& create_binding(auto& src, auto& tgt) { return *(new binding(src,tgt)); }
 
-  void attach( auto host, auto name, auto obj ) {}
+  void attach( auto& host, auto name, auto& obj ) {}
 
 }
 

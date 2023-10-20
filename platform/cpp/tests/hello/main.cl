@@ -5,7 +5,7 @@ process "printer" {
    msg: channel
  }
  react @msg {: x |
-   cout << x;
+   std::cout << x;
  :}
 }
 
