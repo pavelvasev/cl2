@@ -1,5 +1,5 @@
 let js_modules = [
- "compiler/js-compiler.js",
+ "compiler/compiler.js",
  "forms/forms.js",
  "compute/compute.js",
  "bundle-2/bundle-2.js", 

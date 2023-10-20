@@ -1,7 +1,7 @@
 // F-TASKS
 
 import * as C from "../../../../compiler/lib/cl2-compiler.js"
-import * as CJS from "../compiler/js-compiler.js"
+import * as CJS from "../compiler/compiler.js"
 import * as FORMS from "../forms/forms.js"
 
 let default_cp = (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[]} }
@@ -15,78 +15,7 @@ export function init( state, tool )
 	state.env.exit = { make_code: _exit, check_params: default_cp} // F-FUNC-EXIT
 	state.env.wait = { make_code: wait, check_params: default_cp} // F-FUNC-EXIT
 
-	// todo вообще этот output можно ловить и передавать старшему процессу. для F-RUN
-	/* по факту это приводит к путанице. вызываю exit думая что из реакции выхожу, а по факту иду вот в этот скопе.
-	*/
-	// todo убрать ето
-	tool.add_global_code( ['let return_scope = self; let exit_scope = self;',
-		`CL2.attach( self, 'output', CL2.create_cell() )`		
-	])
-
-	let name = "NAME_CREATED_FUNC"
-	/*
-	let code = `
-	 obj "${name}" {
-	 	  in {
-	 	  	rest*: channel // было cell но тогда медленно отрабатывают включения. а мы хотим F-REST-REACT-ASAP
-	 	  }
-	 	  output: cell
-	 	  
-  	  r: react @rest {: args |
-  	    console.channel_verbose("co-func called '${name}'. self=",self+'')
-  	    let rr = ${name}( ...args )
-  	    console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
-  	    return rr
-  	  :}
-  	  //react @output {: self.destroy() :}
-
-  	  bind @r.output @output
-	 }
-	`
-	//console.log("autogen",code)
-	let c_obj = C.code2obj( code )
-	let strs = [C.objs2js( c_obj,state )]	
-  */
-	tool.add_global_code( [`// generate_func_caller_js` ])
-	
-
-/* оставлено на память как пример добавки cl-кода из js
-	let task_code = `
-obj "task" {
-  in {
-    input: channel
-    action: cell
-  }
-
-  output: cell
-
-  b: react @input @action
-
-  bind @b.output @output
-
-  b2: react @b.output {: b.destroy(); b2.destroy(); :}
-  // мы не вызываем self.destroy т.к. у нас output, на него подписаны..
-
-  //react @input {: console.log('cofunc started',self + "") :}
-  //react @b.output {: console.log('cofunc finished',self + "") :}
-  
-  // todo
-  }`
-	let task_code_lang = tool.compile_string( task_code, state )
-	tool.add_global_code( "// from compute plugin",task_code_lang )
-*/
-
 }
-
-// создает объект, возвращающий в .output код функции
-/*
-function generate_func_object( self_objid, func_code ) {
-	return { main: [`let ${self_objid} =  CL2.create_item(); ${self_objid}.$title="${self_objid}"`,
-				`let ${self_objid}_output = CL2.create_cell(`,func_code,")",
-				 `CL2.attach( ${self_objid}, 'output',${self_objid}_output )`],
-			     bindings:[] }
-}
-*/
 
 // создает объект name, который вызывает указанную функцию при смене параметров
 // идея - чтобы можно было говорить func "x" а потом писать (x 1 2 3)
@@ -176,7 +105,7 @@ export function func( obj, state )
 	if (anonymous_mode) {
 		console.log("func: anonymous_mode is prohibited")
 		let self_objid = C.obj_id( obj, state )
-		let code = [`function (${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
+		let code = [`auto (${fn_code.pos_args.join(',')}) { ${fn_code.code} }`]
 		return generate_func_object( self_objid, code)
 	}
 	
@@ -185,8 +114,21 @@ export function func( obj, state )
 	//let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? 'export ' : '' // todo перенести это в bundle-2
 	let export_flag = state.space.get_export_flag( state )
 	
-	let strs = [`${export_flag}function ${name}(${fn_code.pos_args.join(',')}) { `,fn_code.code, `}`]
-  strs.push( `CL2.attach( self,"${name}",${name} )` )
+	let prefix = ''
+	let args = `${fn_code.pos_args.map(x => {
+		let k = x.startsWith("...") // пока следуем js-синтаксису
+		if (k >= 0) {
+			prefix = `template<typename... Ts>`
+			return x.replace("...","Ts... ")
+		}		
+		return "auto "+x
+	}).join(',')}`
+
+	// https://en.cppreference.com/w/cpp/language/parameter_pack
+	// https://stackoverflow.com/questions/1657883/variable-number-of-arguments-in-c
+
+	let strs = [`${export_flag}${prefix} auto ${name}(${args}) { `,fn_code.code, `}`]
+  //strs.push( `CL2::attach( self,"${name}",${name} )` )
 
   state.space.register_export( name,state )
 
@@ -305,7 +247,7 @@ export function _return( obj, state )
 {
 	//console.log("_return",obj)
 	
-  let initial_value = 'CL2.NOVALUE'
+  let initial_value = 'CL2::NOVALUE'
   let p0 = obj.params[0]
   let base = { main: [ `// return at ${obj.locinfo?.short}`], bindings: [] }
 
@@ -328,7 +270,7 @@ export function _return( obj, state )
   			// вроде бы так можно потому что там функция поймет что это канал..
   			base.main.push( `return_scope.output.submit( ${p0.from} )` )
   		else
-  			base.main.push( `${p0.from}.once( val => return_scope.output.submit( val ) )` )
+  			base.main.push( `${p0.from}.once( [](auto val) { return_scope.output.submit( val ) } )` )
   		// тут можно поставить subscribe
   		// но тогда надо следить за удалением return-объекта т.к. в данном случае он 
   		// является процессом..
@@ -364,7 +306,7 @@ export function _exit( obj, state )
 {
 	//console.log("_return",obj)
 	
-  let initial_value = 'CL2.NOVALUE'
+  let initial_value = 'CL2::NOVALUE'
   let p0 = obj.params[0]
   let base = { main: [ `// exit at ${obj.locinfo?.short}`], bindings: [] }
 

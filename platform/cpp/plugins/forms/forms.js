@@ -1,7 +1,7 @@
 // особые формы CL2 уровня кодо-генерации, для языка Javascript
 
 import * as C from "../../../../compiler/lib/cl2-compiler.js"
-import * as CJS from "../compiler/js-compiler.js"
+import * as CJS from "../compiler/compiler.js"
 
 export function init( state ) {
 	state.env = {...state.env,...tablica}
@@ -161,10 +161,13 @@ export function _obj( obj, state )
 	//strs.push(`/// type ${id}`,s,"{")
 
 	let strs2 = []
+
+  strs2.push(`public:`)
+
 	// F-TREE
 	let base_code = obj.params.base_code || "CL2.create_object()"
 	// получается base_obj оверрайдит base_code. да уж.
-	strs2.push(`let self= initial_values.base_obj || ${base_code};`)
+	strs2.push(`auto self= initial_values['base_obj'] || ${base_code};`)
 	strs2.push( `self.$title= initial_values.base_obj ? initial_values.base_obj + "(" + initial_values.$title + ")" : initial_values.$title`)
 	// чтобы можно было давать ссылки на self
 	state.static_values[ 'self' ] = true
@@ -198,11 +201,11 @@ export function _obj( obj, state )
   ///////////////// генерируем тело указанное в 1-м аргументе
 
 	let c_state = C.modify_parent( state, "self" )
-	let body = C.objs2js( C.get_children( obj,1 ), c_state )
+	let body = C.process_objs( C.get_children( obj,1 ), c_state )
 	// console.log("ch=",C.get_children( obj,1 ),"body=",body)
 	//strs2.push( body )
 
-	strs2.push( "// inner children",body )
+	strs2.push( "// inner children",[body.main] )
 	/*
 	for (let k in obj.children)
 	{
@@ -212,12 +215,9 @@ export function _obj( obj, state )
 	}
 	*/
 
-	strs2.push(`return self`)
-	//strs.push( strs2 )
-	//strs.push("}")
+	strs2.push(`// наконец, конструктор!`,`${id}( std::map<std::string, std::any> initial_values ) {`,[body.bindings],'}')
 
 	let strs = state.space.register_item( id, state, strs2 )
-	//let strs = 
 
 	base.main= strs
 
@@ -367,8 +367,8 @@ export function cell( obj, state )
 	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 
 	let fast_part = obj.params.fast ? ",true" : ""
-	let strs = [`let ${name} = CL2.create_cell(${value_str}${fast_part})`]
-	strs.push( `CL2.attach( self,"${name}",${name} )` )
+	let strs = [`let ${name} = CL2::create_cell(${value_str}${fast_part})`]
+	strs.push( `CL2::attach( self,"${name}",${name} )` )
 
 	return {main:strs,bindings:[]}
 }
@@ -376,11 +376,11 @@ export function cell( obj, state )
 export function channel( obj,state )
 {
 	let name = obj.$name_modified || obj.$name
-	let strs = [`let ${name} = CL2.create_channel()`]
-	strs.push( `CL2.attach( self,"${name}",${name} )` )
+	let strs = [`let ${name} = CL2::create_channel()`]
+	strs.push( `CL2::attach( self,"${name}",${name} )` )
 
 	// F-CHANNEL-INIT-CONST
-	let initial_value = 'CL2.NOVALUE'
+	let initial_value = 'CL2::NOVALUE'
   let p0 = obj.params[0]
   if (p0 != null) {
   	if (typeof(p0) == 'object' && p0.link) {

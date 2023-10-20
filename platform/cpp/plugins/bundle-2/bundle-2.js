@@ -15,7 +15,7 @@ export function init( st ) {
 		let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? "export " : ""
 		// todo совместить расчет export_flag с тем что в compute.js для функций
 		//console.log("register_item: id=",id," export_flag=",export_flag,"state.dir=",state.dir)
-		let s = `${export_flag}function create_${id}( initial_values )`
+		let s = `${export_flag}class ${id}`
 		strs.push(`/// type ${id}`,s,"{")
 		strs.push( strs2 )
 		strs.push("}")
@@ -24,6 +24,7 @@ export function init( st ) {
 		return strs
 	}
 
+	// а это надо?
 	space.register_export = ( id, state ) => {
 		if (state.tree_parent_id == null) {
 			state.current.exported ||= []
@@ -97,10 +98,8 @@ export function init( st ) {
 		strs.push( "////////////////////////////////////////" )
 		strs.push( `//////////////////////////////////////// module from ${srcfile}` )
 		strs.push( "////////////////////////////////////////" )
-		strs.push( "{")
-		strs.push( "let self = {}" )
+		strs.push( `namespace ${module_var_name} {`)
 		strs.push( code )
-		strs.push( exportvar )
 		strs.push( "}")
 		strs.push( `//////////////////////////////////////// finished module from ${srcfile}` )		
 		
@@ -112,7 +111,7 @@ export function init( st ) {
 
 		let module_var_name = module_var_names[ srcfile ]
 
-		let exportvar = `var ${tgt} = ${module_var_name}`
+		let exportvar = `namespace ${tgt} = ${module_var_name}`
 
 		let strs = []
 		strs.push( `//////////////////////////////////////// using module ${srcfile} as ${tgt}` )

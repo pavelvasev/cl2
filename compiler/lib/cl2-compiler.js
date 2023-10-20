@@ -252,13 +252,7 @@ export function get_basis( record ) {
 	return record.basis
 }
 
-// вход obj-описание  т.е. массив записей от парсера
-// выход вложенный массив строк на javascript
-// objs - массив описаний
-// state - состояние компилятора. в него записываются прочитанные определения новых типов
-//  т.е. оно служит и окружением компилятора. см state.current
-// todo выделить эту штуку до мержа со строчками. и использовать всюду. и добавить каллбеку.
-export function objs2js( objs,state )
+export function process_objs( objs,state )
 {
 	//console.log("gonna make js for",objs)
 	//console.log("state is",state)
@@ -278,12 +272,26 @@ export function objs2js( objs,state )
 		strs.push( o.main )
 		bindings.push( o.bindings )
 	}
-	//console.log("strss=",strs,"bindings=",bindings.flat())
-	//let s = strs.join("\n") + "\n// bindings\n" + bindings.flat().join("\n")
-	if (bindings.length > 0)
+	return {main: strs, bindings }
+}	
+
+// вход obj-описание  т.е. массив записей от парсера
+// выход вложенный массив строк на javascript
+// objs - массив описаний
+// state - состояние компилятора. в него записываются прочитанные определения новых типов
+//  т.е. оно служит и окружением компилятора. см state.current
+// todo выделить эту штуку до мержа со строчками. и использовать всюду. и добавить каллбеку.
+export function objs2js( objs,state )
+{
+	//console.log("gonna make js for",objs)
+	//console.log("state is",state)
+	let base = process_objs( objs,state )
+
+	let strs = base.main
+	if (base.bindings.length > 0)
 	{
 		//strs.push( "//bindings." ) //" len="+bindings.length + bindings.toString())
-		strs.push( ...bindings.flat() )
+		strs.push( ...base.bindings.flat() )
 	}
 	return strs
 }
