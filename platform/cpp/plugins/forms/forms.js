@@ -30,7 +30,7 @@ export var tablica = {
 	paste_global: { make_code: paste_global, check_params: default_cp },
 	paste_file: { make_code: paste_file, check_params: default_cp },
 	in: { make_code: _in, check_params: default_cp},
-//	react_orig: { make_code: react, check_params: default_cp},
+	react: { make_code: react, check_params: default_cp},
 	nop: { make_code: () => { return { main: [], bindings: [] } }, check_params: default_cp},
 	alias: { make_code: alias, check_params: default_cp},
 	assert: { make_code: assert, check_params: default_cp},
@@ -71,7 +71,7 @@ export function _let( obj, state )
 
 	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
 	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
-	base.main.push( `let ${C.obj_id(obj,state)} = CL2.create_item()`)
+	base.main.push( `auto ${C.obj_id(obj,state)} = cl2::create_item()`)
 
 	//  и фичеры.. это у нас дети которые не дети	
 	if (C.get_nested(obj)) {
@@ -88,12 +88,12 @@ export function _let( obj, state )
 	for (let k in obj.params) {
 		let val = obj.params[k]
 		//let s = `let ${k} = ${val.toString()}`
-		let val_str = val?.from ? "CL2::NOVALUE" : CJS.objToString(val,0,state)
-		let s = `CL2::cell ${k}( ${val_str} )`
+		let val_str = val?.from ? "cl2::novalue" : CJS.objToString(val,0,state)
+		let s = `cl2::cell ${k}( ${val_str} );`
 		strs.push( s )
 		if (val?.from) {
 			//let q = `let ${name} = CL2.create_binding(${obj.params[0].from},${obj.params[1].from})`
-			let q = `CL2.create_binding(${val.from},${k}) // from let expr`
+			let q = `cl2::create_binding(${val.from},${k}) // from let expr`
 			base.bindings.push( q )
 		}
 	}
@@ -174,7 +174,7 @@ export function _obj( obj, state )
 	//bindings.push(`auto self= initial_values['base_obj'] || ${base_code};`)
 	// todo надо как-то поддержать вот эти базовые коды.. мы из получается не поддерживаем
 	// и миксинов нам выходит не будет.. только через наследование..
-	base.bindings.push(`auto self = this;`)
+	// base.bindings.push(`auto self = this;`)
 	//base.bindings.push( `self.$title= initial_values.base_obj ? initial_values.base_obj + "(" + initial_values.$title + ")" : initial_values.$title`)
 	// чтобы можно было давать ссылки на self
 	state.static_values[ 'self' ] = true
@@ -222,7 +222,18 @@ export function _obj( obj, state )
 	}
 	*/
 
-	strs2.push(``,`// наконец, конструктор!`,`${id}( std::map<std::string, std::any> initial_values ) {`,[body.bindings],'}')
+/*
+	strs2.push(``,`// наконец, конструктор!`,
+		`${id}( std::map<std::string, std::any> initial_values ) {`,
+			[`auto & self = *this;`],
+			[body.bindings],
+		 '}')
+*/
+	strs2.push(``,`// наконец, конструктор!`,
+		`${id}() {`,
+			[`auto & self = *this;`],
+			[body.bindings],
+		 '}')
 
 	let strs = state.space.register_item( id, state, strs2 )
 
@@ -372,9 +383,9 @@ export function cell( obj, state )
   }
 
 	let fast_part = obj.params.fast ? ",true" : ""
-	let strs = [`cl2::cell ${name};`]
+	let strs = [`cl2::cell ${name}(${initial_value});`]
 	let bindings = []
-	bindings.push( `${name}.submit( initial_values.contains("${name}") ? initial_values["${name}" : ${initial_value}]`)
+	//bindings.push( `${name}.submit( initial_values.contains("${name}") ? initial_values["${name}" : ${initial_value}]`)
 	bindings.push( `cl2::attach( self,"${name}",${name} )` )
 
 	return {main:strs,bindings}
@@ -399,11 +410,13 @@ export function channel( obj,state )
   } 
 
   // todo оптимизировать проверку initial_values.. например по state.tree_parent_id или типа того
-	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
+  /* пусть кому надо внешний тот и отправляет
+	 let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 	bindings.push(
 		`auto ${name}_initial = ${value_str}`,
 		`if (${name}_initial != cl2::novalue) cl2::schedule( [](){ ${name}.submit( ${name}_initial ) }, ${name} )`
 	)
+	*/
 
 	return {main:strs,bindings:bindings}
 }
@@ -413,6 +426,7 @@ export function _init( obj, state )
 	let strs = []
 	
 	//strs.push( CJS.value_to_arrow_func(obj.params[0],state) )
+	strs.push( "// init")
 	strs.push( obj.params[0].code )
 
 	return {main:[],bindings:strs}
@@ -521,14 +535,14 @@ export function bind( obj, state )
 	let name = obj.$name
 
 	let overwrite_mode = obj.params.overwrite_mode
-	let bst = overwrite_mode ? "CL2.create_binding_delayed" : "CL2.create_binding"
+	let bst = overwrite_mode ? "cl2::create_binding_delayed" : "cl2::create_binding"
 
 	// в ЛФ этим занимается особый вид ячейки-ретрансмиттер называется action
 	// но и в биндах зажержки есть. подумать об этом.
 
   let base = {main:[],bindings:[]}
-	base.bindings.push( `let ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`)
-	base.bindings.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )` )
+	base.bindings.push( `auto ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`)
+	base.bindings.push( `cl2::attach( ${state.struc_parent_id},"${name}",${name} )` )
 
 
 	//  и фичеры.. это у нас дети которые не дети	
@@ -560,9 +574,9 @@ export function pipe( obj, state )
 	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
 	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
 	let objid = C.obj_id(obj,state)
-	base.main.push( `let ${objid} = CL2.create_item() // pipe`)
-	base.main.push( `CL2.attach( ${objid},'input',CL2.create_cell())`)
-	base.main.push( `CL2.attach( ${objid},'output',CL2.create_cell())`)
+	base.main.push( `let ${objid} = cl2::create_io_item() // pipe`)
+	//base.main.push( `cl2::attach( ${objid},'input',CL2.create_cell())`)
+	//base.main.push( `cl2::attach( ${objid},'output',CL2.create_cell())`)
 
 	//  и фичеры.. это у нас дети которые не дети	
 	let counter = 0
@@ -604,7 +618,7 @@ export function pipe( obj, state )
 			prev_from = `${prev_objid}.output`
 		}
 		// output последнего линкуем на output всей пайпы
-		base.bindings.push(`let ${objid}_p = CL2.create_binding(${prev_objid}.output,${objid}.output)`)
+		base.bindings.push(`auto ${objid}_p = cl2::create_binding(${prev_objid}.output,${objid}.output)`)
 	}
 
   if (state.next_obj_cb)
@@ -613,13 +627,13 @@ export function pipe( obj, state )
 	return base
 }
 
-
-/*
+// мы хотим обрабатывать произвольное кол-во аргументов у реакта,
+// поэтому он форма
 export function react( obj, state )
 {
 	let name = obj.$name
 	//console.log("working on reaction",obj)
-	let code = C.value_to_arrow_func(obj.params[1])
+	let code = CJS.value_to_arrow_func(obj.params[1],state)
 	// todo: chech {: :}
 
 	let strs = []
@@ -627,11 +641,11 @@ export function react( obj, state )
 	//strs.push( `CL2.attach( self,"${name}",${name} )` )
 
 	let bindings = []
-
 	//  и фичеры.. это у нас дети которые не дети	а всякие выражения	
 	if (C.get_nested(obj)) {
 		let mod_state = C.modify_parent(state,obj.$name,null)
-		for (let f of C.get_nested(obj)) {
+		objs = C.objs2objs( C.get_nested(obj),mod_state )
+		for (let f of objs) {
 			let o = C.one_obj2js_sp( f, mod_state )
 			strs.push( o.main )
 			//bindings.push("// bindings from feature-list")
@@ -639,17 +653,17 @@ export function react( obj, state )
 		}
 	}
 
-	strs.push( `let ${name} = CL2.create_reaction(${code})`)
+	strs.push( `cl2::react ${name}(${code})`)
 
 	//let src_param = obj.params[ Object.keys( obj.params )[0] ]
 	let src_param = obj.params[0]
 	let srcname = src_param.from
 	
-	bindings.push( `CL2.create_binding( ${srcname},${name} )` )
+	bindings.push( `cl2::create_binding( ${srcname},${name}.input )` )
 
 	return {main:strs,bindings:bindings}
 }
-*/
+
 
 export function alias( obj, state )
 {
@@ -684,8 +698,8 @@ export function assert( obj, state )
 	let base = { main: [`// assert ${obj_id}`], bindings: [] }
 
 	// сделано чтобы можно было по F-RETVAL-LAST цепляться
-	base.main.push( `let ${obj_id} = CL2.create_item()`)	
-	base.main.push( `CL2.attach( ${obj_id},'output',CL2.create_cell() )`)
+	base.main.push( `auto ${obj_id} = cl2::create_item()`)	
+	base.main.push( `cl2::attach( ${obj_id},'output',cl2::create_cell() )`)
 	state.generated_ids.push( obj_id )
 
 	//  и фичеры.. это у нас дети которые не дети	

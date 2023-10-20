@@ -33,9 +33,9 @@ function generate_func_caller(name, state) {
 	 	  output: cell
 	 	  
   	  r: react @rest {: args |
-  	    console.channel_verbose("co-func called '${name}'. self=",self+'')
-  	    let rr = ${name}( ...args )
-  	    console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
+  	    //console.channel_verbose("co-func called '${name}'. self=",self+'')
+  	    auto rr = ${name}( ...args )
+  	    //console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
   	    return rr
   	  :}
   	  //react @output {: self.destroy() :}
@@ -155,7 +155,7 @@ export function func( obj, state )
 */
 export function cocode_to_code( v,state, is_return_scope, is_exit_scope ) {
 	if (!state) {
-		console.trace()
+		 console.trace()
 		 throw "cocode_to_code no state!"
 		}
 	if (!v.cofunc) return v
@@ -247,7 +247,7 @@ export function _return( obj, state )
 {
 	//console.log("_return",obj)
 	
-  let initial_value = 'CL2::NOVALUE'
+  let initial_value = 'cl2::novalue'
   let p0 = obj.params[0]
   let base = { main: [ `// return at ${obj.locinfo?.short}`], bindings: [] }
 
@@ -306,7 +306,7 @@ export function _exit( obj, state )
 {
 	//console.log("_return",obj)
 	
-  let initial_value = 'CL2::NOVALUE'
+  let initial_value = 'cl2::novalue'
   let p0 = obj.params[0]
   let base = { main: [ `// exit at ${obj.locinfo?.short}`], bindings: [] }
 

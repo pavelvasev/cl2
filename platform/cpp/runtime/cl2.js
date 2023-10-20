@@ -350,6 +350,7 @@ export function create_object( title ) {
 	return k
 }
 
+/* почему-то тема сразу с детьми не зашла, и сделали отдельно, см F-TREE
 export class Item extends ClObject {
 	constructor(parent, children=[]) {		
 		super()
@@ -400,11 +401,19 @@ export class Item extends ClObject {
 		this.removed.emit( child )
 	}
 }
+*/
 
+// todo убрать
+export function create_item() {
+	return create_object()
+}
+
+/*
 export function create_item(parent,children=[]) {
 	let k = new Item(parent,children)
 	return k
 }
+*/
 
 // а вообще это надо если мы просто через a.b = ... работаем?
 // но чилдрены опять же анонимны.. точнее они другое отношение..

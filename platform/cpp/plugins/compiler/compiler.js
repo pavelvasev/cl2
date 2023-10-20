@@ -102,7 +102,7 @@ export function default_obj2js( obj,state ) {
 	for (let name of normal) {
 
 		if (bindings_hash[ name ])
-			init_consts[ internal_name(name) ] = "CL2.NOVALUE"
+			init_consts[ internal_name(name) ] = "cl2::novalue"
 		else
 			init_consts[ internal_name(name) ] = obj.params[name]
 	}
@@ -125,8 +125,8 @@ export function default_obj2js( obj,state ) {
 				if (!bindings_hash[ name ]) {
 					// константа
 					let pos_cell_name = `pos_cell_${objid}_${j}`
-					strs2.push( `let ${pos_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state,obj) })`)
-					strs2.push( `${pos_cell_name}.$title="pos_cell_${j}"; ${pos_cell_name}.attached_to=${objid}` )
+					strs2.push( `auto ${pos_cell_name} = cl2::create_cell( ${objToString(obj.params[name],1,state,obj) })`)
+					strs2.push( `${pos_cell_name}.title="pos_cell_${j}"; ${pos_cell_name}.attached_to=${objid}` )
 					pos_cells.push(pos_cell_name)
 					delete init_consts[ name ]
 					//init_consts[ name ] = "CL2.NOVALUE"				
@@ -141,8 +141,8 @@ export function default_obj2js( obj,state ) {
 				// стало быть это ссылки типа binding..
 			}
 			
-			bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
-			bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
+			bindings.push( `auto ${rest_name} = cl2::create_cell( [${pos_cells.join(',')}] )`)
+			bindings.push( `${rest_name}.title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
 			// F-REST-AUTO-EXTRACT
 			bindings.push( `${objid}.release.subscribe( CL2.monitor_rest_values( ${rest_name}, ${objid}.${pos_rest.name} ) )` )
 
@@ -171,8 +171,8 @@ export function default_obj2js( obj,state ) {
 				if (!bindings_hash[ name ]) {
 					// константа
 					let named_cell_name = `named_cell_${objid}_${name}`
-					strs2.push( `let ${named_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state,obj) })`)
-					strs2.push( `${named_cell_name}.$title="named_cell_${name}"; ${named_cell_name}.attached_to=${objid}` )
+					strs2.push( `auto ${named_cell_name} = cl2::create_cell( ${objToString(obj.params[name],1,state,obj) })`)
+					strs2.push( `${named_cell_name}.title="named_cell_${name}"; ${named_cell_name}.attached_to=${objid}` )
 					named_cells[name]=named_cell_name
 					delete init_consts[ name ]
 					//init_consts[ name ] = "CL2.NOVALUE"				
@@ -187,11 +187,11 @@ export function default_obj2js( obj,state ) {
 				// стало быть это ссылки типа binding..
 			}
 			//console.log("named_cells=",named_cells)
-			bindings.push( `let ${named_rest_name} = CL2.create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
-			bindings.push( `${named_rest_name}.$title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
+			bindings.push( `auto ${named_rest_name} = cl2::create_cell( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
+			bindings.push( `${named_rest_name}.title="${named_rest.name}"; ${named_rest_name}.attached_to = ${objid}`)
 			//bindings.push( `let ${objid}_named_rest = CL2.${named_rest.name}.submit( {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}} )`)
 			// F-REST-AUTO-EXTRACT
-			bindings.push( `${objid}.release.subscribe( CL2.monitor_rest_values( ${named_rest_name}, ${objid}.${named_rest.name} ) )` )
+			bindings.push( `${objid}.release.subscribe( cl2::monitor_rest_values( ${named_rest_name}, ${objid}.${named_rest.name} ) )` )
 
   	}
   	else {
@@ -203,11 +203,11 @@ export function default_obj2js( obj,state ) {
   if (named_splat.length > 0) {
   	 let ns = named_splat[0]
   	 // создаем процесс мониторинга
-  	 bindings.push( `let ${ns.name}_controlled_names = {${Object.keys(ns.controlled_names).map(k=>`"${k}":true`).join(',')}}`)
+  	 bindings.push( `auto ${ns.name}_controlled_names = {${Object.keys(ns.controlled_names).map(k=>`"${k}":true`).join(',')}}`)
   	 // F-REST-AUTO-EXTRACT
-  	 bindings.push( `let ${ns.name}_named_rest = ${named_rest_name ? named_rest_name : null}`)
+  	 bindings.push( `auto ${ns.name}_named_rest = ${named_rest_name ? named_rest_name : null}`)
   	 // начальное значение для rest_acc задается такое же, как было для named_rest выше..
-  	 bindings.push( `${ns.source}.subscribe( (values) => {
+  	 bindings.push( `${ns.source}.subscribe( [](values) {
   	 	 let rest_acc = {${Object.keys(named_cells).map(k=>`"${k}":${named_cells[k]}`).join(',')}}
   	 	 for (let name in values) {
   	 	 	if (${ns.name}_controlled_names.hasOwnProperty(name)) {
@@ -225,11 +225,21 @@ export function default_obj2js( obj,state ) {
 
 	// init_consts["parent"] = state.struc_parent?.$name || "self"
 	let obj_title = objid.indexOf( obj.basis ) < 0 ? `${objid}[${obj.basis}]` : `${objid}`
-	init_consts['$title'] = obj_title
+
+	// todo вернуть
+	//init_consts['$title'] = obj_title
+
 	if (obj.base_obj)  // hack F-MIXIN-INTERNAL
 	    init_consts['base_obj'] = obj.base_obj
 	
-  strs.push( `let ${objid} = ${obj.modul_prefix}create_${C.get_basis(basis_record)}( ${objToString(init_consts,1,state,obj)} )`)
+  strs.push( `${obj.modul_prefix}${C.get_basis(basis_record)} ${objid};`)
+  // ${objToString(init_consts,1,state,obj)}
+  //console.log('seeting',init_consts)
+  for (let n in init_consts) {
+  	bindings.push( `${objid}.${n}.submit( ${objToString(init_consts[n],1,state)} )`)
+  }
+
+
   // тоже чтобы можно было на него ссылаться напрямую, по значению
   state.static_values[ objid ] = true
 
@@ -248,9 +258,9 @@ export function default_obj2js( obj,state ) {
   		 // F-TREE
   	    let anonymous_mode = obj.name_is_autogenerated ? true : false
   	    if (anonymous_mode)
-	      strs.push( `CL2.attach_anonymous( ${state.struc_parent_id}, ${objid})` )
+	      bindings.push( `cl2::attach_anonymous( ${state.struc_parent_id}, ${objid})` )
 		 else
-		   strs.push( `CL2.attach( ${state.struc_parent_id}, "${obj.$name}", ${objid})`)
+		   bindings.push( `cl2::attach( ${state.struc_parent_id}, "${obj.$name}", ${objid})`)
   }
 
   // теперь надо бы детей
@@ -286,7 +296,7 @@ export function default_obj2js( obj,state ) {
 	
 	for (let k in bindings_hash) {
 		//let link = obj.links[k]
-		let linkstr = `${objid}.release.once( CL2.create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ) // hehe objid=${objid} prefix=${state.prefix}`
+		let linkstr = `${objid}.release.once( cl2::create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ) // hehe objid=${objid} prefix=${state.prefix}`
 		bindings.push( `//bindings from ${objid}`,linkstr )
 	}
 
@@ -328,7 +338,7 @@ export function default_obj2js( obj,state ) {
 
 function obj_str( str ) {
 	if (/\r|\n/.exec( str )) return "`" + str.replaceAll("`","\\`") + "`"
-	return "'"+str.replaceAll("'","\\'")+"'"
+	return "\""+str.replaceAll("\"","\\\"")+"\""
 }
 
 export function objToString(obj, ndeep, state,parent_obj ) {
@@ -341,7 +351,7 @@ export function objToString(obj, ndeep, state,parent_obj ) {
   if (obj.link && obj.from) return obj.from // F-STATIC-VALUES
 
   switch(typeof obj){  	
-    case "string": return obj === "CL2.NOVALUE" ? obj : obj_str(obj);
+    case "string": return obj === "cl2::novalue" ? obj : obj_str(obj);
     case "function": return obj.name || obj.toString();
     case "object":
       var indent = Array(ndeep||1).join('\t'), isArray = Array.isArray(obj);

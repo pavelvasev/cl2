@@ -2,6 +2,7 @@
 // содержимое которое доступно всем безо всяких пакетов
 
 // таки мысли что надо сделать Cl2.create_reaction( comm, code )
+/*
 obj "react" {
   in {
     input: channel
@@ -17,9 +18,11 @@ obj "react" {
   // но вообще - в ЛФ вот порт хранит значение.. может и нам хранить? что такого.. (ну gc.. а ну и еще копии промежуточных данных в памяти.. ну посмотрим)
   output: channel
 
-  init {: obj |
+  init {:
     self.pending_finish = CL2.create_cell(1)
-    console.channel_verbose('------------- react: ',self+'','listening',input+'')
+
+    //input.subscribe
+    
     let unsub = input.on( (value) => {
       let fn = action.get()
 
@@ -62,13 +65,6 @@ obj "react" {
             finish.submit(true)
           })
         }
-        /*
-        else if (result.once) { ползьуемся тем что ClObject это Comm
-          result.once( val => {
-            output.submit(val)
-          })
-        }
-        */
         else {
           //console.log('submitting result to output',output+'')
           output.submit( result )
@@ -81,9 +77,11 @@ obj "react" {
     self.release.on( () => unsub() )
   :}
 }
+*/
 
+/*
 func "print" {: ...vals |  
   std::cout << args
   return {args...}
 :}
-
+*/
