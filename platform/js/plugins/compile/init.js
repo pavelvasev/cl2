@@ -42,6 +42,8 @@ export function init( state, tool ) {
 			let file_p = "file://" + path.resolve( path.join(tool.platform_dir,"./runtime/cl2.js"))
 			return fetch( file_p ).then( r => r.text() ).then( content => {
 				tool.prepend_global_code(['// clon cl2.js runtime',content])
+
+				tool.prepend_global_code( [`let self={};`] )
 			})
 		})
 		// встроим пока тоже и браузер, для упрощения

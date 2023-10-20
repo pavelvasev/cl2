@@ -50,7 +50,7 @@ export function init( state, tool ) {
 
 		let out_file = file + ".cpp"
 
-		let nodejs = compiled.then( k => {
+		let cpp = compiled.then( k => {
 			let code = tool.gen_full_code( k.code )
 
 			if (config.output_dir)
@@ -59,8 +59,8 @@ export function init( state, tool ) {
 			return new Promise( (resolve,reject) => {
 				fs.writeFile( out_file, code,(err) => {
 			  	if (err) console.log(err)
-			  	console.log("done: ",file,"-->",out_file_mjs)
-			    resolve( out_file_mjs )
+			  	console.log("done: ",file,"-->",out_file)
+			    resolve( out_file )
 			  } )
 			})	  
 		})
@@ -68,7 +68,7 @@ export function init( state, tool ) {
 		/// но вернуть нам надо имя файла которое затем смогут запускать
 		/// вернем нодовый вариант
 
-		return Promise.all( [nodejs, browser ]).then( (values) => values[0])
+		return Promise.all( [cpp]).then( (values) => values[0])
 
 	} )
 	tool.add_command("c", tool.get_command("compile"))
