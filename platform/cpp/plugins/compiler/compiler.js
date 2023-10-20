@@ -366,8 +366,10 @@ export function value_to_arrow_func( code,state,parent_obj )
   code = COMPUTE.cocode_to_code( code,state,insert_return_scope )
 
 	// обработка формы {: :} но вообще это не так уж и ортогонально..
-	if (code.code && code.pos_args)
-		code = `(${code.pos_args.join(',')}) => { ${code.code} }`
+	if (code.code && code.pos_args) {
+		let args = code.pos_args.map(x => { return "auto "+x}).join(',')
+		code = `[](${args}) { ${code.code} }`
+	}
 
 	return code	
 }

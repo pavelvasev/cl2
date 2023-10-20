@@ -88,8 +88,8 @@ export function _let( obj, state )
 	for (let k in obj.params) {
 		let val = obj.params[k]
 		//let s = `let ${k} = ${val.toString()}`
-		let val_str = val?.from ? "CL2.NOVALUE" : CJS.objToString(val,0,state)
-		let s = `let ${k} = CL2.create_cell( ${val_str} )`
+		let val_str = val?.from ? "CL2::NOVALUE" : CJS.objToString(val,0,state)
+		let s = `CL2::cell ${k}( ${val_str} )`
 		strs.push( s )
 		if (val?.from) {
 			//let q = `let ${name} = CL2.create_binding(${obj.params[0].from},${obj.params[1].from})`
@@ -107,17 +107,19 @@ export function _let_next( obj, state )
 {
 	let name = obj.params[0]
 	let strs = []
-	let s = `let ${name} = CL2.create_cell(); ${name}.$title='${name}'`
+	let s = `cl2::cell ${name};`
   strs.push( s )
+  let bindings = []
+  bindings.push( `${name}.$title='${name}'`)
   //console.log('let-next ',name,'state.struc_parent_id=',state.struc_parent_id,state.tree_parent_id)
   if (state.struc_parent_id) {
-  	strs.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )`)
+  	bindings.push( `cl2::attach( ${state.struc_parent_id},"${name}",${name} )`)
   }
 
 	let prev = state.next_obj_cb
 	//console.log("installin NEXT OBJ PARAM for",self_objid)
 	state.next_obj_cb = (obj2,objid2,strs,bindings,bindings_hash_before_rest) => {
-		bindings.push( `CL2.create_binding( ${objid2}.output, ${name} ) // from let_next` )
+		bindings.push( `cl2::create_binding( ${objid2}.output, ${name} ) // from let_next` )
 		state.next_obj_cb = prev
 		//console.log('CASE, prev restored',prev+"","calling it, str=",strs)
 		if (state.next_obj_cb)
@@ -127,17 +129,18 @@ export function _let_next( obj, state )
 	// надо отключить если было включено
 	state.static_values[ name ] = false
 
-
-	return {main: strs, bindings: []}
+	return {main: strs, bindings}
 }
 
 
 export function _in( obj, state )
 {
 	//let base = C.one_obj2js( obj,state )
-	let s = C.objs2js( C.get_children(obj,0),state )
-	//console.log("in called. result=",base)
-	return { main: ["// input params",s,"// end input params"], bindings:[] }
+	let s = C.process_objs( C.get_children(obj,0),state )
+	s.main.unshift("// input params")
+	///console.log("in called. result=",base)
+	//return { main: [,s,"// end input params"], bindings:[] }
+	return s
 }
 
 
@@ -165,10 +168,14 @@ export function _obj( obj, state )
   strs2.push(`public:`)
 
 	// F-TREE
-	let base_code = obj.params.base_code || "CL2.create_object()"
+	//let base_code = obj.params.base_code || "CL2.create_object()"
 	// получается base_obj оверрайдит base_code. да уж.
-	strs2.push(`auto self= initial_values['base_obj'] || ${base_code};`)
-	strs2.push( `self.$title= initial_values.base_obj ? initial_values.base_obj + "(" + initial_values.$title + ")" : initial_values.$title`)
+
+	//bindings.push(`auto self= initial_values['base_obj'] || ${base_code};`)
+	// todo надо как-то поддержать вот эти базовые коды.. мы из получается не поддерживаем
+	// и миксинов нам выходит не будет.. только через наследование..
+	base.bindings.push(`auto self = this;`)
+	//base.bindings.push( `self.$title= initial_values.base_obj ? initial_values.base_obj + "(" + initial_values.$title + ")" : initial_values.$title`)
 	// чтобы можно было давать ссылки на self
 	state.static_values[ 'self' ] = true
 	//strs2.push(`let self=CL2.create_item()`)
@@ -215,7 +222,7 @@ export function _obj( obj, state )
 	}
 	*/
 
-	strs2.push(`// наконец, конструктор!`,`${id}( std::map<std::string, std::any> initial_values ) {`,[body.bindings],'}')
+	strs2.push(``,`// наконец, конструктор!`,`${id}( std::map<std::string, std::any> initial_values ) {`,[body.bindings],'}')
 
 	let strs = state.space.register_item( id, state, strs2 )
 
@@ -353,7 +360,7 @@ export function cell( obj, state )
 {
 	let name = obj.$name_modified || obj.$name
 
-  let initial_value = 'CL2.NOVALUE'
+  let initial_value = 'cl2::novalue'
   let p0 = obj.params[0]
   if (p0 != null) {
   	if (typeof(p0) == 'object' && p0.link) {
@@ -364,23 +371,23 @@ export function cell( obj, state )
   	}
   }
 
-	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
-
 	let fast_part = obj.params.fast ? ",true" : ""
-	let strs = [`let ${name} = CL2::create_cell(${value_str}${fast_part})`]
-	strs.push( `CL2::attach( self,"${name}",${name} )` )
+	let strs = [`cl2::cell ${name};`]
+	let bindings = []
+	bindings.push( `${name}.submit( initial_values.contains("${name}") ? initial_values["${name}" : ${initial_value}]`)
+	bindings.push( `cl2::attach( self,"${name}",${name} )` )
 
-	return {main:strs,bindings:[]}
+	return {main:strs,bindings}
 }
 
 export function channel( obj,state )
 {
 	let name = obj.$name_modified || obj.$name
-	let strs = [`let ${name} = CL2::create_channel()`]
-	strs.push( `CL2::attach( self,"${name}",${name} )` )
+	let strs = [`cl2::channel ${name};`]
+	let bindings = [`cl2::attach( self,"${name}",${name} );` ]
 
 	// F-CHANNEL-INIT-CONST
-	let initial_value = 'CL2::NOVALUE'
+	let initial_value = 'cl2::novalue'
   let p0 = obj.params[0]
   if (p0 != null) {
   	if (typeof(p0) == 'object' && p0.link) {
@@ -393,10 +400,10 @@ export function channel( obj,state )
 
   // todo оптимизировать проверку initial_values.. например по state.tree_parent_id или типа того
 	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
-	let bindings = [
-		`let ${name}_initial = ${value_str}`,
-		`if (${name}_initial != CL2.NOVALUE) CL2.schedule( () => ${name}.submit( ${name}_initial ), ${name} )`
-	]
+	bindings.push(
+		`auto ${name}_initial = ${value_str}`,
+		`if (${name}_initial != cl2::novalue) cl2::schedule( [](){ ${name}.submit( ${name}_initial ) }, ${name} )`
+	)
 
 	return {main:strs,bindings:bindings}
 }
@@ -405,9 +412,10 @@ export function _init( obj, state )
 {
 	let strs = []
 	
-	strs.push( `let init = `,CJS.value_to_arrow_func(obj.params[0],state),`init(${state.tree_parent_id})` )
+	//strs.push( CJS.value_to_arrow_func(obj.params[0],state) )
+	strs.push( obj.params[0].code )
 
-	return {main:strs,bindings:[]}
+	return {main:[],bindings:strs}
 }
 
 // странная вещь. а для импортов была идея global-paste и там можно по ключам кстати
