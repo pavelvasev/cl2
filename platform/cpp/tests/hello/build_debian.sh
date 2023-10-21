@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# PLATFORM=cpp clon
+PLATFORM=cpp clon
 
 mkdir build
 cd build

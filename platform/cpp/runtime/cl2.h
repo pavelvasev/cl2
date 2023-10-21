@@ -10,19 +10,32 @@ namespace cl2 {
   //int novalue = 337722;
 
   //typedef void (*forget_subscription_t)();
+  // ей там надо хранить окружение поэтому она не может быть просто функцией...
   typedef std::function<void(void)> forget_subscription_t;
+
+  /*
+  template <typename T>
+  class subscriber {
+    virtual void submit( T ) = 0;
+  }*/
 
   class object {
     public:
     std::string title;
     std::shared_ptr<object> attached_to;
 
-    object() {      
+    object() {
     }
   };
 
+  template <typename T>
+  class receiver : public object {
+  public:
+    virtual void submit( T ) = 0;
+  };
+
   template<typename T>
-  class channel : public object 
+  class channel : public receiver<T>
   {
     public:
     //typedef void (*S)(T);
@@ -41,39 +54,47 @@ namespace cl2 {
       // https://www.geeksforgeeks.org/functors-in-cpp/
       // мб функторы проще хранить
 
-    typedef std::function<void(T)> S;
+    //typedef std::function<void(T)> S;
 
-    std::vector<S> subscribers;
+    std::vector< receiver<T>* > subscribers;
 
     channel() {}
 
     // получается текущая реализация позволяет несколько раз подписаться. хм.
-    forget_subscription_t subscribe( S value ) {
-      subscribers.push_back( value );
+    forget_subscription_t subscribe( receiver<T>* subscriber ) {
+      subscribers.push_back( subscriber );
 
-      auto unsub = [value,this]() {
-        auto index = std::find( subscribers.begin(), subscribers.end(), value );
-        if (index != std::end( subscribers )) {
-          //auto it = subscribers.begin();
-          //std::advance( it, index ); // чтоб вы сдохли. где б.. слайс??? или сплайс.
-          subscribers.erase( index );
-          //subscribers.erase( subscribers.begin() + index );
-        }
+      auto unsub = [subscriber,this]() {
+        unsubscribe( subscriber );
       };
 
       return unsub;
     }
 
-    auto submit( auto value ) {
+    void unsubscribe( receiver<T>* subscriber ) {
+        auto index = std::find( subscribers.begin(), subscribers.end(), subscriber );
+        if (index != std::end( subscribers )) {
+          //auto it = subscribers.begin();
+          //std::advance( it, index ); // чтоб вы сдохли. где б.. слайс??? или сплайс.
+          subscribers.erase( index );
+          //subscribers.erase( subscribers.begin() + index );
+        }      
+    }
+
+    void submit( T value ) {
+      for (auto s : subscribers) 
+        s->submit( value );
+      /*
       auto sz = subscribers.size();
       for (auto i = 0; i < sz; i++)
-        subscribers[i]( value );
+        subscribers[i].submit( value );
+      */
     }
 
   };
 
   template<typename T>
-  class cell : public object {
+  class cell : public receiver<T> {
   public:
     cell( auto value ) {
       have_value = true;
@@ -103,12 +124,12 @@ namespace cl2 {
     channel<T> changed_emit;
     channel<T> assigned;
 
-    forget_subscription_t subscribe( auto value ) {
+    forget_subscription_t subscribe( T value ) {
       return changed.subscribe( value );
     }
 
     // todo шедулить
-    void submit( auto value ) {
+    void submit( T value ) {
       if (value != cell_value || !have_value) {
         cell_value = value;
         have_value = true;
@@ -168,13 +189,23 @@ namespace cl2 {
   class binding : public object {
     public:
     
-    forget_subscription_t forget_subscription;
+    forget_subscription_t forget_subscription = nullptr;
     //typedef std::function
     // std::function<void(void)> subscription;
+
     binding( auto src, auto tgt ) {
-      forget_subscription = src.subscribe( tgt );
+      //forget_subscription = 0;
+      forget_subscription = src.subscribe( &tgt );
+
+/*
+      forget_subscription = [&src,&tgt]() {
+        src.unsubscribe( &tgt );
+      };
+*/      
+
     }
     ~binding() {
+      //if (forget_subscription)
       forget_subscription(); // отпишемся
     }
   };

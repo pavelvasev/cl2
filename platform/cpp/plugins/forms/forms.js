@@ -546,8 +546,9 @@ export function bind( obj, state )
 	// но и в биндах зажержки есть. подумать об этом.
 
   let base = {main:[],bindings:[]}
-	base.bindings.push( `auto ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`)
-	base.bindings.push( `cl2::attach( ${state.struc_parent_id},"${name}",${name} )` )
+	base.bindings.push( `auto ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from});`)
+	if (state.struc_parent_id)
+		base.bindings.push( `cl2::attach( ${state.struc_parent_id},"${name}",${name} );` )
 
 
 	//  и фичеры.. это у нас дети которые не дети	
