@@ -665,11 +665,11 @@ export function react( obj, state )
 
 	let referenced_object_type = state.current[ srcname ]?.type || "auto"
 
-	strs.push( `cl2::react<${referenced_object_type}> ${name};`)
-	bindings.push(`${name}.action.submit( ${code} );`)
+	strs.push( `cl2::react<${referenced_object_type}> ${name}( ${srcname}, ${code} );`)
+	//bindings.push(`${name}.action.submit( ${code} );`)
 
 	
-	bindings.push( `cl2::create_binding( ${srcname},${name}.input );` )
+	//bindings.push( `cl2::create_binding( ${srcname},${name}.input );` )
 
 	return {main:strs,bindings:bindings}
 }
