@@ -22,7 +22,9 @@ namespace cl2 {
 
   //typedef void (*forget_subscription_t)();
   // ей там надо хранить окружение поэтому она не может быть просто функцией...
-  typedef std::function<void(void)> forget_subscription_t;
+  // короче это не катит в с++ потому что целевой объект может удалиться раньше
+  // а эта функция это ссылка на его нутро
+  //typedef std::function<void(void)> forget_subscription_t;
 
   /*
   template <typename T>
@@ -45,8 +47,9 @@ namespace cl2 {
     virtual void submit( T ) = 0;
 
     // понаехали
-    virtual forget_subscription_t subscribe( receiver<T>* subscriber ) {};
+    virtual void subscribe( receiver<T>* subscriber ) {};
     virtual void unsubscribe( receiver<T>* subscriber ) {};
+    // нотификатор
     virtual void unsubscribed( receiver<T>* subscriber ) {};
   };
 
@@ -77,14 +80,15 @@ namespace cl2 {
     channel() {}
 
     // получается текущая реализация позволяет несколько раз подписаться. хм.
-    forget_subscription_t subscribe( receiver<T>* subscriber ) {
+    void subscribe( receiver<T>* subscriber ) {
       subscribers.push_back( subscriber );
-
+/*
       auto unsub = [subscriber,this]() {
         unsubscribe( subscriber );
       };
 
       return unsub;
+      */
     }
 
     void unsubscribe( receiver<T>* subscriber ) {
@@ -142,12 +146,12 @@ namespace cl2 {
     channel<T> changed_emit;
     channel<T> assigned;
 
-    forget_subscription_t subscribe( receiver<T>* s ) {
-      std::cout << "3333" << std::endl;
-      auto res = changed.subscribe( s );
+    void subscribe( receiver<T>* s ) {
+      //std::cout << "3333" << std::endl;
+      changed.subscribe( s );
       if (is_set()) // поведение ячейки
         s->submit( get() );
-      return res;
+      //return res;
     }
 
     // todo шедулить
@@ -230,7 +234,7 @@ namespace cl2 {
   class binding : public receiver<T> {
     public:
     
-    forget_subscription_t forget_subscription = nullptr;
+    //forget_subscription_t forget_subscription = nullptr;
     //typedef std::function
     // std::function<void(void)> subscription;
 
@@ -238,7 +242,7 @@ namespace cl2 {
     receiver<T> *_src = nullptr;
 
     void submit( T val ) {
-      std::cout << "binding !!" << val <<std::endl;
+      //std::cout << "binding !!" << val <<std::endl;
       _tgt->submit( val );
     }
 
@@ -249,13 +253,13 @@ namespace cl2 {
     binding() {}
 
     void init( receiver<T>* src, receiver<T>* tgt ) {
-      std::cout << "222" << std::endl;
+      //std::cout << "222" << std::endl;
       //forget_subscription = 0;
       _src = src;
       _tgt = tgt;
-      std::cout << "222a" << typeid( src ).name() << std::endl;
+      //std::cout << "222a" << typeid( src ).name() << std::endl;
       _src->subscribe( this );
-      std::cout << "222b" << std::endl;
+      //std::cout << "222b" << std::endl;
 
       //forget_subscription = src.subscribe( &tgt );
 
