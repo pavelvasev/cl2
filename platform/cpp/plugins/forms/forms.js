@@ -382,11 +382,15 @@ export function cell( obj, state )
   	}
   }
 
+	// с++ же
+	let type = obj.params.type;
+	state.current[ name ] = {type}  
+
 	let fast_part = obj.params.fast ? ",true" : ""
-	let strs = [`cl2::cell ${name}(${initial_value});`]
+	let strs = [`cl2::cell<${type}> ${name}(${initial_value});`]
 	let bindings = []
 	//bindings.push( `${name}.submit( initial_values.contains("${name}") ? initial_values["${name}" : ${initial_value}]`)
-	bindings.push( `cl2::attach( self,"${name}",${name} )` )
+	bindings.push( `cl2::attach( self,"${name}",${name} );` )
 
 	return {main:strs,bindings}
 }
@@ -550,7 +554,8 @@ export function bind( obj, state )
   let srcname = obj.params[0].from;
   let referenced_object_type = state.current[ srcname ]?.type || "auto"
 
-  base.main.push( `cl2::binding<${referenced_object_type}> ${name}( &${obj.params[0].from}, &${obj.params[1].from} );`)
+  base.main.push( `cl2::binding<${referenced_object_type}> ${name};`)
+  base.bindings.push( `${name}.init( &${obj.params[0].from}, &${obj.params[1].from} );`)
 
 	//base.bindings.push( `auto ${name} = ${bst}<${referenced_object_type}>(${obj.params[0].from},${obj.params[1].from});`)
 	if (state.struc_parent_id)
@@ -672,7 +677,14 @@ export function react( obj, state )
 
 	let referenced_object_type = state.current[ srcname ]?.type || "auto"
 
-	strs.push( `cl2::react<${referenced_object_type}> ${name}( ${srcname}, ${code} );`)
+	/*
+	  оказывается это не сработает в c++
+	  надо инициализировать класс-член либо в конструкторе через :
+	  либо явно вызовем функцию инициализации.
+	*/
+
+	strs.push( `cl2::react<${referenced_object_type}> ${name};`)
+	bindings.push( `${name}.init( ${srcname}, ${code} );`)
 	//bindings.push(`${name}.action.submit( ${code} );`)
 
 	

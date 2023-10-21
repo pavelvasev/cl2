@@ -71,3 +71,6 @@ https://github.com/atomgalaxy/libciabatta
 а главное что возврат значения из реакции похоже тоже бонус..
 
 изменяемое действие у реакций похоже тоже бонус..
+
+/////
+https://en.cppreference.com/w/cpp/language/list_initialization

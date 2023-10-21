@@ -142,8 +142,12 @@ namespace cl2 {
     channel<T> changed_emit;
     channel<T> assigned;
 
-    forget_subscription_t subscribe( T value ) {
-      return changed.subscribe( value );
+    forget_subscription_t subscribe( receiver<T>* s ) {
+      std::cout << "3333" << std::endl;
+      auto res = changed.subscribe( s );
+      if (is_set()) // поведение ячейки
+        s->submit( get() );
+      return res;
     }
 
     // todo шедулить
@@ -177,13 +181,15 @@ namespace cl2 {
     //cell<action_fn> action;
     //channel<Q> output;
 
-    forget_subscription_t unsub;
+    // к сожалению мы не можем держать функцию такую
+    // потому что если целевой объект удаляется то эта функция ломается
+    // forget_subscription_t unsub = nullptr;
 
     void submit( T val ) {
       ///std::cout << "react submit called:" << val << std::endl; 
       schedule( [&val,this]() {
           //auto fn = action.get();
-          std::cout << "invoking action!";
+          //std::cout << "invoking action!";
           this->_action_fn( val );
           /*
           auto result = fn( val );
@@ -194,17 +200,26 @@ namespace cl2 {
         });
     }
 
-    action_fn _action_fn;
+    void unsubscribed( receiver<T>* src ) {
+      _src = nullptr;
+    }    
 
-    react( channel<T>& input, action_fn fn ) {
+    receiver<T> *_src = nullptr;
+    action_fn _action_fn = nullptr;
+
+    react() {}
+
+    void init( channel<T>& input, action_fn fn ) {
       //action.submit( init_action );
       _action_fn = fn;
       // todo эта unsub будет невалидна, когда input сам себе удалится
-      unsub = input.subscribe( this );
+      _src = &input;
+      input.subscribe( this );
     }
 
     ~react() {
-      unsub();
+      if (_src) _src->unsubscribe( this );
+      //unsub();
     }
 
   };
@@ -219,10 +234,11 @@ namespace cl2 {
     //typedef std::function
     // std::function<void(void)> subscription;
 
-    receiver<T> *_tgt;
-    receiver<T> *_src;
+    receiver<T> *_tgt = nullptr;
+    receiver<T> *_src = nullptr;
 
     void submit( T val ) {
+      std::cout << "binding !!" << val <<std::endl;
       _tgt->submit( val );
     }
 
@@ -230,11 +246,16 @@ namespace cl2 {
       _src = nullptr;
     }
 
-    binding( receiver<T>* src, receiver<T>* tgt ) {
+    binding() {}
+
+    void init( receiver<T>* src, receiver<T>* tgt ) {
+      std::cout << "222" << std::endl;
       //forget_subscription = 0;
       _src = src;
       _tgt = tgt;
+      std::cout << "222a" << typeid( src ).name() << std::endl;
       _src->subscribe( this );
+      std::cout << "222b" << std::endl;
 
       //forget_subscription = src.subscribe( &tgt );
 
@@ -275,11 +296,11 @@ namespace cl2 {
   template <typename T, typename Q>
   react<T,Q>& create_react(auto action) { return *(new react<T,Q>(action)); }
   */
-  template <typename T>
-  react<T>& create_react(auto input, auto action) { return *(new react<T>(input,action)); }
+//  template <typename T>
+//react<T>& create_react(auto input, auto action) { return *(new react<T>(input,action)); }
 
-  template <typename T>
-  binding<T>& create_binding(auto& src, auto& tgt) { return *(new binding<T>(&src,&tgt)); }
+//  template <typename T>
+//  binding<T>& create_binding(auto& src, auto& tgt) { return *(new binding<T>(&src,&tgt)); }
 
   void attach( auto& host, auto name, auto& obj ) {}
 
