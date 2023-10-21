@@ -4,9 +4,10 @@
 #include <any>
 #include <iostream>
 #include <algorithm> // для файнд
+#include <functional> // для std::function
 
 namespace cl2 {
-  int novalue = 337722;
+  //int novalue = 337722;
 
   class object {
     public:
@@ -17,10 +18,18 @@ namespace cl2 {
     }
   };
 
+  template<typename T>
   class channel : public object 
   {
     public:
-    std::vector<std::any> subscribers;
+    //typedef void (*S)(T);
+    //typedef void (*S)(T);
+    //typedef void S(T);  
+    //std::vector<S&> subscribers;
+
+    typedef std::function<void(T)> S;
+
+    std::vector<S> subscribers;
 
     channel() {}
 
@@ -31,7 +40,10 @@ namespace cl2 {
       auto unsub = [&value,this]() {
         auto index = std::find( subscribers.begin(), subscribers.end(), value );
         if (index != std::end( subscribers )) {
-          subscribers.erase( subscribers.begin() + index );
+          auto it = subscribers.begin();
+          std::advance( it, index ); // чтоб вы сдохли. где б.. слайс??? или сплайс.
+          subscribers.erase( it );
+          //subscribers.erase( subscribers.begin() + index );
         }
       };
 
@@ -46,6 +58,7 @@ namespace cl2 {
 
   };
 
+  template<typename T>
   class cell : public object {
   public:
     cell( auto value ) {
@@ -69,12 +82,12 @@ namespace cl2 {
       have_value = false;
     }
 
-    std::any cell_value;
+    T cell_value;
     bool have_value;
 
-    channel changed;
-    channel changed_emit;
-    channel assigned;
+    channel<T> changed;
+    channel<T> changed_emit;
+    channel<T> assigned;
 
     auto subscribe( auto value ) {
       return changed.subscribe( value );
@@ -82,28 +95,33 @@ namespace cl2 {
 
     // todo шедулить
     auto submit( auto value ) {
-      if (value == novalue) {
-        unset();
-        return;
-      }
-      if (value != cell_value)
+      if (value != cell_value || !have_value) {
+        cell_value = value;
+        have_value = true;
         changed.submit( value );
+      }
       assigned.submit( value );
     }
 
   };
 
+/*
   class io_item: public object {
     public:
     cell input;
     cell output;
   };
+*/  
 
+  template <typename T>
+  //template <typename T, typename Q>
   class react: public object {
     public:
-    channel input; // todo много сделать, массив. ну или when_any обойдемся?
-    cell action;
-    channel output;
+    typedef void (*action_fn)(T);
+
+    channel<T> input; // todo много сделать, массив. ну или when_any обойдемся?
+    cell<action_fn> action;
+    //channel<Q> output;
 
     react() {
       //action.submit( init_action );
@@ -111,11 +129,13 @@ namespace cl2 {
       input.subscribe( [this](auto val) {
         schedule( [&val,this]() {
           auto fn = action.get();
+          fn( val );
+          /*
           auto result = fn( val );
-
           // todo проверить что там вернули то
 
           output.submit( result );
+          */
         });
       });
 
@@ -123,16 +143,17 @@ namespace cl2 {
   };
 
 
+  //template <typename T>
   class binding : public object {
     public:
-    typedef void F();
-
-    F subscription;
+    //typedef void (*F)();
+    //typedef std::function
+    std::function<void(void)> subscription;
     binding( auto src, auto tgt ) {
-      this->subscription = src.subscribe( tgt );
+      subscription = src.subscribe( tgt );
     }
     ~binding() {
-      this->subscription(); // отпишемся
+      subscription(); // отпишемся
     }
   };
 
@@ -140,12 +161,27 @@ namespace cl2 {
     fn();
   }
 
-  cell& create_cell() { return *(new cell()); }
-  cell& create_cell( auto value ) { return *(new cell(value)); }
-  channel& create_channel() { return *(new channel()); }
+  template <typename T>
+  cell<T>& create_cell() { return *(new cell<T>()); }
+
+  template <typename T>
+  cell<T>& create_cell( T& value ) { return *(new cell<T>(value)); }
+
+  template <typename T>
+  channel<T>& create_channel() { return *(new channel<T>()); }
+
+  object& create_object() { return *(new object()); }
   //channel& create_item() { return *(new item()) }
-  io_item& create_io_item() { return *(new io_item()); }
-  react& create_react(auto action) { return *(new react(action)); }
+  //io_item& create_io_item() { return *(new io_item()); }
+
+  // философский вопрос, а зачем у нас реакции возвращают значения..
+  /*
+  template <typename T, typename Q>
+  react<T,Q>& create_react(auto action) { return *(new react<T,Q>(action)); }
+  */
+  template <typename T>
+  react<T>& create_react(auto action) { return *(new react<T>(action)); }
+
   binding& create_binding(auto& src, auto& tgt) { return *(new binding(src,tgt)); }
 
   void attach( auto& host, auto name, auto& obj ) {}

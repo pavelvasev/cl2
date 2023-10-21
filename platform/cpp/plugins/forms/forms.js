@@ -394,7 +394,12 @@ export function cell( obj, state )
 export function channel( obj,state )
 {
 	let name = obj.$name_modified || obj.$name
-	let strs = [`cl2::channel ${name};`]
+
+	// с++ же
+	let type = obj.params.type;
+	state.current[ name ] = {type}
+
+	let strs = [`cl2::channel<${type}> ${name};`]
 	let bindings = [`cl2::attach( self,"${name}",${name} );` ]
 
 	// F-CHANNEL-INIT-CONST
@@ -653,12 +658,16 @@ export function react( obj, state )
 		}
 	}
 
-	strs.push( `cl2::react ${name};`)
-	bindings.push(`${name}.action.submit( ${code} );`)
-
 	//let src_param = obj.params[ Object.keys( obj.params )[0] ]
 	let src_param = obj.params[0]
 	let srcname = src_param.from
+
+
+	let referenced_object_type = state.current[ srcname ]?.type || "auto"
+
+	strs.push( `cl2::react<${referenced_object_type}> ${name};`)
+	bindings.push(`${name}.action.submit( ${code} );`)
+
 	
 	bindings.push( `cl2::create_binding( ${srcname},${name}.input );` )
 

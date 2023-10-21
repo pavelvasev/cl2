@@ -38,7 +38,7 @@ export function init( state, tool ) {
 		})
 
 		// F-EMBED-RUNTIME		
-		mmm = mmm.then( () => {
+		mmm = mmm.then( () => {			
 			tool.prepend_global_code(['// clon runtime',`#include "cl2.h"`])
 		})
 
@@ -51,7 +51,14 @@ export function init( state, tool ) {
 		let out_file = file + ".cpp"
 
 		let cpp = compiled.then( k => {
-			let code = tool.gen_full_code( k.code )
+			//tool.prepend_global_code( [`auto self=cl2::create_object();`] )
+			let code = 
+`int main() {
+  auto self=cl2::create_object();	
+${k.code}
+  return 0;
+};`
+			code = tool.gen_full_code( code )
 
 			if (config.output_dir)
 			    out_file_mjs = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".mjs"

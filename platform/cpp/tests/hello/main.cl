@@ -1,12 +1,7 @@
 //print "hello"
 
-process "printer" {
- in {
-   msg: channel
- }
- react @msg {: x |
-   std::cout << x;
- :}
-}
+alfa: channel type="float"
 
-printer "hello"
+react @alfa {: val |
+  std::cout << val;
+:}

@@ -43,6 +43,7 @@ export function init( state, tool ) {
 			return fetch( file_p ).then( r => r.text() ).then( content => {
 				tool.prepend_global_code(['// clon cl2.js runtime',content])
 
+				// todo ей не место тут по логике
 				tool.prepend_global_code( [`let self={};`] )
 			})
 		})

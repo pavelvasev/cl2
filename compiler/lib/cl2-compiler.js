@@ -286,13 +286,16 @@ export function objs2js( objs,state )
 	//console.log("gonna make js for",objs)
 	//console.log("state is",state)
 	let base = process_objs( objs,state )
+	//console.log('base=',base)
 
 	let strs = base.main
 	if (base.bindings.length > 0)
 	{
 		//strs.push( "//bindings." ) //" len="+bindings.length + bindings.toString())
-		strs.push( ...base.bindings.flat() )
+		//strs.push( ...base.bindings.flat() )
+		strs.push( ...base.bindings )
 	}
+	//console.log(strs)
 	return strs
 }
 
