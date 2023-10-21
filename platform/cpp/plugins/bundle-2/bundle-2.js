@@ -16,7 +16,7 @@ export function init( st ) {
 		let export_flag = "";
 		// todo совместить расчет export_flag с тем что в compute.js для функций
 		//console.log("register_item: id=",id," export_flag=",export_flag,"state.dir=",state.dir)
-		let s = `${export_flag}class ${id}`
+		let s = `${export_flag}class ${id} : public cl2::object`
 		strs.push(`/// type ${id}`,s,"{")
 		strs.push( strs2 )
 		strs.push("};")

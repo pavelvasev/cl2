@@ -32,17 +32,18 @@ namespace cl2 {
     virtual void submit( T ) = 0;
   }*/
 
-  class object {
+  class comm {
     public:
-    std::string title;
-    std::shared_ptr<object> attached_to;
+    std::string title = "comm";
+    std::shared_ptr<comm> attached_to = nullptr;
+    bool is_tree_element = false;
 
-    object() {
+    comm() {
     }
-  };
+  };  
 
   template <typename T>
-  class receiver : public object {
+  class receiver : public comm {
   public:
     virtual void submit( T ) = 0;
 
@@ -51,6 +52,11 @@ namespace cl2 {
     virtual void unsubscribe( receiver<T>* subscriber ) {};
     // нотификатор
     virtual void unsubscribed( receiver<T>* subscriber ) {};
+
+    void once( receiver<T>* subscriber ) {
+      // todo
+      subscribe( subscriber );
+    }
   };
 
   template<typename T>
@@ -277,6 +283,18 @@ namespace cl2 {
     }
   };
 
+  class object: public comm {
+    public:
+    bool is_tree_element = false;
+    channel<int> release;
+
+    object() {
+    }
+    ~object() {
+      release.submit(0);
+    }
+  };  
+
   void schedule( auto fn ) {
     //std::cout << "Schedle called!";
     fn();
@@ -303,10 +321,11 @@ namespace cl2 {
 //  template <typename T>
 //react<T>& create_react(auto input, auto action) { return *(new react<T>(input,action)); }
 
-//  template <typename T>
-//  binding<T>& create_binding(auto& src, auto& tgt) { return *(new binding<T>(&src,&tgt)); }
+  template <typename T>
+  binding<T>& create_binding(auto& src, auto& tgt) { return *(new binding<T>(&src,&tgt)); }
 
   void attach( auto& host, auto name, auto& obj ) {}
+  void attach_anonymous( auto& host, auto& obj ) {}
 
 }
 

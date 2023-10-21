@@ -101,8 +101,9 @@ export function default_obj2js( obj,state ) {
 
 	for (let name of normal) {
 
-		if (bindings_hash[ name ])
-			init_consts[ internal_name(name) ] = "cl2::novalue"
+		if (bindings_hash[ name ]) {
+			//init_consts[ internal_name(name) ] = "cl2::novalue"
+		}
 		else
 			init_consts[ internal_name(name) ] = obj.params[name]
 	}
@@ -247,7 +248,8 @@ export function default_obj2js( obj,state ) {
 	if (state.tree_parent_id && !obj.skip_attach) {
 		  // древовидная иерархия.. но там объекты у нас могут путешествовать туды сюды
 		 // F-TREE
-	    bindings.push( `if (${state.tree_parent_id}.is_tree_element && ${objid}.is_tree_element) ${state.tree_parent_id}.append(${objid});` )
+		 // todo вернуть
+	   // bindings.push( `if (${state.tree_parent_id}.is_tree_element && ${objid}.is_tree_element) ${state.tree_parent_id}.append(${objid});` )
   }
   // оказалось что нам надо пропускать append но делать attach_anonymous
   // используем для этого struc_parent_id (оно вроде как по смыслу то что надо)
@@ -296,7 +298,11 @@ export function default_obj2js( obj,state ) {
 	
 	for (let k in bindings_hash) {
 		//let link = obj.links[k]
-		let linkstr = `${objid}.release.once( cl2::create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ); // hehe objid=${objid} prefix=${state.prefix}`
+
+		// todo cpp продолжить здесь
+		// вообще тут самое время вызвать bind форму
+
+		let linkstr = `${objid}.release.once( cl2::create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ) ); // hehe objid=${objid} prefix=${state.prefix}`
 		bindings.push( `//bindings from ${objid}`,linkstr )
 	}
 
@@ -378,7 +384,7 @@ export function value_to_arrow_func( code,state,parent_obj )
 	// обработка формы {: :} но вообще это не так уж и ортогонально..
 	if (code.code && code.pos_args) {
 		let args = code.pos_args.map(x => { return "auto "+x}).join(',')
-		code = `[](${args}) { ${code.code} }`
+		code = `[&self](${args}) { ${code.code} }`
 	}
 
 	return code	
