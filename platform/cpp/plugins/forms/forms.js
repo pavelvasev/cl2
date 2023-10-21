@@ -546,7 +546,13 @@ export function bind( obj, state )
 	// но и в биндах зажержки есть. подумать об этом.
 
   let base = {main:[],bindings:[]}
-	base.bindings.push( `auto ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from});`)
+
+  let srcname = obj.params[0].from;
+  let referenced_object_type = state.current[ srcname ]?.type || "auto"
+
+  base.main.push( `cl2::binding<${referenced_object_type}> ${name}( &${obj.params[0].from}, &${obj.params[1].from} );`)
+
+	//base.bindings.push( `auto ${name} = ${bst}<${referenced_object_type}>(${obj.params[0].from},${obj.params[1].from});`)
 	if (state.struc_parent_id)
 		base.bindings.push( `cl2::attach( ${state.struc_parent_id},"${name}",${name} );` )
 

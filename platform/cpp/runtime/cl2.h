@@ -6,6 +6,17 @@
 #include <algorithm> // для файнд
 #include <functional> // для std::function
 
+/* в наличии такая проблема. мы хотим создать связь между 2мя каналами A -> B.
+   делаем это через binding. но теперь, если канал A удаляется,
+   то надо остановить и связь. вопрос как binding об этом узнает?
+
+   если биндинг сам подписывается на канал, то ему надо знать его тип.
+   а этого бы очень хотелось избежать. но можно и так.
+
+   другой вариант это вести отдельный список кого уведомить при удалении
+   объекта. хехе.
+*/
+
 namespace cl2 {
   //int novalue = 337722;
 
@@ -32,6 +43,11 @@ namespace cl2 {
   class receiver : public object {
   public:
     virtual void submit( T ) = 0;
+
+    // понаехали
+    virtual forget_subscription_t subscribe( receiver<T>* subscriber ) {};
+    virtual void unsubscribe( receiver<T>* subscriber ) {};
+    virtual void unsubscribed( receiver<T>* subscriber ) {};
   };
 
   template<typename T>
@@ -76,12 +92,14 @@ namespace cl2 {
         if (index != std::end( subscribers )) {
           //auto it = subscribers.begin();
           //std::advance( it, index ); // чтоб вы сдохли. где б.. слайс??? или сплайс.
+          subscriber->unsubscribed( this );
           subscribers.erase( index );
           //subscribers.erase( subscribers.begin() + index );
         }      
     }
 
     void submit( T value ) {
+      //std::cout << this->title << ": submit called:" << value << std::endl; 
       for (auto s : subscribers) 
         s->submit( value );
       /*
@@ -150,7 +168,7 @@ namespace cl2 {
 
   template <typename T>
   //template <typename T, typename Q>
-  class react: public object {
+  class react: public receiver<T> {
     public:
     //typedef void (*action_fn)(T);
     typedef std::function<void(T)> action_fn;
@@ -161,13 +179,12 @@ namespace cl2 {
 
     forget_subscription_t unsub;
 
-    react( channel<T>& input, action_fn fn ) {
-      //action.submit( init_action );
-
-      unsub = input.subscribe( [&fn,this](T val) {
-        schedule( [&val,&fn,this]() {
+    void submit( T val ) {
+      ///std::cout << "react submit called:" << val << std::endl; 
+      schedule( [&val,this]() {
           //auto fn = action.get();
-          fn( val );
+          std::cout << "invoking action!";
+          this->_action_fn( val );
           /*
           auto result = fn( val );
           // todo проверить что там вернули то
@@ -175,7 +192,15 @@ namespace cl2 {
           output.submit( result );
           */
         });
-      });
+    }
+
+    action_fn _action_fn;
+
+    react( channel<T>& input, action_fn fn ) {
+      //action.submit( init_action );
+      _action_fn = fn;
+      // todo эта unsub будет невалидна, когда input сам себе удалится
+      unsub = input.subscribe( this );
     }
 
     ~react() {
@@ -184,18 +209,34 @@ namespace cl2 {
 
   };
 
-
-  //template <typename T>
-  class binding : public object {
+  // дизайн решение биндинг подписывает себя
+  // и тогда когда src удалится он биндинга сам отпишет
+  template <typename T>
+  class binding : public receiver<T> {
     public:
     
     forget_subscription_t forget_subscription = nullptr;
     //typedef std::function
     // std::function<void(void)> subscription;
 
-    binding( auto src, auto tgt ) {
+    receiver<T> *_tgt;
+    receiver<T> *_src;
+
+    void submit( T val ) {
+      _tgt->submit( val );
+    }
+
+    void unsubscribed( receiver<T>* src ) {
+      _src = nullptr;
+    }
+
+    binding( receiver<T>* src, receiver<T>* tgt ) {
       //forget_subscription = 0;
-      forget_subscription = src.subscribe( &tgt );
+      _src = src;
+      _tgt = tgt;
+      _src->subscribe( this );
+
+      //forget_subscription = src.subscribe( &tgt );
 
 /*
       forget_subscription = [&src,&tgt]() {
@@ -206,11 +247,13 @@ namespace cl2 {
     }
     ~binding() {
       //if (forget_subscription)
-      forget_subscription(); // отпишемся
+      //forget_subscription(); // отпишемся
+      if (_src) _src->unsubscribe( this );
     }
   };
 
   void schedule( auto fn ) {
+    //std::cout << "Schedle called!";
     fn();
   }
 
@@ -235,7 +278,8 @@ namespace cl2 {
   template <typename T>
   react<T>& create_react(auto input, auto action) { return *(new react<T>(input,action)); }
 
-  binding& create_binding(auto& src, auto& tgt) { return *(new binding(src,tgt)); }
+  template <typename T>
+  binding<T>& create_binding(auto& src, auto& tgt) { return *(new binding<T>(&src,&tgt)); }
 
   void attach( auto& host, auto name, auto& obj ) {}
 
