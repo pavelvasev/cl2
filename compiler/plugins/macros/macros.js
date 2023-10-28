@@ -17,6 +17,11 @@ export function init( state, tool ) {
        check_params: default_cp
     }
 
+    state.env.modifier = { 
+       make_code: modifier,
+       check_params: default_cp
+    }
+
    /*
 	//let default_things = tool.compile_file( state.space.resolve_module_path( "./macros.cl", state ), state)
 	let default_things = tool.compile_file( path.join(__dirname,"macros.cl"), state)
@@ -56,4 +61,34 @@ export function transform( i, objs, state )
 
 	objs.splice(i,1)
 	return [i,objs]
+}
+
+export function modifier( obj, state )
+{
+	let name = obj.params[0]
+	let fn_code = obj.params[1]
+
+	// но кстати шутка - это можно на Слоне писать формы?
+	// пока что убрано чтобы не было зависимости от CO
+	// fn_code = CO.cocode_to_code( fn_code,state,true,true )
+
+
+	//let f = eval( fn_code )
+	// console.log("fn_code =",fn_code )
+
+	let f = new Function( ...fn_code.pos_args, fn_code.code )
+
+	//console.log("reggging modifier name=",name)
+
+	state.current[ name ] = {
+		basis: name,
+		modify: (obj,target,state) => {
+			let res = f( obj,target,state,C )
+			//console.log("TTTTTT res=",res)
+			return res
+		},
+		check_params: default_cp
+  }
+
+  return { main: [], bindings: [] }
 }

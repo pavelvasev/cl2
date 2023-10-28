@@ -527,8 +527,9 @@ one_env
 
 // ------- A. envs
 one_env_obj "environment record"
-  =
-  envid: (__ @(@attr_name ws ":")?)
+  = __
+  macro_prefix: "%"?
+  envid: (@(@attr_name ws ":")?)
   __ first_feature_name:feature_name
   env_modifiers:(__ @env_modifier)*
   child_envs:(__ "{{{" __ @env_list? __ "}}}" __)?
@@ -537,6 +538,8 @@ one_env_obj "environment record"
     env.locinfo = getlocinfo();
     // этим мы застолбили что фича первая всегда идет и точка.
     env.features[ first_feature_name ] = {};
+
+    env.macro_call = macro_prefix ? true : false
     
     set_basis( env, first_feature_name )
 

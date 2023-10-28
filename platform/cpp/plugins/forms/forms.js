@@ -14,7 +14,7 @@ export var tablica = {
 	let_next: { make_code: _let_next, check_params: default_cp },
 	obj: { make_code: _obj, check_params: (assigned_names) => { 
 		 return {normal: assigned_names, renamed: {'1': 'children'}, pos_rest: [],named_rest:[]} 
-		} },
+		} },	
 	
 	process: { make_code: _obj, check_params: (assigned_names) => { 
 		 return {normal: assigned_names, renamed: {'1': 'children'}, pos_rest: [],named_rest:[]} 

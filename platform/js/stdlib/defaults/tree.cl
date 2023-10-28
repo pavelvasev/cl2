@@ -210,7 +210,8 @@ obj "func_process" {
     :}
 }
 
-//mixin "tree_lift"
+// добавляет детей из указанного описания (данного в форме функции)
+// apply_children @children_arr
 obj "apply_children" {
   in {
     action: cell
@@ -230,11 +231,6 @@ obj "apply_children" {
 
   imixin { tree_lift allow_default=false }
 
-  //tree: tree_lift allow_default=false // сборщик чилдренов
-
-  //react @action {: console.log("see action") :}
-  //react @rest {: console.log("see rest") :}
-
   result := react (list @action @rest) {:
       //console.log("************************ apply_children action! self=",self+'')
       let f = action.get()
@@ -251,7 +247,7 @@ obj "apply_children" {
         if (res?.is_tree_element) {
           self.append( res ) // усе поехала сборка
           res.attached_to = self // чтобы имена разруливать
-          //return CL2.create_cell( res ) // екранируем
+          return CL2.create_cell( res ) // екранируем
         } else {
           // ну пусть чего-то там собирают тогда
           self.gather_request.submit()
@@ -259,10 +255,12 @@ obj "apply_children" {
       }
     :}
 
-  func "stop_result_process" {: // это все заради бонуса чтобы аргументы передавать
+  // это все заради бонуса чтобы аргументы передавать
+  func "stop_result_process" {: 
     if (self.result.is_set) {
       let p = self.result.get()
-      p.destroy()
+      if (p)
+          p.destroy()
       self.result.set( CL2.NOVALUE )
     }
   :}

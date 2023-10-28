@@ -129,17 +129,109 @@ export function code2obj( str, base_url="?" )
 // сообразно 2е умеют преобразовывать вход ... а 3и это финальные...
 // ну и 2я преобразовала и надо рестартовать процесс с нее же..
 
+
+// вход:
+// выход: новый массив objs, и новый счетчик откуда продолжать движение
+// выход: список объектов = результат работы модификатора, и i где он остановился.
+/*
+function process_modifier( i, objs, state ) {
+	if (i >= objs.length) return [i,[]]
+	if (!objs[i].macro_call) return [i,[]]
+
+	let next = process_modifier( i+1, objs )
+
+	let env_rec = get_record( state,obj.basis_path, obj, true, false )	
+}
+*/
+
 // F-MACROS
-export function objs2objs( objs, state )
+export function objs2objs( objs, state, one_tick )
 {
-	//return objs
+
+	let i = 0;
+	
+	while (i < objs.length) {
+		let obj = objs[i]
+		//console.log(obj)
+
+		if (obj.basis == "modifier") {
+			let env_rec = get_record( state,obj.basis_path, obj, true, false )
+			env_rec.make_code( obj,state )
+			objs.splice( i, 1 )
+			continue;
+		}
+
+		if (obj.macro_call) {
+			//console.log("mmm",obj.basis)
+
+			let env_rec = get_record( state,obj.basis_path, obj, true, false )
+			if (!env_rec) {
+				console.error("objs2obj: cannot find modifier id=",obj.basis)
+			}
+			//console.log("mmm",obj.basis)
+
+		   let params_count = obj.positional_params_count
+  			let last_param = obj.params[ params_count-1 ]
+
+  			let target_objs
+  			// вариант %name {}
+  			//console.log("mmm",obj.basis)
+  			let i_processed = 1
+  			if (last_param?.code) {
+  				// надо выкусить
+	  			obj.params[ params_count-1 ] = null
+  				obj.positional_params_count--
+
+  				target_objs = objs2objs( last_param.code, state )
+  				//objs.splice( i,1,...target_objs )
+  				params_count--
+  			} else {
+  			 // вариант %name %name ...
+  			 console.log("case. calling with limit 1! ",objs.slice(i+1) )	
+		    let next_objs = objs2objs( objs.slice(i+1), state, 1 )
+		    console.log("case. next_objs=",next_objs)
+		    i_processed = next_objs.i_processed
+
+		    // там может и 1 операция была, но вида %alfa { ... }
+		    // и тогда next_objs нам вернут много
+		    target_objs = next_objs
+		    // выкусим себя и разместим подстановку
+		    //objs = objs.slice( 0,i ).concat( next_objs )    
+		  }
+		  //console.log("mmm",obj.basis)
+
+		  //console.log("macro call! targts=",target_objs)
+
+		  let modified_objs = []
+    	  for (let next_obj of target_objs) {
+    	  	 let res = env_rec.modify( obj, next_obj, state )
+    	  	 
+    	  	 //if (!res) continue;
+    	  	 //if (Array.isArray( res )) modified_objs.push( ...res )
+    	  	 //	else
+    	  	 
+    	  	 modified_objs.push( res )
+    	  }
+
+    	  objs.splice( i, i_processed, ...modified_objs )
+
+    	  continue;	
+  		}
+  		i++
+	}
+	
+
+	let i_processed = i;
+
+	//console.log("converted=",objs)
 
 	// todo генераторам (или как их там) надо уметь вызвать процесс преобразования
 	// после себя (т.е. objs2obj) -  чтобы например реализовать цепочки декораторов.
 
-	let i = 0;	
+	i = 0;
 	while (i < objs.length) {
 		let obj = objs[i]
+		//console.log("obj.basis_path=",obj.basis_path,obj)
 		let env_rec = get_record( state,obj.basis_path, obj, true, false )
 		if (env_rec?.transform) {
 			 //console.log("transform found! i=", i, env_rec)
@@ -161,6 +253,9 @@ export function objs2objs( objs, state )
 			i++
 		}
 	}
+
+	objs.i_processed = i_processed;
+
 	//console.log("after transform, objs=",objs)
 	return objs; // пока так..
 

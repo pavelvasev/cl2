@@ -18,6 +18,7 @@
 // [[= целевой язык ]]
 // [[=! paste_file "mixins.cl" ]]
 
+
 transform "mixin" {: i objs state C|
 
   let obj = objs[i]

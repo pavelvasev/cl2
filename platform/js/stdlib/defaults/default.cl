@@ -733,9 +733,14 @@ func "flatten" {: obj |
 // можно сделать как func если научимся именованные параметры в функции передавать
 // применение: ключи и значения можно указывать как позиционные параметры и как именованные
 // все что указано и сформирует итоговый словарь
-// dict [k v k v] [k=v k=v]
+// dict k v k v k=v k=v
 // либо
-// dict arr [k=v k=v] где arr содержит пары, т.е [ [k v] [k v] ...]
+// dict arr, где arr содержит пары, т.е [ [k v] [k v] ...]
+/* примеры: 
+      * dict "alfa" 5 "beta" 7
+      * dict alfa=5 beta=7
+      * dict (list (list "alfa" 5) (list "beta" 7))
+*/
 obj "dict" {
   in {
     rest_pos*: cell
@@ -939,7 +944,7 @@ func "reduce" {: arr acc_init f |
     return process_elem( arr[i],names[i],acc ).then( (result) => {
       return process_dict( arr,names, i+1, result )
     })
-  }  
+  }
 
   let output = CL2.create_cell(); //output.attached_to = self
   output.$title = "titles_fn_output"
@@ -1059,3 +1064,48 @@ func "sequence2" { blocks |
   :}
 }
 */
+
+
+/* создает tree-элементы согласно arr
+   repeater @arr { item | elements.. }
+
+   мысли на будущее:
+   - оптимизировать, для этого запоминать с какими начальными значениями создавали..
+   делать передачу ячеек наверное не следует, это усложнит всю систему.
+   если кому-то надо ячейки, они их могут упаковать в значения и передать в них.
+*/
+mixin "tree_lift"
+process "repeater" {
+  in {
+    input: cell []
+    action&: cell // действие
+  }
+  // аутпута не будет - все в children
+
+  running: cell [] // список запущенных контекстов
+
+  react (list @input @action) {: args |
+    forget_all()
+
+    let running_acc = []
+    let f = args[1]
+    let input = args[0]
+    let index = 0;
+
+    for (let r of input) {
+      //console.log("repeater r=",r)
+      let result = f( r, index );
+      running_acc.push( result )
+      self.append( result )
+      index++
+    }
+    running.set( running_acc )
+  :}
+
+  func "forget_all" {:
+    running.get().map( r => r.destroy() ) // пока так
+    running.submit( [] )
+  :}
+
+  react @self.release {: forget_all() :}
+}
