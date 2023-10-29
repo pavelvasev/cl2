@@ -481,6 +481,7 @@ attr_name
 // разрешим еще больше в имени чтобы фичи могли называться как угодно < || && + и т.д.
 feature_name "feature name"
   = [a-zA-Zа-яА-Я_][a-zA-Zа-яА-Я0-9_\-\.!]* { return text(); } 
+  / "%" { return text(); }  // F-COMPILER-LANG
 //  / "===" "="+ { return "wait"} //F-SEQ-WAIT
   / feature_operator_name // оставим возможность фичам вида + a b c
 
@@ -528,7 +529,6 @@ one_env
 // ------- A. envs
 one_env_obj "environment record"
   = __
-  macro_prefix: "%"?
   envid: (@(@attr_name ws ":")?)
   __ first_feature_name:feature_name
   env_modifiers:(__ @env_modifier)*
@@ -539,7 +539,7 @@ one_env_obj "environment record"
     // этим мы застолбили что фича первая всегда идет и точка.
     env.features[ first_feature_name ] = {};
 
-    env.macro_call = macro_prefix ? true : false
+    //env.macro_call = macro_prefix ? true : false
     
     set_basis( env, first_feature_name )
 

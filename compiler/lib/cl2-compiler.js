@@ -1,5 +1,7 @@
 import * as P from "./lang-parser.js"
 
+import * as CL2 from '../../platform/js/runtime/cl2.js';
+
 // работа с состоянием
 /* роль состояния:
    - хранить считанные определения, чтобы их потом использовать для проверки сигнатур вызова
@@ -149,7 +151,75 @@ export function objs2objs( objs, state, one_tick )
 {
 
 	let i = 0;
+
+/* не понял как выяснять что там объект с .output-ом есть
+	let compiler_program = []
+	while (i < objs.length) {
+		let obj = objs[i]
+		if (obj.macro_call) {
+			compiler_program.push( obj )
+		}
+	}
+*/	
+
+	let compiler_program = { main: [], bindings: []}
+	let j = 0;
+	let next_objs = []
+	let points = []
+
+	let substate = modify_dir(state,"internal");
+	while (i < objs.length) {
+		let obj = objs[i]
+		if (obj.basis == "%") {
+			let items = get_children(obj,0)
+			//obj = objs[i+1] 
+			console.log("macro call",obj,"items=",items)
+
+			if (items.length > 0) {
+				// запись вида % { commands }
+				let r = process_objs( items, substate )
+				compiler_program.main.push( r.main )
+				compiler_program.bindings.push( r.bindings )				
+			}
+			else {
+				// запись вида % command
+				obj = objs[i+1] 
+
+				let env_rec = get_record( substate,obj.basis_path, obj, true, false )
+				if (!env_rec) {
+					console.error("compiler-lang: no env record for basis",obj.basis_path)
+				}
+				let r = env_rec.make_code( obj, substate )
+				compiler_program.main.push( r.main )
+				compiler_program.bindings.push( r.bindings )
+				console.log("r-obj-id",r.obj_id, r)
+				if (r.obj_id) {
+					// там будет результат
+					compiler_program.bindings.push( `CL2.create_binding( ${r.obj_id}.output, points[${points.length}] )`)
+					points.push( CL2.create_cell() ) 
+					j++
+				}
+
+				i++ // съедаем следующую команду
+			}
+		} else {
+			next_objs.push( obj )			
+			points.push( CL2.create_cell( obj ) )
+		}
+		i++
+	}
+	if (j > 0) {
+		//compiler_program.main.push( `let points = Array(${j}).map( x => return CL2.create_cell() )` )
+		let compiler_program_code = strarr2str( compiler_program.main.concat( compiler_program.bindings ) )
+		console.log("compiler_program_code=",compiler_program_code)
+
+		let fn = new Function( 'points','CL2','self',compiler_program_code )
+		let r = fn( points,CL2,{} )
+		console.log( 'r=',r)
+	}
+	objs = next_objs
 	
+	/*
 	while (i < objs.length) {
 		let obj = objs[i]
 		//console.log(obj)
@@ -219,6 +289,7 @@ export function objs2objs( objs, state, one_tick )
   		}
   		i++
 	}
+	*/
 	
 
 	let i_processed = i;
@@ -227,6 +298,8 @@ export function objs2objs( objs, state, one_tick )
 
 	// todo генераторам (или как их там) надо уметь вызвать процесс преобразования
 	// после себя (т.е. objs2obj) -  чтобы например реализовать цепочки декораторов.
+
+	// слой трансформаторов
 
 	i = 0;
 	while (i < objs.length) {
@@ -347,6 +420,7 @@ export function get_basis( record ) {
 	return record.basis
 }
 
+// результат - запись вида { main: ..., bindings: ... }
 export function process_objs( objs,state )
 {
 	//console.log("gonna make js for",objs)

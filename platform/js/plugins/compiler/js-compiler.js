@@ -323,7 +323,7 @@ export function default_obj2js( obj,state ) {
 		bindings.push( `// output binding of ${objid}`,linkstr )
 	}
 
-	return {main:strs,bindings}
+	return {main:strs,bindings, obj_id: objid}
 }
 
 function obj_str( str ) {

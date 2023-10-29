@@ -1,3 +1,5 @@
+// попытка сделать модификаторы
+
 modifier "some" {: obj target state |
   //console.log( "called modifier some!",target )
   let prefix = obj.params[0] || "my input is"
