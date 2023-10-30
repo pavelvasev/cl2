@@ -145,11 +145,62 @@ function process_modifier( i, objs, state ) {
 	let env_rec = get_record( state,obj.basis_path, obj, true, false )	
 }
 */
+/*
+function create_interpreter( state ) {
+	// https://stackoverflow.com/questions/67322922/context-preserving-eval
+	var __EVAL = s => eval(`void (__EVAL = ${__EVAL.toString()}); ${s}`);
+	let fn_code = `
+	return ( code ) => {
+		console.log("interpreter called",code)
+		
+		let arr = []
+		CL2.setStartPerformScheduled(f => {
+			arr.push( f )
+		})
+
+		//let self = {}
+
+		let res = __EVAL( code )
+
+		while (arr.length > 0) {
+			console.log("i-tick ",arr.length)
+			let f = arr.shift()
+			f()
+		}
+
+		return res
+	}`
+	let fn = new Function( 'CL2','self','__EVAL',fn_code )
+	return fn( CL2, {},__EVAL )
+}
+*/
 
 function create_interpreter( state ) {
+	// https://stackoverflow.com/questions/67322922/context-preserving-eval
+	var __EVAL = s => eval(`void (__EVAL = ${__EVAL.toString()}); ${s}`);
+	
 	return ( code ) => {
-		eval( code )
+		//console.log("interpreter called",code)
+		
+		let arr = []
+		CL2.setStartPerformScheduled(f => {
+			arr.push( f )
+		})
+
+		//let self = {}
+
+		let res = __EVAL( code )
+
+		while (arr.length > 0) {
+			//console.log("i-tick ",arr.length)
+			let f = arr.shift()
+			f()
+		}
+
+		return res
 	}
+	//let fn = new Function( 'CL2','self','__EVAL',fn_code )
+	//return fn( CL2, {},__EVAL )
 }
 
 // F-MACROS
@@ -174,24 +225,36 @@ export function objs2objs( objs, state, one_tick )
 	let points = []
 
 	// он у нас будет общий на весь модуль текущий..
-	if (!state.compiler_program_state)
+	if (!state.compiler_program_state) {
 		state.compiler_program_state = modify_dir(state,"internal");
+		state.compiler_program_interpreter = create_interpreter()
+		state.compiler_program_interpreter('let self={}')
+		state.compiler_program_interpreter( state.space.default_things_code )
+
+		//console.log("testing interp")
+		//state.compiler_program_interpreter("create_read()")
+	}
 
 	let substate = state.compiler_program_state
+	let interpreter = state.compiler_program_interpreter
 
 	while (i < objs.length) {
 		let obj = objs[i]
 		if (obj.basis == "%") {
 			let items = get_children(obj,0)
 			//obj = objs[i+1] 
-			console.log("macro call",obj,"items=",items)
+			//console.log("macro call",obj,"items=",items)
 
 			if (items.length > 0) {
 				// запись вида % { commands }
 				let r = process_objs( items, substate )
-				compiler_program.main.push( r.main )
-				compiler_program.bindings.push( r.bindings )				
+				//compiler_program.main.push( r.main )
+				//compiler_program.bindings.push( r.bindings )
+				interpreter( strarr2str( r.main.concat( r.bindings )) )
 				j++
+				// съедим инструкцию
+				objs.splice( i, 1)
+				continue;
 			}
 			else {
 				// запись вида % command
@@ -202,62 +265,57 @@ export function objs2objs( objs, state, one_tick )
 					console.error("compiler-lang: no env record for basis",obj.basis_path)
 				}
 				let r = env_rec.make_code( obj, substate )
-				compiler_program.main.push( r.main )
-				compiler_program.bindings.push( r.bindings )
-				console.log("r-obj-id",r.obj_id, r)
+				//compiler_program.main.push( r.main )
+				//compiler_program.bindings.push( r.bindings )
+				// console.log("r-obj-id",r.obj_id, r)
+				let new_code = []
 				if (r.obj_id) {
 					// там будет результат
-					compiler_program.bindings.push( `CL2.create_binding( ${r.obj_id}.output, points[${points.length}] )`)
-					points.push( CL2.create_cell() ) 
+					r.bindings.push( `${r.obj_id}.output`)
+					let res = interpreter( strarr2str( r.main.concat( r.bindings )))
+					if (res.is_set) {
+						let rr = res.get()
+						//console.log("compiler-lang: waited res=",rr)
+						if (rr.code) {
+							// круто дали новый код
+							new_code = rr.code
+						} else if (Array.isArray(rr) && rr[0].code)
+						   new_code = rr.map( item => item.code ).flat()
+						else {
+							//console.log("parsing rr",rr)
+							let parsed = state.tool.parse( rr.toString() )
+							//let parsed = state.tool.parse( `comment 'compiler-lang begin' ${rr}` )
+							//console.log("parsed=",parsed)
+							parsed[0].$name = objs[i].$name // вот так							
+							new_code = parsed
+							//state.tool.compile_string
+							/* это рид
+								let nc = objs[i]
+								nc.basis = "read"
+								nc.basis_path = ["read"]
+								nc.params[0] = rr
+								new_code = [nc]							
+							*/	
+						}   
+					} else {
+						console.error("compiler-lang: no result",res)
+					}
 					j++
-				}
+				} else 
+					interpreter( strarr2str( r.main.concat( r.bindings )))
 
-				i++ // съедаем следующую команду
+				//i++ // съедаем следующую команду
+				objs.splice( i, 2, ...new_code)
+				continue;
 			}
 		} else {
-			next_objs.push( obj )			
-			points.push( CL2.create_cell( obj ) )
+			//next_objs.push( obj )
+			//points.push( CL2.create_cell( obj ) )
 		}
 		i++
 	}
-	console.log("Sborka finish, j=",j,objs.length)
+	//console.log("Sborka finish, j=",j,objs.length)
 
-	if (j > 0) {
-		// есть подстановки
-
-		//compiler_program.main.push( `let points = Array(${j}).map( x => return CL2.create_cell() )` )
-		let compiler_program_code = strarr2str( compiler_program.main.concat( compiler_program.bindings ) )
-		//console.log("compiler_program_code=",compiler_program_code)
-		//let fn_code = state.tool.gen_full_code( compiler_program_code )
-		let fn_code = state.space.default_things_code + "\n" + compiler_program_code
-		//console.log("fn_code=",fn_code)
-		let fn = new Function( 'points','CL2','self',fn_code )
-
-		let arr = []
-		CL2.setStartPerformScheduled(f => {
-			arr.push( f )
-		})		
-
-		let r = fn( points,CL2,{} )
-
-		while (arr.length > 0) {
-			console.log("tick ",arr.length)
-			let f = arr.shift()
-			f()
-		}
-		//console.log( 'points',points)
-
-		next_objs = []
-	   points.map( p => {
-	   	if (p.is_set) {
-	   		console.log( "generated point",p.get() )
-	   		next_objs.push( p.get() );
-	   	}
-	   	else 
-	   	   console.error('point is not set!', p)
-	   })
-	}
-	objs = next_objs
 	
 	/*
 	while (i < objs.length) {
@@ -557,16 +615,21 @@ export function paramEnvToFunc( value, state ) {
 	return s
 }
 
-
 // вытащено из форм. может им тут не место.
 // по объектовой записи объекта понять кто его параметры включая каналы
-export function get_obj_params( obj ) {
+export function get_obj_params( obj, obj_children ) {
 	let params = {}
 	let rest_param, named_rest_param, children_param, next_obj_param
 	// F-CHAINS-V3 next_obj_param
 
-	let in_p = get_children(obj,1).find( c => c.basis == "in")
-	if (!in_p) return {params}
+	// возможность работы с несколькими in-секциями
+	let ins = obj_children.filter( c => c.basis == "in")
+	if (ins.length == 0) return {params}
+	//console.log("ins len=",ins.length,obj)
+
+	for (let in_p of ins) {
+	//let in_p = get_children(obj,1).find( c => c.basis == "in")
+	//if (!in_p) return {params}
 
   // вот этим шагом можно параметры будет отдельно рендерить
 	//obj.in_params = in_p
@@ -603,7 +666,8 @@ export function get_obj_params( obj ) {
 					next_obj_param = k.$name_modified
 				}
 			*/	
-		}		
+		}
+	}	
 	
 	//console.log("get-obj-params obj=",obj.$name, "in=",in_p,{params,rest_param,named_rest_param})
 

@@ -1109,3 +1109,13 @@ process "repeater" {
 
   react @self.release {: forget_all() :}
 }
+
+// это у нас такая форма quote
+form "quote" {: obj state C|
+  let self_objid = C.obj_id( obj, state )
+  let strs = [`let ${self_objid} = CL2.create_object();`,
+  `let ${self_objid}_output = CL2.create_cell(${ JSON.stringify(obj.params[0]) });`,
+  `CL2.attach( ${self_objid}, 'output',${self_objid}_output )`
+  ]
+  return {main: strs, bindings: [], obj_id: self_objid}
+:}

@@ -38,6 +38,7 @@ export var tablica = {
 	pipe: { make_code: pipe, check_params: default_cp},
 	__dirname: { make_code: dirname, check_params: default_cp},
 	form: { make_code: form, check_params: default_cp},
+	comment: { make_code: comment, check_params: default_cp},
 	//transform: { transform: transform, check_params: default_cp},
 }
 
@@ -184,10 +185,13 @@ export function _obj( obj, state )
 			// таки мб не обжа
 		}
   }
-*/  
+*/
+
+	// проходка заранее
+	let children = C.objs2objs( C.get_children( obj,1 ), state )
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
-	let {params,rest_param,named_rest_param, children_param,next_obj_param} = C.get_obj_params( obj )
+	let {params,rest_param,named_rest_param, children_param,next_obj_param} = C.get_obj_params( obj, children )
 	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
@@ -198,7 +202,7 @@ export function _obj( obj, state )
   ///////////////// генерируем тело указанное в 1-м аргументе
 
 	let c_state = C.modify_parent( state, "self" )
-	let body = C.objs2js( C.get_children( obj,1 ), c_state )
+	let body = C.objs2js( children, c_state )
 	// console.log("ch=",C.get_children( obj,1 ),"body=",body)
 	//strs2.push( body )
 
@@ -547,11 +551,12 @@ export function bind( obj, state )
 */
 export function pipe( obj, state )
 {
-	let base = { main: [], bindings: [] }
+	let objid = C.obj_id(obj,state)
+	let base = { main: [], bindings: [], obj_id: objid }
 
 	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
 	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
-	let objid = C.obj_id(obj,state)
+	
 	base.main.push( `let ${objid} = CL2.create_item() // pipe`)
 	base.main.push( `CL2.attach( ${objid},'input',CL2.create_cell())`)
 	base.main.push( `CL2.attach( ${objid},'output',CL2.create_cell())`)
@@ -761,7 +766,7 @@ export function form( obj, state )
 	state.current[ name ] = {
 		basis: name,
 		make_code: (obj,state) => {
-			return f( obj,state )
+			return f( obj,state, C )
 		},
 		check_params: default_cp
   }
@@ -769,3 +774,8 @@ export function form( obj, state )
 
 	return { main: [], bindings: [] }
 }
+
+export function comment( obj, state )
+{
+	return { main: [`// ${obj.params[0]}`],bindings:[]}
+}	
