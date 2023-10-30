@@ -175,6 +175,7 @@ function create_interpreter( state ) {
 }
 */
 
+// todo если этот слой останется то утащить его в плагин
 function create_interpreter( state ) {
 	// https://stackoverflow.com/questions/67322922/context-preserving-eval
 	var __EVAL = s => eval(`void (__EVAL = ${__EVAL.toString()}); ${s}`);
@@ -226,7 +227,11 @@ export function objs2objs( objs, state, one_tick )
 
 	// он у нас будет общий на весь модуль текущий..
 	if (!state.compiler_program_state) {
-		state.compiler_program_state = modify_dir(state,"internal");
+		state.compiler_program_state = modify_dir(state,"./");
+		state.compiler_program_state.struc_parent_id = "self"
+
+		//state.compiler_program_state.space.get_export_flag
+
 		state.compiler_program_interpreter = create_interpreter()
 		state.compiler_program_interpreter('let self={}')
 		state.compiler_program_interpreter( state.space.default_things_code )
@@ -318,6 +323,7 @@ export function objs2objs( objs, state, one_tick )
 
 	
 	/*
+	/// слой модификаторов
 	while (i < objs.length) {
 		let obj = objs[i]
 		//console.log(obj)

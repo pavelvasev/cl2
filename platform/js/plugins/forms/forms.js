@@ -434,6 +434,8 @@ export function paste_global( obj, state )
 
 import * as path from 'node:path';
 
+/* paste_file "file.cl"
+*/
 export function paste_file( obj, state )
 {
 	let params_count = obj.positional_params_count
@@ -735,7 +737,7 @@ export function dirname( obj, state )
 
 	let id = C.obj_id(obj,state)
 	base.main.push( `let ${id} = CL2.create_item()`)
-	let val_str = C.objToString(state.dir,0,state)
+	let val_str = CJS.objToString(state.dir,0,state)
 	base.main.push( `CL2.attach( ${id},'output', CL2.create_cell( ${val_str} ))` )
 
   if (state.next_obj_cb)

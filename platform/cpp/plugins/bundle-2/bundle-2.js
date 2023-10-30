@@ -35,7 +35,8 @@ export function init( st ) {
 
 	space.get_export_flag = ( state ) => {
 		return "" // пока без етого
-		let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? "export " : ""		
+		let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? "export " : ""
+		// (!state.export_disabled) &&
 		return export_flag
 	}
 
