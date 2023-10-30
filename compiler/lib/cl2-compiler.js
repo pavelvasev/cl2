@@ -146,6 +146,12 @@ function process_modifier( i, objs, state ) {
 }
 */
 
+function create_interpreter( state ) {
+	return ( code ) => {
+		eval( code )
+	}
+}
+
 // F-MACROS
 export function objs2objs( objs, state, one_tick )
 {
@@ -167,7 +173,12 @@ export function objs2objs( objs, state, one_tick )
 	let next_objs = []
 	let points = []
 
-	let substate = modify_dir(state,"internal");
+	// он у нас будет общий на весь модуль текущий..
+	if (!state.compiler_program_state)
+		state.compiler_program_state = modify_dir(state,"internal");
+
+	let substate = state.compiler_program_state
+
 	while (i < objs.length) {
 		let obj = objs[i]
 		if (obj.basis == "%") {
@@ -180,10 +191,11 @@ export function objs2objs( objs, state, one_tick )
 				let r = process_objs( items, substate )
 				compiler_program.main.push( r.main )
 				compiler_program.bindings.push( r.bindings )				
+				j++
 			}
 			else {
 				// запись вида % command
-				obj = objs[i+1] 
+				obj = objs[i+1]
 
 				let env_rec = get_record( substate,obj.basis_path, obj, true, false )
 				if (!env_rec) {
@@ -208,14 +220,42 @@ export function objs2objs( objs, state, one_tick )
 		}
 		i++
 	}
+	console.log("Sborka finish, j=",j,objs.length)
+
 	if (j > 0) {
+		// есть подстановки
+
 		//compiler_program.main.push( `let points = Array(${j}).map( x => return CL2.create_cell() )` )
 		let compiler_program_code = strarr2str( compiler_program.main.concat( compiler_program.bindings ) )
-		console.log("compiler_program_code=",compiler_program_code)
+		//console.log("compiler_program_code=",compiler_program_code)
+		//let fn_code = state.tool.gen_full_code( compiler_program_code )
+		let fn_code = state.space.default_things_code + "\n" + compiler_program_code
+		//console.log("fn_code=",fn_code)
+		let fn = new Function( 'points','CL2','self',fn_code )
 
-		let fn = new Function( 'points','CL2','self',compiler_program_code )
+		let arr = []
+		CL2.setStartPerformScheduled(f => {
+			arr.push( f )
+		})		
+
 		let r = fn( points,CL2,{} )
-		console.log( 'r=',r)
+
+		while (arr.length > 0) {
+			console.log("tick ",arr.length)
+			let f = arr.shift()
+			f()
+		}
+		//console.log( 'points',points)
+
+		next_objs = []
+	   points.map( p => {
+	   	if (p.is_set) {
+	   		console.log( "generated point",p.get() )
+	   		next_objs.push( p.get() );
+	   	}
+	   	else 
+	   	   console.error('point is not set!', p)
+	   })
 	}
 	objs = next_objs
 	

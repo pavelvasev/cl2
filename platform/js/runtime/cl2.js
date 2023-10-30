@@ -771,7 +771,13 @@ export function schedule( fn, priority_holder_object, force_priority ) {
 
 
 	if (next_tick.length == 1)
-		setImmediate( perform_scheduled )
+		startPerformScheduled( perform_scheduled )
+}
+
+// нам надо уметь эту штуку переопределять
+var startPerformScheduled = setImmediate;
+export function setStartPerformScheduled(f) {
+	startPerformScheduled = f;
 }
 
 function perform_scheduled() {

@@ -8,8 +8,11 @@ export function init( state, tool, conf ) {
 		state.env = {...state.env, ...default_things.state.current}
 		tool.add_global_code( `// from ${name}` )
 		tool.add_global_code( default_things.code )	
+		return default_things.code;
 	}
 	
-	f( "default-transforms.cl")
-	f( "default.cl")
+	let d1 = f( "default-transforms.cl" )
+	let d2 = f( "default.cl" )
+
+	state.space.default_things_code = d1 + "\n" + d2;
 }
