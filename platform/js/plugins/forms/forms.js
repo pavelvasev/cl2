@@ -24,6 +24,7 @@ export var tablica = {
 //	func: { make_code: func, check_params: default_cp },
 //func: { make_code: func, check_params: (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[], children_param: "body"} } },
 	cell: { make_code: cell, check_params: default_cp },
+	const: { make_code: _const, check_params: default_cp },
 	bind: { make_code: bind, check_params: default_cp },
 	init: { make_code: _init, check_params: default_cp },
 	paste: { make_code: paste, check_params: default_cp },
@@ -104,6 +105,7 @@ export function _let( obj, state )
 }
 
 // F-LET-NEXT
+// todo убрать это. оно зло. на уровне парсера сделать задание значения. либо сделать let.
 export function _let_next( obj, state )
 {
 	let name = obj.params[0]
@@ -127,7 +129,6 @@ export function _let_next( obj, state )
 
 	// надо отключить если было включено
 	state.static_values[ name ] = false
-
 
 	return {main: strs, bindings: []}
 }
@@ -191,7 +192,8 @@ export function _obj( obj, state )
 	let children = C.objs2objs( C.get_children( obj,1 ), state )
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
-	let {params,rest_param,named_rest_param, children_param,next_obj_param} = C.get_obj_params( obj, children )
+	let {params,rest_param,named_rest_param, 
+	  children_param,next_obj_param,const_params} = C.get_obj_params( obj, children )
 	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
@@ -270,10 +272,12 @@ export function _obj( obj, state )
 			   pos_rest_names - список имен которые следуте записать в rest-параметр
 			   named_rest_names - список имен которые следуте записать в named-rest-параметр
 				 children_param - имя параметра для записи функции добавки детей 
+				 const_params - словарь имен которые параметры и должны передаваться по значению F-PARAMS
 			*/
 			let named = [], pos_rest_names = [], named_rest_names=[]
 			let renamed = {}
 			let named_splat = [], pos_splat = []
+			let _const_params = {} // F-PARAMS
 
 			pos_rest_names.name = rest_param
 			named_rest_names.name = named_rest_param
@@ -288,6 +292,11 @@ export function _obj( obj, state )
 				}
 				if (val?.pos_splat) {
 					pos_splat.push( {name: k, source: val.source, controlled_names: positional_names.slice(k+1)} )
+					continue
+				}
+				if (const_params.hasOwnProperty( k )) {
+					// k встречается в списке параметров объекта - значит это именованный
+					_const_params.push( k )
 					continue
 				}
 				// k - имя очередного параметра указанное внешне. может быть числом, для позционных.				
@@ -320,11 +329,14 @@ export function _obj( obj, state )
 			}
 			return {normal:named,renamed,pos_rest:pos_rest_names, 
 			   named_rest: named_rest_names, children_param, 
-			   pos_splat, named_splat}
+			   pos_splat, named_splat, const_params: _const_params}
 		},
 		get_params: () => {
 			return obj_params
 		},
+		get_const_params: () => {
+			return const_params
+		},		
 		get_positional_names: () => { // выдает таблицу
 			return Object.keys(params)
 		}
@@ -374,6 +386,16 @@ export function cell( obj, state )
 	let strs = [`let ${name} = CL2.create_cell(${value_str}${fast_part})`]
 	strs.push( `CL2.attach( self,"${name}",${name} )` )
 
+	return {main:strs,bindings:[]}
+}
+
+// F-CONST-PARAM
+export function _const( obj,state ) {
+	let name = obj.$name_modified || obj.$name
+	let initial_value = CJS.objToString(obj.params[0],0,state) || null
+	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
+	let strs = [`let ${name} = ${value_str}`, `self.${name} = ${name}`]
+	state.static_values[name]  = true
 	return {main:strs,bindings:[]}
 }
 
@@ -530,6 +552,7 @@ export function bind( obj, state )
 
 
 	//  и фичеры.. это у нас дети которые не дети	
+	// это позволяет писать bind (formula) (formula)
 	let modified = C.modify_parent( state )
 	if (C.get_nested(obj))
 	{

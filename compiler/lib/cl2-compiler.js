@@ -623,9 +623,11 @@ export function paramEnvToFunc( value, state ) {
 
 // вытащено из форм. может им тут не место.
 // по объектовой записи объекта понять кто его параметры включая каналы
+// todo добавить проверку что все необходимые значения заданы
 export function get_obj_params( obj, obj_children ) {
 	let params = {}
 	let rest_param, named_rest_param, children_param, next_obj_param
+	let const_params = {}
 	// F-CHAINS-V3 next_obj_param
 
 	// возможность работы с несколькими in-секциями
@@ -647,6 +649,13 @@ export function get_obj_params( obj, obj_children ) {
 			{
 				params[ k.$name ] = true
 				k.$name_modified = k.$name
+			}
+			else
+			if (k.basis == "const")
+			{
+				params[ k.$name ] = true
+				k.$name_modified = k.$name
+				const_params[ k.$name ] = true
 			}
 
 			if (k.$name.endsWith("**")) {
@@ -677,5 +686,5 @@ export function get_obj_params( obj, obj_children ) {
 	
 	//console.log("get-obj-params obj=",obj.$name, "in=",in_p,{params,rest_param,named_rest_param})
 
-	return {params,rest_param,named_rest_param,children_param,next_obj_param}
+	return {params,rest_param,named_rest_param,children_param,next_obj_param,const_params}
 }
