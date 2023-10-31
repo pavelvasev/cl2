@@ -3,6 +3,7 @@
 obj "foo1" {
   in {
     beta: const
+    tetra: cell
   }
   init {:
     console.log("beta is",beta);
@@ -19,7 +20,7 @@ obj "foo" {
   :}
 
   //bebe: foo1 (% + 10 @alfa)
-  bebe: foo1 @alfa
+  bebe: foo1 @alfa 14
   
   output := @bebe.beta
 }
@@ -29,7 +30,7 @@ sigma: const 20
 
 f: foo @sigma
 
-f1: foo1
+f1: foo1 11 14
 print "f1.beta = " @f1.beta
 
 //foo 15

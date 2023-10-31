@@ -51,7 +51,7 @@ obj "spawn" {
   in {
     cmd_args*: cell
     stdio: cell 'pipe'
-    dir: cell '' 
+    dir: cell ''
   }
   output: channel
   stderr: channel

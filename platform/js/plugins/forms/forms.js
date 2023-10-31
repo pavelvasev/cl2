@@ -193,7 +193,8 @@ export function _obj( obj, state )
 
 	// todo передалать. но тут тупорого - мы удаляем просто позиционные
 	let {params,rest_param,named_rest_param, 
-	  children_param,next_obj_param,const_params} = C.get_obj_params( obj, children )
+	  children_param,next_obj_param,
+	  const_params, required} = C.get_obj_params( obj, children )
 	//console.log("get-obj-params:",{params,rest_param,named_rest_param})
 	let obj_params = params
 	let positional_names = Object.keys(params)
@@ -260,15 +261,19 @@ export function _obj( obj, state )
 			return res
 		},
 		check_params: ( param_names, param_values, locinfo ) => {
-			//console.log("check_params of id",id,"param_names=",param_names,"obj_params=",obj_params)
+			// param_names - массив имен, param_values - словарь значений
 			// задача - по каждому указанному входному параметру дать информацию
 			// как его следует подавать
 			// - как именованный (и как именно - это касается позиционной подачи)
 			// - в рест позиционный - в рест именованный (и какое имя)
+			// F-CHECK-EXTRA проверяет что не дано лишних параметров
+			// F-CHECK-REQUIRED проверяет также что все обязательные параметры заданы 
+
+			//console.log("check_params of id",id,"param_names=",param_names,"obj_params=",obj_params)			
 
 			/* возвращает словарь: 
 			   named - список имен которые следует передать обычным образом
-			   renamed - словарь преобразования имен
+			   renamed - словарь преобразования имен -- внешнее -> внутреннее
 			   pos_rest_names - список имен которые следуте записать в rest-параметр
 			   named_rest_names - список имен которые следуте записать в named-rest-параметр
 				 children_param - имя параметра для записи функции добавки детей 
@@ -279,13 +284,16 @@ export function _obj( obj, state )
 			let named_splat = [], pos_splat = []
 			let _const_params = {} // F-PARAMS
 
+			// F-CHECK-REQUIRED
+			let required_rm = {...required}
+
 			pos_rest_names.name = rest_param
 			named_rest_names.name = named_rest_param
 			// obj_params это словарь параметров из описания объекта (типа то бишь)
 			// positional_names - массив имен позиционных параметров из описания
 			for (let k of param_names) {
 				let val = param_values[ k ]
-				//if (!val) console.log( "strange! param_values=",param_values,"name=",k)
+				
 				if (val?.named_splat) {
 					named_splat.push( {name: k, source: val.source, controlled_names: obj_params} )
 					continue
@@ -297,12 +305,14 @@ export function _obj( obj, state )
 				if (const_params.hasOwnProperty( k )) {
 					// k встречается в списке параметров объекта - значит это именованный
 					_const_params.push( k )
+					delete required_rm[k]
 					continue
 				}
 				// k - имя очередного параметра указанное внешне. может быть числом, для позционных.				
 				if (obj_params.hasOwnProperty( k )) {
 					// k встречается в списке параметров объекта - значит это именованный
 					named.push( k )
+					delete required_rm[k]
 					continue
 				}
 				
@@ -311,22 +321,45 @@ export function _obj( obj, state )
 					// k есть позиционный параметр. запомним как его надо переименовать при присвоении
 					named.push( k )
 					renamed[k] = qq
+					delete required_rm[qq]
 					continue
 				}
 				// есть рест и обычные - заполнены
 				// и при этом имя параметра это число. todo как-то отдельно эти бы числа просто пройти..
 				if (rest_param && named.length == positional_names.length && /^(0|[1-9]\d*)$/.test(k)) {
 					pos_rest_names.push( k )
+					delete required_rm[rest_param]
 					// todo но это только если k - позиционно подан
 					continue // временное название для **
 				}
 				if (named_rest_param) {
 					named_rest_names.push( k )
+					delete required_rm[named_rest_param]
 					continue // временное название для *
 				}
-				console.error(`object ${id} has no parameter ${k}. obj.params=`,obj_params, locinfo)
-				throw new Error( `object ${id} has no parameter ${k}`)
+				console.error(`object type ${id} has no parameter ${k}. obj.params=`,obj_params, locinfo)
+				throw new Error( `object type ${id} has no parameter ${k}`)
 			}
+
+			// F-CHECK-REQUIRED
+			let missing = Object.keys( required_rm )
+			if (missing.length > 0) {
+				if (named_splat.length > 0)
+				{
+					// придется в рантайме контролировать
+					named_splat[0].required_names = required_rm
+					// todo
+					// да и вопрос на самом деле. в рантайме то что в этот момент делать?
+					// мб обязательные параметры запретить через сплат выдавать как раз..
+					// и тогда на моменте компиляции мы это увидим.
+					console.log("warning: required params controlled by named splat",missing)
+				}
+				else {
+					console.error(`object type '${id}' requires parameters: ${missing}. obj.params=`,param_values, locinfo)
+					throw new Error( `object type '${id}' requires parameters: ${missing}`)				
+				}
+			}
+
 			return {normal:named,renamed,pos_rest:pos_rest_names, 
 			   named_rest: named_rest_names, children_param, 
 			   pos_splat, named_splat, const_params: _const_params}

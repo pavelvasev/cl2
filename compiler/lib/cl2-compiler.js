@@ -628,6 +628,7 @@ export function get_obj_params( obj, obj_children ) {
 	let params = {}
 	let rest_param, named_rest_param, children_param, next_obj_param
 	let const_params = {}
+	let required = {} // F-CHECK-REQUIRED
 	// F-CHAINS-V3 next_obj_param
 
 	// возможность работы с несколькими in-секциями
@@ -656,6 +657,9 @@ export function get_obj_params( obj, obj_children ) {
 				params[ k.$name ] = true
 				k.$name_modified = k.$name
 				const_params[ k.$name ] = true
+				// F-CHECK-REQUIRED
+				if (!k.params.hasOwnProperty(0)) 
+					required[ k.$name ] = true
 			}
 
 			if (k.$name.endsWith("**")) {
@@ -673,18 +677,17 @@ export function get_obj_params( obj, obj_children ) {
 					k.$name_modified = k.$name.slice(0,-1)
 					children_param = k.$name_modified
 					params[ children_param ] = true // т.е. параметр доступен и через обычные параметры
-				}	
-			/*	
-		  else // todo удалить фичу next_obj_param т.к. она вроде как и не нужна, появились F-TRANSFORM
-			if (k.$name.endsWith("~")) {
-					k.$name_modified = k.$name.slice(0,-1)					
-					next_obj_param = k.$name_modified
 				}
-			*/	
+			else // получается мы всякие rest не проверяем
+			// F-CHECK-REQUIRED
+			// так то это хак и послезнание, что у ячейки значение в параметре 0..
+			if (k.basis == "cell" && !k.params.hasOwnProperty(0))  
+			    required[ k.$name_modified ] = true
+
 		}
 	}	
 	
 	//console.log("get-obj-params obj=",obj.$name, "in=",in_p,{params,rest_param,named_rest_param})
 
-	return {params,rest_param,named_rest_param,children_param,next_obj_param,const_params}
+	return {params,rest_param,named_rest_param,children_param,next_obj_param,const_params,required}
 }

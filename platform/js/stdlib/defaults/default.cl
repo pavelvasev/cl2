@@ -220,7 +220,7 @@ obj "__if"
     //input: cell
     condition: cell // если канал то тогда константы не получается подставлять..
     then_branch: cell
-    else_branch: cell
+    else_branch: cell false // todo что бы это значило..
   }
   output: cell
   current_state: cell 0 // 0 uninited, 1 then case, 2 else case
