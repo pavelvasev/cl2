@@ -213,7 +213,7 @@ export function default_obj2js( obj,state ) {
   	 let ns = named_splat[0]
   	 // создаем процесс мониторинга
   	 bindings.push( `let ${ns.name}_controlled_names = {${Object.keys(ns.controlled_names).map(k=>`"${k}":true`).join(',')}}`)
-  	 bindings.push( `let ${ns.name}_required_names = {${Object.keys(ns.required_names).map(k=>`"${k}":true`).join(',')}}`)
+  	 // bindings.push( `let ${ns.name}_required_names = {${Object.keys(ns.required_names).map(k=>`"${k}":true`).join(',')}}`)
   	 // F-REST-AUTO-EXTRACT
   	 bindings.push( `let ${ns.name}_named_rest = ${named_rest_name ? named_rest_name : null}`)
   	 // начальное значение для rest_acc задается такое же, как было для named_rest выше..
