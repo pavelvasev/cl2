@@ -623,7 +623,6 @@ export function paramEnvToFunc( value, state ) {
 
 // вытащено из форм. может им тут не место.
 // по объектовой записи объекта понять кто его параметры включая каналы
-// todo добавить проверку что все необходимые значения заданы
 export function get_obj_params( obj, obj_children ) {
 	let params = {}
 	let rest_param, named_rest_param, children_param, next_obj_param
@@ -632,6 +631,8 @@ export function get_obj_params( obj, obj_children ) {
 	// F-CHAINS-V3 next_obj_param
 
 	// возможность работы с несколькими in-секциями
+	// todo это очень долго. вероятно стоит вообще ток первый элемент проверять.
+	// а насчет нескольких секций это мб и лишнее - даже на уровне ортогональности.	
 	let ins = obj_children.filter( c => c.basis == "in")
 	if (ins.length == 0) return {params}
 	//console.log("ins len=",ins.length,obj)

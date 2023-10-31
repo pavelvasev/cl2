@@ -83,6 +83,7 @@ obj "spawn" {
      //s_env.PATH = s_env.PATH + ":" + tool_dir
     //let child = cp.spawn( args[0], args.slice(1), {env: s_env} )
     let opts = { stdio: self.stdio.get() }
+    //console.log("using opts",opts)
     if (self.dir.is_set) {
       let d = self.dir.get()
       if (d && d.length > 0)
@@ -95,16 +96,20 @@ obj "spawn" {
 
     // https://stackoverflow.com/questions/14332721/node-js-spawn-child-process-and-get-terminal-output-live
     if (child.stdout) {
+      //console.log('seee c1')
       child.stdout.setEncoding('utf8');
       child.stdout.on('data', function(data) {
         // data = data.toString() ?
-        // console.log('data',data)
+        //console.log('data',data)
         self.stdout.submit( data )
       })
     }
+
     if (child.stderr) {
+      //console.log('seee c2')
       child.stderr.setEncoding('utf8');
       child.stderr.on('data', function(data) {
+        //console.log('err',data)
         // data = data.toString() ?
         self.stderr.submit( data )
       })    
