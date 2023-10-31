@@ -12,7 +12,7 @@ export function get_module_dir0(r) {
 			return null
 		}
 
-export function get_module_dir1(r, current_dir, root_dir) {
+export function get_module_dir1(r, current_dir, modules_root_dir) {
 			let dir0 = get_module_dir0( r )
 			//console.log("dir0=",dir0,"r=",r)
 			if (dir0 [0] == ".") { // относительно файла
@@ -23,18 +23,18 @@ export function get_module_dir1(r, current_dir, root_dir) {
 			// все остальные считаются от проекта
 			// return path.join( state.dir, "modules",dir_0 )
 			// F-SINGLE-MODULES-DIR
-			return path.join( root_dir, "modules",dir0 )
+			return path.join( modules_root_dir,dir0 )
 		}
 
 // по спецификации рассчитывает каталог модуля
 // r это спецификатор модуля из записей init.js
 // current_dir это "текущая папка" для расчета относительных путей
-// root_dir это папка проекта, F-SINGLE-MODULES-DIR
-export function get_module_dir( r, current_dir, root_dir=current_dir ) {
-	return path.resolve( get_module_dir1( r, current_dir, root_dir ))
+// modules_root_dir это папка модулей проекта, F-SINGLE-MODULES-DIR
+export function get_module_dir( r, current_dir, modules_root_dir=current_dir ) {
+	return path.resolve( get_module_dir1( r, current_dir, modules_root_dir ))
 }
 
-// загружает конфигурацию модуля по указанному пути (папка или файл)
+// загружает конфигурацию модуля по указанному пути (папка или файл) module_path
 // пока считается что там файл init.js в папке лежит
 // и дорабатывает этот конфиг, считает для него карту импорта (зачем-то)
 // root_dir_path - папка проекта, F-SINGLE-MODULES-DIR
@@ -58,14 +58,15 @@ export function	load_module_config( module_path, root_dir_path=module_path ) {
 		//console.log("load_module_config: importing",init_file)
 		return import( init_file ).then( m => {
 			let inner_modules = m.modules || m.sources || {}
+			let modules_dir = path.join( root_dir_path, m.modules_dir || "modules" )
 
 			// функция 1 - запомнить пути для карты импорта
 			// todo вообще ее надо отсюда вынести. пусть эта функция только читает
 			let import_map = {}
 			for (let key in inner_modules) 
-				import_map[key] = get_module_dir( inner_modules[key], dir, root_dir_path )
+				import_map[key] = get_module_dir( inner_modules[key], dir, modules_dir )
 
-			let conf = {...m, modules: inner_modules, import_map, dir}
+			let conf = {...m, modules: inner_modules, import_map, dir, modules_dir}
 
 			return conf
 		})
