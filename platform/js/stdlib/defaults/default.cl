@@ -556,6 +556,7 @@ func "more_equal" {: ...values |
 :}
 alias "more_equal" ">="
 
+
 paste_file "events.cl"
 
 ////////////////////////////////
@@ -605,6 +606,16 @@ func "arrays_equal" {: a b |
   return false
 :}
 
+///////////////////////
+
+func "replace" {: src pattern repl |
+  return str.replaceAll( pattern, repl )
+:}
+
+func "regexp" {: pattern flags |
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+  return new RegExp( pattern, flags )
+:}
 
 ///////////////////////
 
@@ -650,7 +661,11 @@ func "join" {: obj sep |
 :}
 
 func "flatten" {: obj |
-    return obj.flatten()
+    return obj.flat()
+:}
+
+func "compact" {: obj |
+    return obj.filter( x => x )
 :}
 
 //func "dict" {: rest_values | return values :}
