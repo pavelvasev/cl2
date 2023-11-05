@@ -133,6 +133,7 @@ export function default_obj2js( obj,state ) {
 				let name = pos_rest[j]		
 				if (!bindings_hash[ name ]) {
 					// константа
+					//console.log('lll',obj.params[name])
 					let pos_cell_name = `pos_cell_${objid}_${j}`
 					strs2.push( `let ${pos_cell_name} = CL2.create_cell( ${objToString(obj.params[name],1,state,obj) })`)
 					strs2.push( `${pos_cell_name}.$title="pos_cell_${j}"; ${pos_cell_name}.attached_to=${objid}` )
@@ -143,9 +144,20 @@ export function default_obj2js( obj,state ) {
 				else
 				{
 					// ссылка
-					let to = bindings_hash[ name ]
+					let from = bindings_hash[ name ]
 					delete bindings_hash[ name ]
-					pos_cells.push(to)
+					// rest требует чтобы все было ячейкой
+					// так что может у нас и ссылка, но на статичное значение т.е. не ячейку
+					
+					if (state.static_values[ from ]) {
+						console.log("catched from=",from)
+						pos_cells.push(`CL2.create_cell( ${from} )`) 
+					}
+					else {
+						if (from == "chat")
+							console.log("not catched from=",from,state.static_values,obj.locinfo)
+					  pos_cells.push(from)
+					}
 				}
 				// стало быть это ссылки типа binding..
 			}
@@ -246,6 +258,7 @@ export function default_obj2js( obj,state ) {
 	  state.static_values[ objid ] = true
 
 	  // F-CONST-PARAMS
+	  // выставляем внешнему окружению новые статические ссылки (обозначая что это не ячейки)
 	  // мы берем get_const_params потому что это имена в определении
 	  // а const_params здесь это те что задаем мы в этом вызове
 	  // todo тут бы и функции также добавить..?	  

@@ -127,7 +127,10 @@ export function _let_next( obj, state )
 	}
 
 	// надо отключить если было включено
-	state.static_values[ name ] = false
+	// т.к. мы в этот момент вводим ячейку, а она не статичное значение
+	if (state.static_values[ name ])
+		delete state.static_values[ name ]
+	    //state.static_values[ name ] = false
 
 	return {main: strs, bindings}
 }

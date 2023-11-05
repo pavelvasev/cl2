@@ -682,8 +682,10 @@ export function get_obj_params( obj, obj_children ) {
 			else // получается мы всякие rest не проверяем
 			// F-CHECK-REQUIRED
 			// так то это хак и послезнание, что у ячейки значение в параметре 0..
-			if (k.basis == "cell" && !k.params.hasOwnProperty(0))  
-			    required[ k.$name_modified ] = true
+			if (k.basis == "cell" && !k.params.hasOwnProperty(0)) {
+				 if (!k.params.novalue) // F-CELL-NOVALUE
+			        required[ k.$name_modified ] = true
+			}
 
 		}
 	}	

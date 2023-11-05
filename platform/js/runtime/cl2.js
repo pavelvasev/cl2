@@ -50,13 +50,19 @@ if ( (typeof(process) !== "undefined" && process.env.VERBOSE) || globalThis.verb
 
 
 // базовый класс примитивов синхронизации.
-export class Comm {
+export class Base {
 	constructor() {
-		this.$cl_id = (global_thing_counter++)		
+		this.$cl_id = (global_thing_counter++)
 	}
 	toString() {
 		return `${this.constructor.name}:${get_title( this )}`
 	}
+}
+
+export class Comm extends Base {
+
+	constructor() { super() }
+
 	// становится потребна
 	// subscribe на однократное срабатывание.
 	once( fn ) {
@@ -282,8 +288,9 @@ export function create_cell(value,fast=false) {
 	return k
 }
 
-// а зачем он Comm? ну этим map в итоге пользуются ок..
-export class ClObject extends Comm {
+// ClObject сделано не comm, потому что иначе на него начинают 
+// пытаться подписываться там где не надо (при передаче его по ссылкам...)
+export class ClObject extends Base {
 	constructor() {
 		super()
 		attach( this,"release",create_channel())
@@ -304,7 +311,7 @@ export class ClObject extends Comm {
 				})
 			}
 		})
-*/		
+*/
 	}
 	destroy() {
 		//console.log('destory called',this+"", "emitting release",this.release+"")

@@ -128,7 +128,10 @@ export function _let_next( obj, state )
 	}
 
 	// надо отключить если было включено
-	state.static_values[ name ] = false
+	// т.к. мы в этот момент вводим ячейку, а она не статичное значение
+	if (state.static_values[ name ])
+		delete state.static_values[ name ]
+	    //state.static_values[ name ] = false
 
 	return {main: strs, bindings: []}
 }
@@ -423,6 +426,8 @@ export function cell( obj, state )
 }
 
 // F-CONST-PARAM
+// todo: при передаче значений по ссылке no-value недопустимо
+// some @cell -- здесь сейчас ставится novalue
 export function _const( obj,state ) {
 	let name = obj.$name_modified || obj.$name
 	let initial_value = CJS.objToString(obj.params[0],0,state) || null
