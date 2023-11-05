@@ -207,6 +207,7 @@ obj "func_process" {
       self.subscribe = self.output.subscribe.bind( self.output )
       self.once = self.output.once.bind( self.output )
       self.$title = "cofunc_process"
+      self.is_func_process = true
     :}
 }
 

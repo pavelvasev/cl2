@@ -7,7 +7,7 @@ func "map" {: arr f |
     return new Promise( (resolve,reject) => {
       let result = f( e,index )
       //console.log('map process_elem result=',result+'')
-      if (result instanceof CL2.Comm || result?.once) {
+      if (result instanceof CL2.Comm || result?.is_func_process) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
           // но вообще это странно.. получается мы не можем возвращать каналы..
@@ -81,7 +81,7 @@ func "filter" {: arr f |
   function process_elem(e, index) {
     return new Promise( (resolve,reject) => {
     let result = f( e, index )
-    if (result instanceof CL2.Comm || result?.once) {
+    if (result instanceof CL2.Comm || result?.is_func_process) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
           // но вообще это странно.. получается мы не можем возвращать каналы..
@@ -128,7 +128,7 @@ func "reduce" {: arr acc_init f |
     return new Promise( (resolve,reject) => {
 
     let result = f( e, index, acc )
-    if (result instanceof CL2.Comm || result?.once) {
+    if (result instanceof CL2.Comm || result?.is_func_process) {
           // console.log('see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
           // но вообще это странно.. получается мы не можем возвращать каналы..

@@ -39,7 +39,7 @@ obj "react" {
         // мега-идея промис js в том, что если результат это канал, то процесс продолжается..
         // т.е. нам как бы вернули информацию, что процесс еще идет и результаты уже у него
 
-        if (result instanceof CL2.Comm || result?.once) {
+        if (result instanceof CL2.Comm || result?.is_func_process) {
           console.channel_verbose('react see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
           // но вообще это странно.. получается мы не можем возвращать каналы..
@@ -262,7 +262,7 @@ obj "__if"
       let res = branch_value( arg ) // может им не надо таки arg то. а то это значение жеж.
       //console.log("res=",res+'')
       // cp то надо или нет уже
-      if (res instanceof CL2.Comm || res?.subscribe) {
+      if (res instanceof CL2.Comm || res?.is_func_process) {
         let b = CL2.create_binding( res, self.output )
         //console.log("b created")
         // по идее при удалении res биндинг удалится
