@@ -212,6 +212,9 @@ export function _obj( obj, state )
 
 	let c_state = C.modify_parent( state, "self" )
 	let body = C.process_objs( C.get_children( obj,1 ), c_state )
+
+	let internal_static_names = Object.keys(c_state.static_values).filter( x => state.static_values[x] ? false : true );
+
 	// console.log("ch=",C.get_children( obj,1 ),"body=",body)
 	//strs2.push( body )
 
@@ -251,6 +254,8 @@ export function _obj( obj, state )
 		make_code: (obj,state) => { 
 			let self_objid = C.obj_id( obj, state )
 			let res = CJS.default_obj2js(obj,state)
+
+			console.log("may add static values:", internal_static_names )
 
 			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {

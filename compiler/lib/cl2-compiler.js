@@ -47,7 +47,7 @@ export function modify_parent( state={}, nv, nv2=nv )
 	    struc_parent_id:nv, 
 	    tree_parent_id: nv2, 
 	    static_values: {...state.static_values}, // чтобы вложенные функции оставались внутри
-      current: {...state.current}, // вложенные определения чтобы оставались внутри
+       current: {...state.current}, // вложенные определения чтобы оставались внутри
 	    next_obj_cb: null,
 	    generated_ids: [] }
 	return ns
@@ -531,6 +531,7 @@ export function process_objs( objs,state )
 	//console.log("state is",state)
 	let strs = []
 	let bindings = []
+	let ids = []
 	//console.error("going via objs=",objs)
 	//console.trace()
 
@@ -544,8 +545,9 @@ export function process_objs( objs,state )
 		//console.log("o=",o)
 		strs.push( o.main )
 		bindings.push( o.bindings )
+		//if (o.obj_id) ids.push( o.obj_id_static )
 	}
-	return {main: strs, bindings }
+	return {main: strs, bindings} // , obj_id_arr: ids 
 }	
 
 // вход obj-описание  т.е. массив записей от парсера
@@ -561,6 +563,11 @@ export function objs2js( objs,state )
 	let base = process_objs( objs,state )
 	//console.log('base=',base)
 
+	return records2js( base )
+}
+
+// todo надо дать название этим записям и функции тоже норм имя дать
+export function records2js( base ) {
 	let strs = base.main
 	if (base.bindings.length > 0)
 	{
@@ -569,6 +576,8 @@ export function objs2js( objs,state )
 		strs.push( ...base.bindings )
 	}
 	//console.log(strs)
+	strs.obj_id_arr = base.obj_id_arr
+	//console.log("obj_id_arr=",base.obj_id_arr)
 	return strs
 }
 

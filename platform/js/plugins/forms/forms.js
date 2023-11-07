@@ -208,9 +208,14 @@ export function _obj( obj, state )
   ///////////////// генерируем тело указанное в 1-м аргументе
 
 	let c_state = C.modify_parent( state, "self" )
+	//let body_gen = C.process_objs( children, c_state )
+	//let body = C.records2js( body_gen )
 	let body = C.objs2js( children, c_state )
 	// console.log("ch=",C.get_children( obj,1 ),"body=",body)
 	//strs2.push( body )
+	
+	// F-STATIC-TO-PARENT
+	let internal_static_names = Object.keys(c_state.static_values).filter( x => state.static_values[x] ? false : true );
 
 	strs2.push( "// inner children",body )
 	/*
@@ -240,6 +245,15 @@ export function _obj( obj, state )
 		make_code: (obj,state) => { 
 			let self_objid = C.obj_id( obj, state )
 			let res = CJS.default_obj2js(obj,state)
+
+			// F-STATIC-TO-PARENT
+			if (state.static_values[ self_objid ]) {
+				 //console.log("adding static values:", internal_static_names,"self_objid=",self_objid )
+				 internal_static_names.forEach( name => {
+				 	  //console.log("adding static value:", `${self_objid}.${name}`,"self_objid=",self_objid )
+				 	  state.static_values[ `${self_objid}.${name}`] = true
+				 })
+			}
 
 			// F-CHAINS-V3, todo optimize if вынести
 			if (next_obj_param) {
