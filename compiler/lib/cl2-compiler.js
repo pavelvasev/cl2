@@ -563,17 +563,25 @@ export function objs2js( objs,state )
 	let base = process_objs( objs,state )
 	//console.log('base=',base)
 
-	return records2js( base )
+	return records2js( base,state )
 }
 
 // todo надо дать название этим записям и функции тоже норм имя дать
-export function records2js( base ) {
+export function records2js( base,state ) {
 	let strs = base.main
 	if (base.bindings.length > 0)
 	{
-		//strs.push( "//bindings." ) //" len="+bindings.length + bindings.toString())
-		//strs.push( ...base.bindings.flat() )
-		strs.push( ...base.bindings )
+		// F-STATIC-LATER
+		function process_bindings( b_arr) {
+			return b_arr.map( b => {
+				if (Array.isArray(b)) return process_bindings( b )
+				if (b.apply) return b( state )
+				return b
+			})
+		}
+		let bindings = process_bindings( base.bindings)
+		strs.push( ...bindings )	
+		//strs.push( ...base.bindings )
 	}
 	//console.log(strs)
 	strs.obj_id_arr = base.obj_id_arr

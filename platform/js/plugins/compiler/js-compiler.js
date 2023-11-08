@@ -293,10 +293,20 @@ export function default_obj2js( obj,state ) {
  
 	strs.push( strs2 ) // rest-накопления
 	
+	bindings.push( `//bindings of ${objid}` );
 	for (let k in bindings_hash) {
-		//let link = obj.links[k]
-		let linkstr = `${objid}.release.once( CL2.create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ) // hehe objid=${objid} prefix=${state.prefix}`
-		bindings.push( `//bindings from ${objid}`,linkstr )
+		// было:
+		//let linkstr = `${objid}.release.once( CL2.create_binding( ${bindings_hash[k]}, ${objid}.${internal_name(k)} ).unsub ) // objid=${objid} prefix=${state.prefix}. `
+		// bindings.push( `//bindings from ${objid}`,linkstr )
+
+		// F-STATIC-LATER
+		let src_item = bindings_hash[k]		
+		let binding_f = state => {
+			if (state.static_values[src_item])
+					return `${objid}.${internal_name(k)}.submit( ${src_item} ); // binding to static value.`	
+			return `${objid}.release.once( CL2.create_binding( ${src_item}, ${objid}.${internal_name(k)} ).unsub )`
+		}
+		bindings.push( binding_f )
 	}
 
 	if (state.next_obj_cb) { // F-CHAINS-V3
