@@ -63,6 +63,8 @@ export function init( state, tool )
 					  // и todo - надо карту импортов свою им подгрузить
 					  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
 						let code = tool.compile_string( content, module_state )
+
+						//console.log("IIII",code)
 						
 						imported_modules[ file ] = module_state
 

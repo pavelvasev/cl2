@@ -60,20 +60,21 @@ class Tool {
 	loaded_modules = {}
 	// загружает 1 модуль находящийся в указанной папке
 	// папка указывается через record - спецификацию модуля
-	load_module( record, state, current_dir="", root_dir ) {
+	load_module( record, state, current_dir="", modules_root_dir ) {
 
 		// тут какая-то легкая несостыковка по root_dir, но вроде работает
-		let dir = U.get_module_dir( record, current_dir, root_dir )		
+		let dir = U.get_module_dir( record, current_dir, modules_root_dir )		
 		//console.log("\nload_module, path=",dir,"current_dir=",current_dir,"root_dir=",root_dir)
 		//console.trace()
 		//console.trace()
 		
-		this.loaded_modules[dir] ||= U.load_module_config( dir, root_dir ).then( conf => {
+		this.loaded_modules[dir] ||= U.load_module_config( dir, modules_root_dir ).then( conf => {
 			state.modules_conf[ dir ] = conf
 			// 1 загрузим под-модули этого модуля
 			// 2 передадим управление на инициализацию этого модуля
 
-			return this.load_modules( Object.values(conf.modules), state, conf.dir,conf.modules_dir ).then( () => {
+			// F-MODULES-DIR
+			return this.load_modules( Object.values(conf.modules), state, conf.dir, conf.modules_dir ).then( () => {
 				// фича - передаем conf в инит-процедуру указанного модуля
 				// так она сможет узнать текущий каталог. хотя.. а в стейте что ли нету?
 				// есть но пустое.. ех 

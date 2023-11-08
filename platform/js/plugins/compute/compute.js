@@ -103,8 +103,8 @@ function generate_func_caller(name, state) {
 	 	  }
 	 	  output: cell
 	 	  
-  	  r: react @rest {: args |
-  	    console.channel_verbose("co-func called '${name}'. self=",self+'')
+  	  r: react @rest {: args |  	    
+  	    console.channel_verbose("co-func called '${name}'. self=",self+'',args)
   	    let rr = ${name}( ...args )
   	    console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
   	    return rr

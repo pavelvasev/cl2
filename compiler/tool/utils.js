@@ -1,5 +1,9 @@
 import * as path from 'node:path';
 
+// record-спецификация модуля это то что указывается в clon.js
+// это есть словарь, ключи которого имена пакетов для таблицы импортов
+// а значения - определяют откуда брать эти модули.
+
 export function get_module_dir0(r) {
 			if (typeof(r) === "string") return r
 
@@ -37,15 +41,18 @@ export function get_module_dir( r, current_dir, modules_root_dir=current_dir ) {
 // загружает конфигурацию модуля по указанному пути (папка или файл) module_path
 // пока считается что там файл init.js в папке лежит
 // и дорабатывает этот конфиг, считает для него карту импорта (зачем-то)
-// root_dir_path - папка проекта, F-SINGLE-MODULES-DIR
-export function	load_module_config( module_path, root_dir_path=module_path ) {
+// modules_root_dir - папка модулей проекта, F-SINGLE-MODULES-DIR
+export function	load_module_config( module_path, modules_root_dir ) {
+	    
 		//console.log("load_module_config module_path=",module_path)
 
 		// let dir = get_module_dir( record, current_dir ) // тут dir, path, все вперемешку короче получилось
 		// console.log("resolved dir for module:",dir)
 
 		let init_file, dir
-		//console.log("load_module: ",dir)
+
+		//console.log("load_module: module_path=",module_path)
+
 		if (module_path.endsWith(".js") || module_path.endsWith(".mjs")) {
 			init_file = module_path
 			dir = path.dirname( module_path )
@@ -55,10 +62,18 @@ export function	load_module_config( module_path, root_dir_path=module_path ) {
 		  dir = module_path
 		}
 
+		// если папка модулей проекта не задана, то это считается папка
+		//if (!modules_root_dir) console.log("modules_root_dir not specified! computing.")
+		modules_root_dir ||= path.join( dir, "modules" )
+
 		//console.log("load_module_config: importing",init_file)
 		return import( init_file ).then( m => {
 			let inner_modules = m.modules || m.sources || {}
-			let modules_dir = path.join( root_dir_path, m.modules_dir || "modules" )
+			// F-MODULES-DIR
+			//console.log("loaded",init_file)
+			//console.log("pt modules_root_dir=",modules_root_dir, "m.modules_dir=",m.modules_dir)
+			let modules_dir = m.modules_dir ? path.resolve( dir, m.modules_dir ) : modules_root_dir
+			//console.log("   thus modules_dir=",modules_dir)
 
 			// функция 1 - запомнить пути для карты импорта
 			// todo вообще ее надо отсюда вынести. пусть эта функция только читает

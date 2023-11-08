@@ -553,11 +553,15 @@ export function create_binding_when_any( list, q ) {
 	//let q = create_channel()
 	//SSconsole.log("create_binding_when_any, list=",list)
 	let barr = []
+	//let index = 0;
 	for (let k of list) {
 		//console.log("connnecting ",k,"to",q)
 		let b = create_binding( k, q )
 		barr.push( b )
-		//k.changed.on( () => console.log("k is changed ",k.get()) )
+		//k.subscribe( x => console.log("bwha change!",x,"k=",k))
+		//let mindex = index;
+		//k.changed.on( () => console.log("k is changed! index=",mindex,"val=",k.get(),"clid=",k.$cl_id) )
+		//index++
 	}
 	let unsub = () => {
 		//console.log("unsub called")
@@ -842,6 +846,8 @@ export function monitor_rest_values( src,tgt ) {
 	dtgt.attached_to = src
 	let db = create_binding_delayed( dtgt, tgt )
 
+	let had_sent = false;
+
 		//src.changed.subscribe( f )
 
 		src.assigned.subscribe( f ) // F-REST-REACT-ASAP
@@ -886,7 +892,7 @@ export function monitor_rest_values( src,tgt ) {
 			
 			//consoleА.log("all - subscribing")
 			all.subscribe( () => {
-				//console.log("all.subscribe ticked")
+				//if (had_sent) console.log("mon-rest all.subscribe ticked NON-FIRST",src.$cl_id, src.$locinfo)
 				let have_not_setted = false
 				let values = cells.map( x => x.is_set ? x.get() : have_not_setted = x+"" )
 				if (have_not_setted) {
@@ -903,7 +909,8 @@ export function monitor_rest_values( src,tgt ) {
 					values = result
 				}
 
-				//console.log("emitting collected",values)
+				//if (had_sent)console.log("emitting collected",values)
+				had_sent = true
 				dtgt.emit( values )
 			})
 

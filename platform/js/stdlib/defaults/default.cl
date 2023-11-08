@@ -147,6 +147,8 @@ obj "react" {
 */
 
 // в extract складывается массив ячеек, а на выходе он дает массив значений этих ячеек..
+// по сути то вызов monitor_rest_values -- надо заменить.. todo
+
 obj "xtract" {
   in {
     input: cell // можно channel но монитору нужна ячейка
@@ -167,6 +169,7 @@ obj "xtract" {
 
     //react @o2 {: v | console.log('xtract return:',v) :}
 }
+
 
 // ну вроде как нам не надо прямо чтобы вот процесс.. функция тоже норм теперь 
 // когда мы из функций процессы делаем
@@ -408,8 +411,8 @@ obj "apply" {
   //react @action {: console.log("see action") :}
   //react @rest {: console.log("see rest") :}
 
-  xx: react (list @action @rest) {:
-      //console.log("main reaction!")
+  xx: react (list @action @rest) {: a1 a2 |
+      //console.log("apply! main reaction!",a1, a2)
       let f = action.get()
       let args = rest.get()
       //console.log("x-apply",f,args)

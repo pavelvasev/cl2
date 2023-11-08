@@ -4,7 +4,7 @@
 
 import path="node:path" os="std/os.cl" util="../../tool/utils.js"
 
-# установить модули для модуля dir в проекте root_dir с учетом уже установленных модулей nested
+# установить модули для модуля dir в папку modules_root_dir с учетом уже установленных модулей nested
 
 func "download" { spec dir |
   if (get @spec "git") {
@@ -24,9 +24,9 @@ func "download" { spec dir |
   }
 }
 
-/* spec - ссылка на модуль в форму { git: ... } или строчки
+/* spec - ссылка на модуль в форме { git: ... } или строчки
    dir - целевой каталог для установки модуля
-   root_dir - папка проекта
+   modules_root_dir - заданная папка установки модулей
    nested - список уже установленных папок
    need_download - признак что надо загружать
 
@@ -34,8 +34,8 @@ func "download" { spec dir |
    2. считывает его конфигурацию
    3. проходит по модулям указанным в конфигурации и пытается их установить
 */
-func "nest" { spec dir root_dir nested need_download|
-  print "******* nest dir=" @dir "root_dir=" @root_dir
+func "nest" { spec dir modules_root_dir nested need_download|
+  print "******* nest dir=" @dir "modules_root_dir=" @modules_root_dir
 
   if (get @nested @dir) {
     // уже обработали
@@ -48,9 +48,10 @@ func "nest" { spec dir root_dir nested need_download|
       return @d
   }
   =====
+  print "--- download finished"
   //print "checking conf dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
-  conf := apply {: dir root_dir | return util.load_module_config(dir,root_dir) :} @dir @root_dir
+  conf := apply {: dir modules_root_dir | return util.load_module_config(dir,modules_root_dir) :} @dir @modules_root_dir
   //print "conf = " @conf
   //print "see modules: " (get @conf "modules")
 
@@ -58,8 +59,12 @@ func "nest" { spec dir root_dir nested need_download|
 
   s2 := reduce (get @conf "modules") @subnested { value key acc |
     submodule_dir := get (get @conf "import_map") @key
+    modules_dir := get @conf "modules_dir"
+    return (apply @nest @value @submodule_dir @modules_dir @acc true)  // 
+    
+    //return (apply @nest @value @submodule_dir (get @conf "modules_dir") @acc true)
+
     //print "s2 subnest dir=" @dir "key=" @key "submodule_dir=" @submodule_dir 
-    return (apply @nest @value @submodule_dir @root_dir @acc true)
   }
   #print "s2=" @s2
   #print "subnested=" @subnested
@@ -72,7 +77,7 @@ init_file := os.join @init_dir "clon.mjs"
 
 if (os.exist @init_file) {
   print "running nest"
-  result := nest( dict(), @init_dir, @init_dir, dict(), false)
+  result := nest( dict(), @init_dir, false, dict(), false) // (+ @init_dir "/modules")
   //print "result = " @result
   react @result { val |
     print "finished" @val

@@ -65,7 +65,8 @@ export function init( st ) {
 
 	function path_to_var( srcfile ) {
 		let p1 = path.basename(srcfile,".cl")
-		let p2 = p1.replaceAll( /[^a-z0-9\-\_]/gi,"_")
+		let p2 = p1.replaceAll( /[^a-z0-9]/gi,"_")
+		//console.log("p1=",p1,"p2=",p2)
 		let p3 = p2 + "_" + (module_counter++).toString()
 		return p3
 	}
@@ -79,7 +80,7 @@ export function init( st ) {
 	}
 
     // вносим модуль в списки импортов. один и тот же модуль 2 раза вносить не надо.
-	space.register_import = ( tgt, srcfile, substate,code ) => {
+	space.register_import = ( tgt, srcfile, substate, code ) => {
 		let strs = []
 		/// используется метод https://habr.com/ru/articles/583130/
 		//let names = Object.keys(substate.current).map(n => `create_${n}`).join(",")

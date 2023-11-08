@@ -164,6 +164,7 @@ export function default_obj2js( obj,state ) {
 			
 			bindings.push( `let ${rest_name} = CL2.create_cell( [${pos_cells.join(',')}] )`)
 			bindings.push( `${rest_name}.$title="${pos_rest.name}"; ${rest_name}.attached_to = ${objid}`)
+			//bindings.push( `${rest_name}.$locinfo=\`${obj.locinfo}\`;`)
 			// F-REST-AUTO-EXTRACT
 			bindings.push( `${objid}.release.subscribe( CL2.monitor_rest_values( ${rest_name}, ${objid}.${pos_rest.name} ) )` )
 

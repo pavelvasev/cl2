@@ -25,6 +25,7 @@ export var tablica = {
 //func: { make_code: func, check_params: (assigned_names) => { return {normal: assigned_names, renamed: {}, pos_rest: [],named_rest:[], children_param: "body"} } },
 	cell: { make_code: cell, check_params: default_cp },
 	const: { make_code: _const, check_params: default_cp },
+	state: { make_code: _state, check_params: default_cp },
 	bind: { make_code: bind, check_params: default_cp },
 	init: { make_code: _init, check_params: default_cp },
 	paste: { make_code: paste, check_params: default_cp },
@@ -213,7 +214,7 @@ export function _obj( obj, state )
 	let body = C.objs2js( children, c_state )
 	// console.log("ch=",C.get_children( obj,1 ),"body=",body)
 	//strs2.push( body )
-	
+
 	// F-STATIC-TO-PARENT
 	let internal_static_names = Object.keys(c_state.static_values).filter( x => state.static_values[x] ? false : true );
 
@@ -447,7 +448,23 @@ export function _const( obj,state ) {
 	let initial_value = CJS.objToString(obj.params[0],0,state) || null
 	let value_str = `typeof(initial_values)=='object' && initial_values.hasOwnProperty('${name}') ? initial_values.${name} : ${initial_value}`
 	let strs = [`let ${name} = ${value_str}`, `self.${name} = ${name}`]
+  state.static_values[name]  = true
+
+  console.log("F CONST EXPORT",name)
+  state.space.register_export( name, state )
+
+	return {main:strs,bindings:[]}
+}
+
+// F-STATE
+export function _state( obj,state ) {
+	let name = obj.$name_modified || obj.$name
+	let initial_value = CJS.objToString(obj.params[0],0,state) || null
+	let strs = [`let ${name} = ${initial_value}`, `self.${name} = ${name}`]
 	state.static_values[name]  = true
+
+	state.space.register_export( name, state )
+
 	return {main:strs,bindings:[]}
 }
 

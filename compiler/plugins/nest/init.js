@@ -16,4 +16,10 @@ export function init( state, tool ) {
 	} )
 	tool.add_command("n", tool.get_command("nest"))
 
+	// лесом эти nest - привычнее install
+	tool.add_command( "install", () => {
+		return tool.get_command("run")( path.join(__dirname,"nest.cl") )
+	} )
+	tool.add_command("i", tool.get_command("install"))	
+
 }

@@ -20,7 +20,7 @@ export function init( state, tool ) {
 		let mmm0 = access(config_file, constants.R_OK)
 		let config = {}
 		let mmm = mmm0.then( () => {
-			return tool.load_module( config_file,state,"",project_dir ).then( conf => {
+			return tool.load_module( config_file,state ).then( conf => {
 				//console.log("loaded conf",conf)
 				tool.config = conf
 				config = conf
