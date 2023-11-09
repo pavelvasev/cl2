@@ -1,3 +1,5 @@
+// todo: env_args больше не используются, подвычистить надо.
+
 // todo: повысить приоритет для a operator b. например сделать так что operator в первой форме
 // возможен будет только если он первый в перечислении (по аналогии с read)
 
@@ -531,8 +533,7 @@ one_env_obj "environment record"
   = __
   envid: (@(@attr_name ws ":")?)
   __ first_feature_name:feature_name
-  env_modifiers:(__ @env_modifier)*
-  child_envs:(__ "{{{" __ @env_list? __ "}}}" __)?
+  env_modifiers:(__ @env_modifier)*  
   {
     var env = new_env( envid );
     env.locinfo = getlocinfo();
@@ -543,7 +544,7 @@ one_env_obj "environment record"
     
     set_basis( env, first_feature_name )
 
-    fill_env( env, env_modifiers, child_envs )
+    fill_env( env, env_modifiers, [] )
 
     return env;
   }
@@ -773,12 +774,12 @@ env_pipe
 // итого { alfa | bla bla bla } - тут правда конфликт с пайпами будет, но разберемся.. может пайпам другой символ дать..
 env_args_list "environment args list"
   = "|"? __ attrs:(@attr_name __ ","? __)+ __ "|"
-  { return { attrs: attrs }
+  { 
+    return { attrs: attrs }
   }
   
 env_list "environment list"
-  = __ args:env_args_list? // F-ENV-ARGS 
-    __
+  = __
     head:env1 tail:((__ ";")* @env1 __ )* (__ ";")*
     __
     {
@@ -796,10 +797,6 @@ env_list "environment list"
           console.log( it.links["pipe_input_link"].locinfo );
         }      
     }
-
-    // F-ENV-ARGS
-    if (args) 
-      res.env_args = args;
 
     return res;
 
@@ -1045,11 +1042,22 @@ js_inline "js inline code"
   }
 
 cl_cofunc "cl-cofunc code"
-  = "{" __ env_list:env_list? __ "}" {
+  = "{" __ args:env_args_list? // F-ENV-ARGS 
+        __ env_list:env_list? __ 
+    "}" 
+  {
     // F-CL-COFUNC
-    //console.log("cocode", env_list)
+    // console.log("cocode", env_list,"args=",args)
+
+    // F-ENV-ARGS
+    /*
+    if (args) 
+      res.env_args = args;
+    */  
+
+
     //let env = new_env()    
-    return { code: env_list, cofunc: true, pos_args: env_list?.env_args?.attrs || [], locinfo: getlocinfo() }
+    return { code: env_list, cofunc: true, pos_args: args?.attrs || [], locinfo: getlocinfo() }
   }
 
 

@@ -664,7 +664,8 @@ func "join" {: obj sep |
 :}
 
 func "flatten" {: obj |
-    return obj.flat()
+    return obj.flat(Infinity)
+    // Infinity означает полный уровень вложенности. А по умолчанию 1.
 :}
 
 func "compact" {: obj |

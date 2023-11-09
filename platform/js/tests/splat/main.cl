@@ -25,3 +25,9 @@ print "d=" @d
 f: foo **d
 
 assert (arrays_equal @f.output [10,11,17,44,42])
+
+================
+
+q := list 1 2 3 4 5
+
+print "**q is " **q

@@ -648,6 +648,8 @@ export function pipe( obj, state )
 	let objid = C.obj_id(obj,state)
 	let base = { main: [], bindings: [], obj_id: objid }
 
+	//console.log(obj)
+
 	// так надо а то они думаю что там родитель есть.. хотя он вроде как и не нужен тут..
 	// todo тут надо просто правильно выставить tree_parent_id / struc_parent_id
 	
