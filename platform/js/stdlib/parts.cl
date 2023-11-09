@@ -9,8 +9,9 @@
   Программа берет фичи, в требуемых местах выбирает из фич 
   кусочки с одинаковым идентификатором, и применяет их.
 
-  Применение кусочков:
-    display_parts: массив-функций -> процесс создания объектов описанных в функциях
+  Функции (процессы):
+    get: массив-фич, идентификатор -> массив кусочков.
+    create: массив-функций -> процесс создания объектов описанных в функциях
     func_chain: массив функций -> функция, которая построена по принципу цепочки (см ниже)
 */
 
@@ -28,9 +29,11 @@
 // требование - каждый кусочек должен быть ячейкой (или каналом)
 /*
    пример:
-   items := get_parts @features "top_gui_panel"
+   items := parts.get @features "top_gui_panel"
 */
-process "get_parts" {
+// примечание. на самом деле это процесс map-get. просто наш map он не процесс, увы.
+// ну вообще-то тут еще и чистка - убираем пустые записи.
+process "get" {
   in {
     features: cell
     id: cell
@@ -46,11 +49,11 @@ process "get_parts" {
    пример:
 
    dom.element "div" {
-     display_parts @items
+     parts.create @items
    }
 */
 mixin "tree_lift"
-process "display_parts"
+process "create"
 {
   in {
     parts: cell
@@ -80,7 +83,7 @@ process "display_parts"
 
   пример:
 
-  react @channel (func_chain (get_parts @features "important_action"))
+  react @channel (parts.func_chain (parts.get @features "important_action"))
 
 */
 func "func_chain" {: funcs |

@@ -50,7 +50,7 @@ func "map" {: arr f |
         return [result,...rest_result]
       })
     })
-  }  
+  }
 
   let output = CL2.create_cell(); //output.attached_to = self
   output.$title = "map_fn_output"
