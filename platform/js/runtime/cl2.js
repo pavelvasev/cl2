@@ -281,6 +281,11 @@ export class Cell extends Comm {
 	get() {
 		return this.value
 	}
+	// удобное
+	get_def( default_value ) {
+		if (this.is_set) return this.value
+		return default_value;
+	}
 }
 
 export function create_cell(value,fast=false) {
