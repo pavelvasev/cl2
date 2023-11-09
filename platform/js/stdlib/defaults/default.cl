@@ -728,6 +728,8 @@ func "get" {: src field |
 
 func "slice" {: list start length | return list.slice( start,length ) :}
 
+func "subslice" {: list start length | return list.slice( start,start+length ) :}
+
 paste_file "./map-reduce.cl"
 
 
