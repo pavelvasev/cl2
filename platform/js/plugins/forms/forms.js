@@ -450,7 +450,7 @@ export function _const( obj,state ) {
 	let strs = [`let ${name} = ${value_str}`, `self.${name} = ${name}`]
   state.static_values[name]  = true
 
-  console.log("F CONST EXPORT",name)
+  //console.log("F CONST EXPORT",name)
   state.space.register_export( name, state )
 
 	return {main:strs,bindings:[]}
