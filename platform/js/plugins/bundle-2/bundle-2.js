@@ -13,9 +13,15 @@ export function init( st ) {
 		//console.log('register_item: ',id,'state.tree_parent_id=',state.tree_parent_id, state.struc)
 		let strs = []
 		let export_flag = state.struc_parent_id == null && (state.dir == '' || state.dir == './') ? "export " : ""
+
+		//console.log( "id=",id,"state.dir=",state.dir)
+
 		// todo совместить расчет export_flag с тем что в compute.js для функций
 		//console.log("register_item: id=",id," export_flag=",export_flag,"state.dir=",state.dir)
 		let s = `${export_flag}function create_${id}( initial_values )`
+
+		if (export_flag == '') s = `let create_${id} = function ( initial_values )`;
+
 		strs.push(`/// type ${id}`,s,"{")
 		strs.push( strs2 )
 		strs.push("}")
@@ -91,6 +97,7 @@ export function init( st ) {
 		let module_var_name = path_to_var( srcfile )
 		module_var_names[ srcfile ] = module_var_name
 		
+		// если указать тут var то оно полезет наружу из scope..
 	    let exportvar = `var ${module_var_name} = {${names}}`
 	    //let exportvar = `var ${module_var_name} = self`
 		// let js_import_path = "./" +  src + ".js"

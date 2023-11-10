@@ -672,21 +672,47 @@ export function pipe( obj, state )
 			// и output левого элемента ставим первым таким параметром.
 			// ну если там был input и не совпало.. посмотрим, может ошибка.
 
-			//let r = C.get_record( state, f.basis_path, f )
-			//console.log('see record',r)
+		
 			if (prev_from) {
-				let i = f.positional_params_count
-				// сдвигаем
-				while (i > 0) {
-					f.params[i] = f.params[i-1]
-					i = i-1
-				}
-				// ставим первый позиционный
-				f.params[0] = {link:true}
-				f.links[0] = {to:0,from:`${prev_from}`}
-				f.positional_params_count = f.positional_params_count+1
 
-				//// вставка готова
+				let r = C.get_record( state, f.basis_path, f )
+				let r_params = r.get_params();
+				//console.log('see record',r, r.get_params(), r.get_positional_names())
+
+				if (r_params.input) {
+					// F-PIPE-INPUT
+					f.params.input = {link:true}
+					f.links.input = {to:"input",from:`${prev_from}`}
+
+					// но если там есть позиционные параметры, то они уже могли пойти на input
+					// и сообразно нам надо все что было на input - сдвинуть
+
+					let input_pos = r.get_positional_names().indexOf("input");
+					let i = f.positional_params_count
+					if (input_pos >= 0 && i >= input_pos) {
+						// сдвигаем всех кто после input, освобождаем для него место
+						while (i > input_pos) {
+							f.params[i] = f.params[i-1]
+							i = i-1
+						}
+					}
+				}
+				else
+				{
+					// нет инпута - делаем позиционное
+
+					let i = f.positional_params_count
+					// сдвигаем
+					while (i > 0) {
+						f.params[i] = f.params[i-1]
+						i = i-1
+					}
+					// ставим первый позиционный				
+					f.params[0] = {link:true}
+					f.links[0] = {to:0,from:`${prev_from}`}
+					f.positional_params_count = f.positional_params_count+1					
+					/// вставка готова
+				}	
 		  }
 
 			let o = C.one_obj2js_sp( f, mod_state )

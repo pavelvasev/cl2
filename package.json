@@ -2,18 +2,18 @@
   "name": "clon-lang",
   "exports": {
     ".": "./platform/js/runtime/cl2.js"
-   },
-   "main": "./platform/js/runtime/cl2.js",
+  },
+  "main": "./platform/js/runtime/cl2.js",
   "type": "module",
   "version": "1.0.8",
   "description": "CLON language tool.",
   "directories": {
     "example": "examples"
   },
-  "bin": { 
-     "clon" : "compiler/tool/cl-tool.js",
-     "clon-lang" : "compiler/tool/cl-tool.js"
-   },
+  "bin": {
+    "clon": "compiler/tool/cl-tool.js",
+    "clon-lang": "compiler/tool/cl-tool.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pavelvasev/clon-lang.git"
@@ -24,5 +24,7 @@
     "url": "https://github.com/pavelvasev/clon-lang/issues"
   },
   "homepage": "https://github.com/pavelvasev/clon-lang#readme",
-  "dependencies": {}
+  "dependencies": {
+    "ws": "^8.14.2"
+  }
 }
