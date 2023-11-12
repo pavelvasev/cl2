@@ -437,6 +437,9 @@ export function cell( obj, state )
 	let strs = [`let ${name} = CL2.create_cell(${value_str}${fast_part})`]
 	strs.push( `CL2.attach( self,"${name}",${name} )` )
 
+	if (obj.params.skip_expose)
+		strs.push( `${name}.skip_expose = true` )
+
 	return {main:strs,bindings:[]}
 }
 
@@ -492,6 +495,9 @@ export function channel( obj,state )
 		`let ${name}_initial = ${value_str}`,
 		`if (${name}_initial != CL2.NOVALUE) CL2.schedule( () => ${name}.submit( ${name}_initial ), ${name} )`
 	]
+
+	if (obj.params.skip_expose)
+		strs.push( `${name}.skip_expose = true` )	
 
 	return {main:strs,bindings:bindings}
 }

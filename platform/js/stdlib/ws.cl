@@ -75,13 +75,13 @@ process "client" {
 
     self.h.on("message", (data) => {
       let msg = JSON.parse( data )
-      //console.log("cc client input data=",data,"parsed=",msg)
+//      console.log("client receive data=",data,"parsed=",msg)
       output.submit( msg )
     })
   :}
 
   react @input {: data |
-    console.log("client sending data=",data)
+//    console.log("client sending data=",data)
     if (!self.h) {
       console.error("client have input but not connected. dropping.")
       return

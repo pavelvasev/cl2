@@ -10,10 +10,10 @@
 // а сейчас получается это не очень то возможно.
 
 obj "tree_child" {
-  parent: cell
+  parent: cell skip_expose=true
   // ссылка на parent-а, вдруг кому-то надо
   // но кстати а лифту то надо? или он как?
-  lift_parent: cell
+  lift_parent: cell skip_expose=true
   // ссылка на лифт-парент
   // но кстати нужна ли она? проще же в attached_to постучаться..
   // но технически оказалось что элемент принадлежит и паренту, и лифт-паренту
@@ -52,18 +52,18 @@ mixin "tree_child"
 obj "tree_lift" //base_code="create_tree_child({})"{
 {
   in {
-    allow_default: cell true
+    allow_default: cell true skip_expose=true
   }
 
-  req: cell     // храним тут заявки
-  children: cell  // а тут результат сбора
+  req: state skip_expose=true       // храним тут заявки
+  children: cell skip_expose=true  // а тут результат сбора
 
-  gather_request: channel
-  gather_request_action: channel
+  gather_request: channel skip_expose=true
+  gather_request_action: channel skip_expose=true
   bind @gather_request @gather_request_action overwrite_mode=true
 
   init {:
-    self.req.submit( new Set() )
+    self.req = new Set()
     self.is_tree_lift = true
 
     //self.gather_request.submit( true )
@@ -79,7 +79,7 @@ obj "tree_lift" //base_code="create_tree_child({})"{
   :}
 
   func "append" {: child |
-    let r = self.req.get()
+    let r = self.req
     if (r.has( child )) return
 
     r.add( child )
@@ -92,7 +92,7 @@ obj "tree_lift" //base_code="create_tree_child({})"{
   :}
 
   func "forget" {: child |
-    let r = self.req.get()
+    let r = self.req
     r.delete( child )
     //console.log("submit gather-request - due to tree_lift forget",self+'')
     self.gather_request.submit()
@@ -135,7 +135,7 @@ obj "tree_lift" //base_code="create_tree_child({})"{
 
   r_gather: react @gather_request_action {:
     //console.log("tree_lift see gather request ",self+'')
-    let r = self.req.get()
+    let r = self.req
     let {result, monitor } = gather_list( r )
 
     self.stop_listen_lifts.get()()
@@ -162,7 +162,7 @@ obj "tree_lift" //base_code="create_tree_child({})"{
     return true
   :}
 
-  stop_listen_lifts: cell {: return true :}
+  stop_listen_lifts: cell skip_expose=true {: return true :}
   r_release: react @self.release {:
       self.stop_listen_lifts.get()() 
       // решено обнулить чилдренов чтобы парент реальный их забыл
