@@ -651,7 +651,9 @@ export function get_obj_params( obj, obj_children ) {
 	// todo это очень долго. вероятно стоит вообще ток первый элемент проверять.
 	// а насчет нескольких секций это мб и лишнее - даже на уровне ортогональности.	
 	let ins = obj_children.filter( c => c.basis == "in")
-	if (ins.length == 0) return {params}
+
+	//if (ins.length == 0) return {params}
+
 	//console.log("ins len=",ins.length,obj)
 
 	for (let in_p of ins) {

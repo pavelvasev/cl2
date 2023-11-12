@@ -66,9 +66,9 @@ process "client" {
 
   react @url {: url |
     if (self.h) self.h.close()
-    console.log("connecting to ",url)
+    //console.log("connecting to ",url)
     self.h = new jsws.WebSocket( url )
-    
+
     self.h.on("message", (data) => {
       let msg = JSON.parse( data )
       //console.log("cc client input data=",data,"parsed=",msg)
