@@ -69,6 +69,10 @@ transform "mixin" {: i objs state C|
     //let mx_name = obj.params[0]
     let code = `create_${mx_name}({base_obj:self})`
     let gen = state.tool.parse( `paste "${code}"` ) // todo optimize
+    if (!target_obj.params[1]) {
+      console.error("mixin failed! target_obj has no param 1! ",target_obj)
+      return
+    }
     let next_obj_code = target_obj.params[1].code
     //console.log("next_obj=",next_obj)
     next_obj_code.unshift( ...gen )
