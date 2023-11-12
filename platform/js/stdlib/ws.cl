@@ -3,6 +3,7 @@
 import jsws="js:ws" std="std"
 
 // адаптер для сервера для работы с клиентами
+// idea - сделать отдельно адаптер на чтение и на запись. в духе client_input @conn
 process "adapter" {
   in {
     conn: const
@@ -26,6 +27,7 @@ process "adapter" {
   :}
 }
 
+// серверный процесс
 process "server" {
   in {
     port: cell
@@ -33,7 +35,7 @@ process "server" {
 
   h: state
   
-  connection: channel
+  connect: channel
 
   react @port {: port |
     if (self.h) self.h.close()
@@ -51,18 +53,19 @@ process "server" {
       console.log('ws server started at',self.h.address())
     })
     
-    self.h.on('connection', (ws) => self.connection.submit( ws ) );
+    self.h.on('connection', (ws) => self.connect.submit( ws ) );
   :}
 }
 
+// клиентский процесс
 process "client" {
   in {
     url: cell
-    input: channel
+    input: channel // канал отправки сообщений
   }
   
   output: channel
-  open: cell false
+  open: cell false // признак что присоединились
 
   h: state
 

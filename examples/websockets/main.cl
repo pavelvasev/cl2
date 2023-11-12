@@ -3,11 +3,11 @@
 import std="std" ws="std/ws.cl"
 
 ///////// сервер
-// принимает сооощения от клиента, умножает на 10 и отправляет обратно
+// принимает сообщения от клиента, умножает на 10 и отправляет обратно
 
 srv: ws.server 8001
 
-react @srv.connection { conn |
+react @srv.connect { conn |
   print "see server client"
 
   ws.adapter @conn | * 10 | ws.adapter @conn
