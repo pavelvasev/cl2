@@ -2,34 +2,29 @@
 // содержимое которое доступно всем безо всяких пакетов
 
 // таки мысли что надо сделать Cl2.create_reaction( comm, code )
-obj "react" {
+process "react" {
   in {
     input: channel
     action: cell
-}
-  // output: channel
-  // нам надо биндится к результатам тасков.. таски выражаются react-ами.. поэтому надо ячейки
-  // потому что вот таска сработала, это вызывает другую таску, та создает процесс, а 
-  // технология такова что тот процесс начинает зачитывать output-ы вот реакций.. и ничего не прочитает
-  // хотя формально если нам надо таски, так и надо делать таски
-  //output: cell is_changed={: new old | return true :}
-  // теперь можно и канал - т.к. таски сделаны отдельно внешним образом
-  // но вообще - в ЛФ вот порт хранит значение.. может и нам хранить? что такого.. (ну gc.. а ну и еще копии промежуточных данных в памяти.. ну посмотрим)
-  output: channel
+  }
 
   init {: obj |
     self.pending_finish = CL2.create_cell(1)
     console.channel_verbose('------------- react: ',self+'','listening',input+'')
-    let unsub = input.on( (value) => {
+    let unsub = input.subscribe( (value) => {
       let fn = action.get()
 
       // F-REACT-ORDER
+      /*
       let finish = CL2.create_cell()
       let pending_finish = self.pending_finish
       self.pending_finish = finish // теперь другие эту будут читать
+      */
 
-      pending_finish.once( () =>       //console.log('react input changed. scheduling!',self+'','value=',value)
+      //pending_finish.once( () =>       //console.log('react input changed. scheduling!',self+'','value=',value)
+      // console.log("react scheduling",value)
       CL2.schedule( () => { // принципиальный момент - чтобы реакция не срабатывала посреди другой реакции
+        // console.log("react scheduled run",value)
         console.channel_verbose('react got scheduled control. invoking scheduled action. self=',self+'')
 
         let result = fn( value )
@@ -38,48 +33,92 @@ obj "react" {
 
         // мега-идея промис js в том, что если результат это канал, то процесс продолжается..
         // т.е. нам как бы вернули информацию, что процесс еще идет и результаты уже у него
+        
+      }, obj)
+      //)
+    })
 
+    self.release.on( () => unsub() )
+  :}
+}
+
+// вход - список каналов/ячеек
+obj "when_all" {
+  in {
+    rest*: cell
+  }
+  output: cell
+
+  bind @rest @output
+}
+
+
+process "apply" {
+  in {
+    action: cell
+    rest*: cell 
+  }
+  // todo добавить поле input и тогда пайпы получится делать для apply
+  output: cell
+
+  react (when_all @action @rest) {:
+      
+      let f = action.get_default(null)
+      let args = rest.get_default(null)
+
+      //console.log("perform: f=",f,"args=",args)
+
+      if (!(f && args)) {
+        //console.log("non-ready")
+        return; // не готовое
+      }
+        
+        let result = f( ...args )
+
+        //console.log("result=",result)
+
+        // реагируем только на func-process у нас такая договоренность ждать его результат
+        // остальное возвращаем как есть. если кому надо - может создать func-process.
+
+        if (result?.is_func_process) {
+          // если с тех пор задали другой процесс.. то этот бы надо и забыть.. todo?
+          let unsub = result.once( (val) => {
+            console.channel_verbose('react got once tick. val=',val+'',typeof(val),'result(channel)=',result+'','self=',self+'')
+            output.submit( val )
+            // todo тут нужна очередность соблюдать вызовов.. ехехех...
+            //finish.submit(true)
+          })
+        }
+        else
+          output.submit( result )
+
+/*
         if (result instanceof CL2.Comm || result?.is_func_process) {
           console.channel_verbose('react see channel, subscribing once')
           // вернули канал? слушаем его дальше.. такое правило для реакций
           // но вообще это странно.. получается мы не можем возвращать каналы..
           // но в целом - а зачем такое правило для реакций? может его оставить на уровне apply это правило?
 
-          // ну и еще странно что - получается будем запускать следующую реакцию пока даже 
-          // эта еще не закончилась. и начнут спутываться значения (их очередность)
-          // возможно, реакцию стоит брать в работу, когда ее предыдущий процесс закончился
-          // а пока не закончился копить? какое правило?
-
           let unsub = result.once( (val) => {
             console.channel_verbose('react got once tick. val=',val+'',typeof(val),'result(channel)=',result+'','self=',self+'')
             output.submit( val )
-            finish.submit(true)
+            //finish.submit(true)
           })
         }
         else if (result instanceof Promise) {
           result.then( val => {
             output.submit(val)
-            finish.submit(true)
+            //finish.submit(true)
           })
         }
-        /*
-        else if (result.once) { ползьуемся тем что ClObject это Comm
-          result.once( val => {
-            output.submit(val)
-          })
-        }
-        */
         else {
           //console.log('submitting result to output',output+'')
           output.submit( result )
-          finish.submit(true)
+          //finish.submit(true)
         }
-      }, obj)
-      )
-    })
+*/        
+    :}
 
-    self.release.on( () => unsub() )
-  :}
 }
 
 paste "
@@ -362,17 +401,6 @@ obj "block" {
 }
 */
 
-// вход - список каналов/ячеек
-obj "when_all2" {
-  in {
-    rest*: cell
-  }
-  output: cell
-
-  bind @rest @output
-}
-
-
 obj "when_all3" {
   in {
     rest*: cell
@@ -400,49 +428,43 @@ obj "when_all3" {
 // read нам нужна.. чтобы работало f := 10
 func "read" {: x | return x :}
 
-obj "apply" {
+// анализирует входящий поток и смотрит там ячейку
+// значения этой ячейки и выдает наружу
+// мб это channel_to_value и сделать аналогичное value_to_channel?
+process "read_value" {
   in {
-    action: cell
-    rest*: cell
+    input: cell
   }
-  //u: extract @rest
+  output: cell
+  binding: state
+
+  init {:
+    input.subscribe( comm => {
+      if (self.binding) self.binding.destoy();  
+      self.binding = CL2.create_binding( comm, output )
+    })
+    self.release.subscribe( () => {
+      if (self.binding) self.binding.destoy();  
+    })
+  :} 
+}
+
+// мб стоит создать лучше Cl2.promise_to_func_process 
+// и тогда apply будет его результаты возвращать
+process "read_promise" {
+  in {
+    input: cell
+  }
   output: cell
 
-  //react @action {: console.log("see action") :}
-  //react @rest {: console.log("see rest") :}
-
-  xx: react (list @action @rest) {: a1 a2 |
-      //console.log("apply! main reaction!",a1, a2)
-      let f = action.get()
-      let args = rest.get()
-      //console.log("x-apply",f,args)
-
-      if (f && args) {
-        //console.log("calling")
-        let res = f( ...args )
-        //console.log("apply res=",res,"f=",f)
-        // типа если вернули канал - то зацепку за его значение нам обеспечит react
-        return res
-        /*
-        
-        //if (f.awaitable) res.then(val => output.set( val ))
-        // console.log("CCC f.is_task_function=",f.is_task_function,"f=",f)
-        if (f.is_task_function && res instanceof CL2.Comm) {
-          console.log("task fn!",res + "")
-          // вернули канал? слушаем его дальше..
-          let unsub = res.once( (val) => {
-            console.log("once",val)
-            output.set( val )
-          })
-        }
-        else
-          output.set( res )
-        */  
-
-      } 
-    :}
-
-  bind @xx.output @output
+  init {:
+    input.subscribe( comm => {
+      // todo убирать старое
+      comm.then( value => {
+        output.submit( value )
+      })
+    })    
+  :} 
 }
 
 //// арифметика

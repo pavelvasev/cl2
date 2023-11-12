@@ -41,7 +41,7 @@ react @k.exitcode {
   printed: print ("summary is\\n" + (format_summary @summary))
 
   apply {: code | console.log('finished, code',code); process.exit( code ) :} 
-     (apply {: s | return s.find( r => r[1] != 0 ) ? 1 : 0 :} @summary) 
+     (apply {: s | console.log('s=',s); return s.find( r => r[1] != 0 ) ? 1 : 0 :} @summary) 
      @printed.output
 
   //print( "   ", x + 1, sin(x) )

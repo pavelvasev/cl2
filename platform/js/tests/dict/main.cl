@@ -21,9 +21,9 @@ r1: react (std.timer n=1 period=10) {:
   y.set(10)
 :}
 
-react (std.timer n=1 period=10 start=20) {
+react (std.timer n=1 period=10 start=250) {
 //r_check: react @r1.output {
-  assert (apply {: x | console.log("checking x"); return x.a == 5 && x.b == 10 :} @x)
+  assert (apply {: x | console.log("checking x",x); return x.a == 5 && x.b == 10 :} @x)
 }
 
 //bind @r1.output @r_check.input delay=1

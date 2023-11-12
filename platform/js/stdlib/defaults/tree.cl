@@ -232,7 +232,7 @@ obj "apply_children" {
 
   imixin { tree_lift allow_default=false }
 
-  result := react (list @action @rest) {:
+  result := apply {:
       //console.log("************************ apply_children action! self=",self+'')
       let f = action.get()
       let args = rest.get()
@@ -254,7 +254,7 @@ obj "apply_children" {
           self.gather_request.submit()
         }
       }
-    :}
+    :} @action @rest 
 
   // это все заради бонуса чтобы аргументы передавать
   func "stop_result_process" {: 

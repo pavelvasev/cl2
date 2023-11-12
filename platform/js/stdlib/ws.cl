@@ -2,6 +2,7 @@
 
 import jsws="js:ws" std="std"
 
+// адаптер для сервера для работы с клиентами
 process "adapter" {
   in {
     conn: const
@@ -61,6 +62,7 @@ process "client" {
   }
   
   output: channel
+  open: cell false
 
   h: state
 
@@ -68,6 +70,8 @@ process "client" {
     if (self.h) self.h.close()
     //console.log("connecting to ",url)
     self.h = new jsws.WebSocket( url )
+
+    self.h.on('open', () => self.open.submit(1))
 
     self.h.on("message", (data) => {
       let msg = JSON.parse( data )
@@ -77,7 +81,7 @@ process "client" {
   :}
 
   react @input {: data |
-    //console.log("client input sending data=",data)
+    console.log("client sending data=",data)
     if (!self.h) {
       console.error("client have input but not connected. dropping.")
       return

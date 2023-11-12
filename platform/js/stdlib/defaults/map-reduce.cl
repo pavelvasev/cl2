@@ -54,6 +54,8 @@ func "map" {: arr f |
 
   let output = CL2.create_cell(); //output.attached_to = self
   output.$title = "map_fn_output"
+  output.is_func_process = true; // операция будет медленной и печальной
+
   // [...arr] переводит в массив принудительно, если там было Set например
   if (!Array.isArray(arr)) {
     if (arr instanceof Set)
@@ -70,6 +72,7 @@ func "map" {: arr f |
       //console.log('map done. values=',values)
       output.submit( values )
     })
+
   return output
 :}
 
@@ -112,6 +115,7 @@ func "filter" {: arr f |
 
 
   let output = CL2.create_cell(); //output.attached_to = self
+  output.is_func_process = true; // операция будет медленной и печальной
   output.$title = "filter_fn_output"
 
   if (!Array.isArray(arr)) arr = [...arr]
@@ -162,6 +166,7 @@ func "reduce" {: arr acc_init f |
   }
 
   let output = CL2.create_cell(); //output.attached_to = self
+  output.is_func_process = true; // операция будет медленной и печальной
   output.$title = "titles_fn_output"
 
   // [...arr] переводит в массив принудительно, если там было Set например

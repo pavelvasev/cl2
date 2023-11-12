@@ -8,7 +8,7 @@ process "alfa" {
   }
   print "hello from alfa, beta.coef is" @output
   
-  output := get @p_beta "coef"
+  output := get @p_beta "coef" | read_value
 }
 
 process "beta" {
@@ -16,7 +16,7 @@ process "beta" {
     p_alfa: cell
     coef: cell 10
   }
-  output := * (get @p_alfa "output") 2
+  output := * (get @p_alfa "output" | read_value) 2
   
   print "hello from beta, output=" @output
 }

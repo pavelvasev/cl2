@@ -282,7 +282,7 @@ export class Cell extends Comm {
 		return this.value
 	}
 	// удобное
-	get_def( default_value ) {
+	get_default( default_value ) {
 		if (this.is_set) return this.value
 		return default_value;
 	}
@@ -757,9 +757,12 @@ export function schedule( fn, priority_holder_object, force_priority ) {
 
 	// попробуем вставкой мб так побыстрее таки.. 
 	let i = 0
-	while (i < next_tick.length && fn_priority < next_tick[i].priority) {
+	// в этом выражении <= очень важно. т.к. оно означает - запихиваем в очередь максимально далеко
+	// это позволяет сохранить порядок обработки
+	while (i < next_tick.length && fn_priority <= next_tick[i].priority) {
 		i++
 	}
+	//console.log("schedule: inserted at pos",i)
 	//console.log("next_tick before insert",next_tick.map( x => x.priority))
 	next_tick = [...next_tick.slice(0,i), fn, ...next_tick.slice(i) ]
 	//console.log("next_tick after insert",next_tick.map( x => x.priority))
@@ -838,8 +841,8 @@ export class DelayedEater() {
 // tgt - целевой канал куда слать
 // что делает. считывает src рассчитывая увидеть там массив ячеек
 // и при изменении значений этих ячеек - собирает их в массив
-// и кладет его в tgt
-// проблема - если в src не ячейки а другие примитивы, то сборка ломается
+// и кладет его в tgt. при этом применяет дедубликацию сообщений.
+// если в src не ячейки а другие примитивы, то сборка ломается
 export function monitor_rest_values( src,tgt ) {
 
 	//console.log("monitor_rest_values inner!")

@@ -103,12 +103,12 @@ function generate_func_caller(name, state) {
 	 	  }
 	 	  output: cell
 	 	  
-  	  r: react @rest {: args |  	    
+  	  r: apply {: args |
   	    console.channel_verbose("co-func called '${name}'. self=",self+'',args)
   	    let rr = ${name}( ...args )
   	    console.channel_verbose("co-func finished '${name}'. self=",self+'','result=',console.fmt_verbose(rr))
   	    return rr
-  	  :}
+  	  :} @rest
   	  //react @output {: self.destroy() :}
 
   	  bind @r.output @output
@@ -169,7 +169,9 @@ export function func( obj, state )
 
 	// надо вызвать до cocode_to_code, чтобы зарегистрировать в state объект вызова. 
 	// тогда рекурсия в функции доступна.
-	let caller = generate_func_caller( name, state )
+	let generate_caller = !obj.params.disable_process
+	let caller = generate_caller ? generate_func_caller( name, state ) : { main:[],bindings:[] }
+	//console.log("fn name=",name,"generate_caller=",generate_caller)
 
 	fn_code = cocode_to_code( fn_code,state,true,true )
 

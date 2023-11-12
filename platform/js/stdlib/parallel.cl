@@ -70,6 +70,8 @@ func "map" {: arr batch_size f|
   }  
 
   let output = CL2.create_cell(); //output.attached_to = self
+  output.is_func_process = true; // операция будет медленной и печальной
+  
   output.$title = "map_fn_output"
   // [...arr] переводит в массив принудительно, если там было Set например
   if (!Array.isArray(arr)) {

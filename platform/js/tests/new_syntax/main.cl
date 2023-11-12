@@ -98,7 +98,7 @@ apply {
 }
 # в форме k := foo | alfa
 apply {
-  k_pipe := apply({: return 10 :}) | react({: val | return val+12 :})
+  k_pipe := apply({: return 10 :}) | apply({: val | return val+12 :})
   print "k_pipe=" @k_pipe
   assert (@k_pipe == 22)
 }

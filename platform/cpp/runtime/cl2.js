@@ -753,6 +753,7 @@ export function schedule( fn, priority_holder_object, force_priority ) {
 	while (i < next_tick.length && fn_priority < next_tick[i].priority) {
 		i++
 	}
+	
 	//console.log("next_tick before insert",next_tick.map( x => x.priority))
 	next_tick = [...next_tick.slice(0,i), fn, ...next_tick.slice(i) ]
 	//console.log("next_tick after insert",next_tick.map( x => x.priority))

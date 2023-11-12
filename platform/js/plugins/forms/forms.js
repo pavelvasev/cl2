@@ -697,6 +697,21 @@ export function pipe( obj, state )
 						}
 					}
 				}
+				else if (f.basis == "apply") { // F-PIPE-APPLY
+					// случай apply особый
+
+					let i = f.positional_params_count
+					// сдвигаем
+					while (i > 1) {
+						f.params[i] = f.params[i-1]
+						i = i-1
+					}
+					// ставим первый позиционный				
+					f.params[1] = {link:true}
+					f.links[1] = {to:1,from:`${prev_from}`}
+					f.positional_params_count = f.positional_params_count+1					
+					/// вставка готова
+				}	
 				else
 				{
 					// нет инпута - делаем позиционное
