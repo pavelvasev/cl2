@@ -306,7 +306,7 @@ react (std.timer) {: val | alfa.submit( val + beta.get() ) :}
 
 print "srv alfa is" @alfa
 
-react @srv.connection { wss |
+react @srv.connect { wss |
   //console.log("server see client")
   print "see server client"
   return 1

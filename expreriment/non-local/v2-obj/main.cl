@@ -389,7 +389,7 @@ apply {: console.log("server enva clid is",enva.$cl_id,CL2.get_title(enva)) :}
 
 srv: ws.server 8001
 
-react @srv.connection { wss |
+react @srv.connect { wss |
   print "see server client"
   
   conn: ws.adapter @wss
@@ -403,7 +403,7 @@ react @srv.connection { wss |
 
 cli: ws.client "http://localhost:8001"
 
-if @cli.open {
+if @cli.ready {
 
   client_enva: node
 

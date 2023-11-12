@@ -65,7 +65,7 @@ process "client" {
   }
   
   output: channel
-  open: cell false // признак что присоединились
+  ready: cell false // признак что присоединились
 
   h: state
 
@@ -74,7 +74,7 @@ process "client" {
     //console.log("connecting to ",url)
     self.h = new jsws.WebSocket( url )
 
-    self.h.on('open', () => self.open.submit(1))
+    self.h.on('open', () => self.ready.submit(1))
 
     self.h.on("message", (data) => {
       let msg = JSON.parse( data )

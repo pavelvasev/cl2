@@ -27,6 +27,8 @@ react @srv.connect { conn |
 
 cli: ws.client "http://localhost:8001" (std.timer)
 
-react @cli.output {: d |
-  console.log( "----> client got data",d )
-:}
+if @cli.ready {
+  react @cli.output {: d |
+    console.log( "----> client got data",d )
+  :}
+}
