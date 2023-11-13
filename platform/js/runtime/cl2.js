@@ -78,6 +78,11 @@ export class Comm extends Base {
 		return unsub
 	}
 
+	// F-THENABLE
+	then( fn ) {
+		return this.once( fn )
+	}
+
 	// F-COHERENT-MIND
 	get_m_priority() {
 		if (this.attached_to?.get_m_priority)
@@ -280,8 +285,11 @@ export class Cell extends Comm {
 	}
 	get() {
 		return this.value
+	
 	}
 	// удобное
+	// но название то плохое. надо или просто get(), но тогда там - get_fast.
+	// или еще как-то. todo
 	get_default( default_value ) {
 		if (this.is_set) return this.value
 		return default_value;

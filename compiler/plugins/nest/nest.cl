@@ -51,7 +51,10 @@ func "nest" { spec dir modules_root_dir nested need_download|
   print "--- download finished"
   //print "checking conf dir=" @dir
   //conf := apply (get @util "load_module_config") @dir
-  conf := apply {: dir modules_root_dir | return util.load_module_config(dir,modules_root_dir) :} @dir @modules_root_dir
+  conf := apply {: dir modules_root_dir | 
+       return util.load_module_config(dir,modules_root_dir) :} @dir @modules_root_dir 
+       | read_promise
+       
   //print "conf = " @conf
   //print "see modules: " (get @conf "modules")
 

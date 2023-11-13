@@ -4,10 +4,12 @@
 // вероятно на уровне препроцессинга исходника
 // идея - нам нужен какой-то очевидный препроцессор в духе Си
 // % ifdef @browser { jsws = global } { }
+// но мб и бесполезно - там on а тут addEventListener
 
 import std="std"
 
 // клиентский процесс
+// вероятно парсинг из и в json тут лишние - это можно сделать внешним коммуникатором
 process "client" {
   in {
     url: cell
@@ -15,7 +17,7 @@ process "client" {
   }
   
   output: channel
-  error: channel // сообщения об ошибках
+  error: cell // сообщения об ошибках
   ready: cell false // признак что присоединились
 
   h: state
@@ -27,6 +29,7 @@ process "client" {
 
     self.h.addEventListener('open', () => self.ready.submit(1))
     self.h.addEventListener('error', (err) => {
+       //console.error("ws error",err)
        self.error.submit(err)
        })
     self.h.addEventListener('close', (err) => {
@@ -34,12 +37,12 @@ process "client" {
       })
 
     self.h.addEventListener("message", (data) => {
-      let msg = JSON.parse( data )
+      let msg = JSON.parse( data.data )
 //      console.log("client receive data=",data,"parsed=",msg)
       output.submit( msg )
     })
   :}
-
+ 
   react @input {: data |
 //    console.log("client sending data=",data)
     if (!self.h) {

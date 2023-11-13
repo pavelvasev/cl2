@@ -29,3 +29,5 @@ F-SINGLE-MODULES-DIR
 F-MODULES-DIR
 возможность на уровне проекта указать, в какой папке держать его модули.
 export var modules_dir="../modules"
+
+*********

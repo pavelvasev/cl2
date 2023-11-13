@@ -128,6 +128,11 @@ func "reduce" {: arr acc_init f |
   //if (!f.is_task_function)
   //  return arr.map( f )
 
+  //if (!arr) {
+    //console.error("reduce: arr is empty",arr)
+  //  return acc_init
+  //}
+
   function process_elem(e,index,acc) {
     return new Promise( (resolve,reject) => {
 
