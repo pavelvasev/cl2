@@ -24,6 +24,9 @@
    features := list (some_feature) ...
 */
 
+/*
+*/
+
 // добывает кусочки из списка объектов
 // сделано процессом, это позволяет кусочкам меняться во времени
 // требование - каждый кусочек должен быть ячейкой (или каналом)
@@ -42,6 +45,11 @@ process "get" {
   incoming_cells := apply {: f id | return f.map( x => x[id] ).flat().filter( v => v) :} @features @id
   output := xtract @incoming_cells | compact
   //list **incoming_cells | compact  
+
+  react @output {: v |
+      if (v.length == 0)
+        console.warn("parts.get: найдено 0 частей для ",self.id.get())
+  :}
 }
 
 /* Создает объекты указанные в кусочках. Кусочки должны быть функциями.
@@ -84,6 +92,8 @@ process "create"
   пример:
 
   react @channel (parts.func_chain (parts.get @features "important_action"))
+  
+  idea: next передавать мб в this проще, а не 1м аргументом.
 
 */
 func "func_chain" {: funcs |
@@ -93,6 +103,8 @@ func "func_chain" {: funcs |
     let next_fn = ( ...new_args ) => invoke( num+1, ...new_args )                  
     return funcs[num]( next_fn, ...i_args )
   }
+
+  //if (funcs.length == 0) console.warn("func_chain: 0 функция в цепочке.")
 
   return (...args) => invoke( 0, ...args)
 :}

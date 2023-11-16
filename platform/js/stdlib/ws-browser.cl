@@ -25,7 +25,12 @@ process "client" {
   react @url {: url |
     if (self.h) self.h.close()
     //console.log("connecting to ",url)
-    self.h = new WebSocket( url )
+    try {
+      self.h = new WebSocket( url )
+    } catch (err) {
+      console.error("inside catch of WebSocket",err)
+      self.error.submit( err )
+    }
 
     self.h.addEventListener('open', () => self.ready.submit(1))
     self.h.addEventListener('error', (err) => {
