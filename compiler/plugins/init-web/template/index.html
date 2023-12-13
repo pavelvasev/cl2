@@ -6,7 +6,7 @@
 <body>
 
 <script type="module">
-  import * as M from "./main.cl.js"
+  import * as M from "./build/main.cl.js"
   M.create_main({}).output.changed.subscribe( elem => {
     document.body.appendChild( elem )
   })

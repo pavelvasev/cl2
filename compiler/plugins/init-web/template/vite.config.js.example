@@ -1,3 +1,5 @@
+// можно переименовать этот файл в vite.config.js и тогда это конфигурация vite будет.
+
 import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/

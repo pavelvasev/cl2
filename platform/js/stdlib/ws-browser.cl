@@ -52,6 +52,12 @@ process "client" {
 //    console.log("client sending data=",data)
     if (!self.h) {
       console.error("client have input but not connected. dropping.")
+      self.error.submit( `Соединение с сервером не установлено.` )
+      return
+    }
+    function isOpen(ws) { return ws.readyState === ws.OPEN }
+    if (!isOpen( self.h )) {
+      self.error.submit( `Соединение с сервером не в порядке. Код: ${self.h.readyState}` )
       return
     }
     try {

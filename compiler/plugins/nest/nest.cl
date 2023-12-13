@@ -9,7 +9,7 @@ import path="node:path" os="std/os.cl" util="../../tool/utils.js"
 func "download" { spec dir |
   if (get @spec "git") {
     print "this is git. syncing." @dir
-    return (if (os.exist @dir) {
+    return (if (os.exist @dir | read_promise) {
       print "git dir exist. issuing pull."
       k: os.spawn "git" "pull" dir=@dir stdio='inherit'
       return @k.exitcode

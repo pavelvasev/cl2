@@ -5,5 +5,4 @@ modules
 package-lock.json
 *.cl.cpp
 *.cmake
-build
 node_modules

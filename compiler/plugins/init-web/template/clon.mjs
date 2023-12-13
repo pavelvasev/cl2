@@ -5,6 +5,9 @@ export var modules={
   //"sigma": "./module-sigma"
 }
 
+export var output_dir="build"
+// export var modules_dir="../modules"
+
 // todo тесты текущего модуля
 // export var tests = ["tests/all.cl"]
 
