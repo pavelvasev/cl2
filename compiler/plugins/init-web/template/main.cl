@@ -3,7 +3,7 @@
 введенные определения затем можно использовать в других проектах и на веб-странице.
 */
 
-import std="std" dom="dom"
+import std="std" dom="dom.cl"
 
 mixin "tree_node"
 process "box" {

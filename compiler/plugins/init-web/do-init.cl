@@ -47,7 +47,8 @@ print "* copy template"
 os.cp (+ (__dirname) "template") "."
 =====
 print "* installing modules 2"
-r: os.spawn "clon" "nest" stdio="inherit"
+r: os.spawn "npm" "install" stdio="inherit"
+#r: os.spawn "clon" "install" stdio="inherit"
 react @r.exitcode {
   //print (os.read "README.md")
   print @readme_content

@@ -43,9 +43,9 @@ export function get_module_dir( r, current_dir, modules_root_dir=current_dir ) {
 // пока считается что там файл init.js в папке лежит
 // и дорабатывает этот конфиг, считает для него карту импорта (зачем-то)
 // modules_root_dir - папка модулей проекта, F-SINGLE-MODULES-DIR
-export function	load_module_config( module_path, modules_root_dir ) {
+export function	load_module_config( module_path, modules_root_dir, include_package_json=true ) {
 	    
-		console.log("load_module_config module_path=",module_path)
+		//console.log("load_module_config module_path=",module_path)
 
 		// let dir = get_module_dir( record, current_dir ) // тут dir, path, все вперемешку короче получилось
 		// console.log("resolved dir for module:",dir)
@@ -69,24 +69,30 @@ export function	load_module_config( module_path, modules_root_dir ) {
 
 		// F-PACKAGE-JSON
 		// "вычислим" модули из package.json
-		let p = path.join(dir,"package.json")
-		let package_json_modules_p = fs.access(p, fs.constants.R_OK).then( () => {
-			console.log("OK file exist")
-			return fs.readFile(p).then( content => {
-				const info = JSON.parse(content);
-				let keys = info.dependencies || {}
-				let xtra = Object.keys(keys).reduce( (acc,name) => {
-				  if (name.endsWith(".cl")) {
-				    //let short_name = name.split(".cl")[0]
-				    let short_name = name;
-				    acc[short_name]={dir:`./node_modules/${name}`}
-				    //acc[short_name] = `./node_modules/${name}`
-				  }
-				  return acc
-				},{})
-				return xtra
-			})				
-		}).catch( () => {} )		
+
+		let package_json_modules_p
+		if (include_package_json) {
+			let p = path.join(dir,"package.json")
+			package_json_modules_p = fs.access(p, fs.constants.R_OK).then( () => {
+				//console.log("OK file exist")
+				return fs.readFile(p).then( content => {
+					const info = JSON.parse(content);
+					let keys = info.dependencies || {}
+					let xtra = Object.keys(keys).reduce( (acc,name) => {
+					  if (name.endsWith(".cl")) {
+					    //let short_name = name.split(".cl")[0]
+					    let short_name = name;
+					    acc[short_name]={dir:`./node_modules/${name}`}
+					    //acc[short_name] = `./node_modules/${name}`
+					  }
+					  return acc
+					},{})
+					return xtra
+				})				
+			}).catch( () => {} )
+		} else {
+			package_json_modules_p = Promise.resolve({})
+		}
 
 		//console.log("load_module_config: importing",init_file)
 		return package_json_modules_p.then( package_json_modules => {
