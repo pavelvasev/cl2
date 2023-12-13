@@ -26,12 +26,17 @@ func "join" {: ...parts |
   return path.join(...parts)
 :}
 
+func "mark_func_process" {: input |
+   input.is_func_process = true
+   return input
+:}
+
 func "exist" {: path |
   //console.log('exist',path,process.cwd())
   let mmm0 = fs.access(path, fs.constants.R_OK)
   // мы же работаем в режиме каналов а там надо что-то записать
   // запишем false
-  return mmm0.then(result => path).catch( (err) => false )
+  return mark_func_process( mmm0.then(result => path).catch( (err) => false ) )
 :}
 
 func "env" {: return process.env :}
@@ -128,14 +133,14 @@ func "stop" {: code |
 // чтение файла
 func "read" {: url opts |
   // todo приделать сюда таки мб http и прочее
-  return fs.readFile(url, 'utf8')
+  return mark_func_process( fs.readFile(url, 'utf8') )
 :}
 
 // запись файла
 func "write" {: url content |
   // todo если тут урль прям реально? post делать?
   // todo а еще надо бы file:// отрабатывать
-  return fs.writeFile( url, content )
+  return mark_func_process( fs.writeFile( url, content ) )
 :}
 
 obj "watch" { 

@@ -72,6 +72,6 @@ function resolve_module_import_map( src_id, state ) {
 		//throw new Error(`resolve_module_import_map: cannot find module for id ${src_id}`)
 	let module_conf = state.modules_conf[ found_dir ]
 	if (!module_conf)
-		throw new Error(`resolve_module_import_map: cannot find dir info id ${src_id} dir ${found_dir}`)
+		throw new Error(`resolve_module_import_map: cannot find dir info! id=${src_id} dir=${found_dir}`)
 	return state.modules_conf[ found_dir ].import_map
 }

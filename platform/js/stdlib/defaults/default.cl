@@ -82,7 +82,7 @@ process "apply" {
 
         if (result?.is_func_process) {
           // если с тех пор задали другой процесс.. то этот бы надо и забыть.. todo?
-          let unsub = result.once( (val) => {
+          let unsub = result.then( (val) => {
             console.channel_verbose('react got once tick. val=',val+'',typeof(val),'result(channel)=',result+'','self=',self+'')
             output.submit( val )
             // todo тут нужна очередность соблюдать вызовов.. ехехех...

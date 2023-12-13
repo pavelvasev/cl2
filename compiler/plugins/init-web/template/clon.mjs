@@ -1,8 +1,8 @@
 // это файл конфигурации clon-проекта.
 // подключаемые пакеты
 export var modules={
-  dom: {git:"https://github.com/pavelvasev/dom.cl"},
-  //"sigma": "./module-sigma"
+  // dom: {git:"https://github.com/pavelvasev/dom.cl"},
+  // "sigma": "./module-sigma"
 }
 
 export var output_dir="build"
