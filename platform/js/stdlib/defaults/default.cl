@@ -431,6 +431,7 @@ func "read" {: x | return x :}
 // анализирует входящий поток и смотрит там ячейку
 // значения этой ячейки и выдает наружу
 // мб это channel_to_value и сделать аналогичное value_to_channel?
+// зачем оно нам?
 process "read_value" {
   in {
     input: cell
@@ -442,6 +443,30 @@ process "read_value" {
     input.subscribe( comm => {
       if (self.binding) self.binding.destoy();  
       self.binding = CL2.create_binding( comm, output )
+    })
+    self.release.subscribe( () => {
+      if (self.binding) self.binding.destoy();  
+    })
+  :} 
+}
+
+// читает значение из ячейки, и к нему относится как к объекту с ячейками
+// пример: read_cell @someobj "property"
+// idea: приводить к read_cell записи вида @alfa.beta.gamma ...
+// но там надо смотреть, если beta не ячейка - то просто ее читать.
+// а так то это пайпа: read @x | read_cell "y" | read_cell "some"
+process "read_cell" {
+  in {
+    input: cell
+    cell_name: const
+  }
+  output: channel
+  binding: state
+
+  init {:
+    input.subscribe( comm => {
+      if (self.binding) self.binding.destoy();  
+      self.binding = CL2.create_binding( comm[ cell_name ], output )
     })
     self.release.subscribe( () => {
       if (self.binding) self.binding.destoy();  
@@ -799,7 +824,8 @@ process "repeater" {
   react @self.release {: forget_all() :}
 }
 
-// это у нас такая форма quote
+// это у нас такая форма - quote
+// todo пример
 form "quote" {: obj state C|
   let self_objid = C.obj_id( obj, state )
   let strs = [`let ${self_objid} = CL2.create_object();`,
