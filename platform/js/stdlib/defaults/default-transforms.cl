@@ -23,6 +23,12 @@
 // [[= целевой язык ]]
 // [[=! paste_file "mixins.cl" ]]
 
+// idea: mixin "name" params.. process "target"
+// и нечего сразу несколько - все-равно не пользуюсь.. зато параметры можно указывать..
+
+// idea: mixin { tree_node alfa=5; xtra_jump mode=2; } process ...
+// т.о. параметры миксинов и возможность указывать несколько
+
 transform "mixin" {: i objs state C|
 
   let obj = objs[i]
@@ -75,6 +81,7 @@ transform "mixin" {: i objs state C|
     }
     let next_obj_code = target_obj.params[1].code
     //console.log("next_obj=",next_obj)
+    // вставляем первой строчкой
     next_obj_code.unshift( ...gen )
   }
 

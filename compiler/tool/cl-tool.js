@@ -7,7 +7,7 @@ let default_modules = [
 	"module-path/module-path.js",	
 	"test/init.js",
 	"nest/init.js",
-	"init/init.js", "init-web/init.js", "init-electron/init.js",
+	"init/init.js", "init-web/init.js", "init-electron/init.js", "init-3d/init.js",
 	"watch", "add",
 	"macros/macros.js"
 	]

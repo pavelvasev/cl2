@@ -57,6 +57,7 @@ export function transform( i, objs, state )
 		},
 		check_params: default_cp
   }
+  //console.log('regged macro',name)
   // но кстати вопрос.. а если оно ну там что-то поделает и вернет опять obj-запись?
 
 	objs.splice(i,1)

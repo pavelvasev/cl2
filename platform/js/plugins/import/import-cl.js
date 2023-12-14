@@ -6,14 +6,18 @@ import * as FORMS from "../forms/forms.js"
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 
-export function init( state, tool )
+export function init( astate, tool )
 {
 	// уже прочитанные модули
 	let imported_modules = {} // abs-path => state
 
 	// todo идея мб не import name="id" а таки import name=@id т.е. модули вводить как ячейки?..
-	state.env["import"] = {
-		make_code: function( obj, state ) {
+	astate.env["import"] = {
+		transform: (i,objs,state) => {
+			let obj = objs[i]
+
+			//console.log("import-transform started!",obj.locinfo)
+
 			let promarr = []
 			let strs = []
 			let outers = []
@@ -21,8 +25,11 @@ export function init( state, tool )
 				let src = obj.params[tgt]
 				//console.log("using",src,"as ",tgt)
 
-				if (state.current[tgt])
+				if (state.current[tgt]) {
+					//console.log("state.current=",state.current)
+					console.log('going to fail due to',obj.locinfo)
 					throw new Error(`import: cannot import to name '${tgt}', it already busy in current env`)
+				}
 
 				//let file = path.resolve( path.join(state.dir,src) )
 				
@@ -48,7 +55,6 @@ export function init( state, tool )
 						tool.add_global_code( state.space.register_import_outer(src, file) )
 					}
 					else {
-
 						// пока так...
 						let content = fs.readFileSync( file ,{ encoding: 'utf8', flag: 'r' });
 
@@ -60,12 +66,17 @@ export function init( state, tool )
 
 					  module_state.import_map = state.space.resolve_module_import_map( src, state )
 
+					  //console.log("import-transform: compiling file=",file)
+
 					  // и todo - надо карту импортов свою им подгрузить
 					  // мы вызываем это objs2js чтобы наполнить module_state определениями из прочитанного кода
 						let code = tool.compile_string( content, module_state )
 
+					  //console.log("import-transform: finished compiling file=",file)	
+
 						//console.log("IIII",code)
 						
+						//console.log('saved to common global state')
 						imported_modules[ file ] = module_state
 
 						//strs.push(`import * as ${tgt} from '${js_import_path}'`)
@@ -79,9 +90,14 @@ export function init( state, tool )
 				state.current[tgt] = module_state
 
 				strs.push( state.space.register_import_use( tgt, file, module_state ) )
-			}
-			return { main: strs, bindings: [], prefix: outers }
-	  },
+			} // for
+			//console.log("import-transform finished!")
+			obj.mk_code_result = { main: strs, bindings: [], prefix: outers }
+			return [i+1,objs]
+		},
+		make_code: function( obj, state ) {
+			return obj.mk_code_result
+	    },
 		check_params: () => {}
 	}
 

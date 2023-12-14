@@ -404,12 +404,17 @@ export function objs2objs( objs, state, one_tick )
 	// после себя (т.е. objs2obj) -  чтобы например реализовать цепочки декораторов.
 
 	// слой трансформаторов
+	//console.log('going via transform')
 
 	i = 0;
 	while (i < objs.length) {
 		let obj = objs[i]
-		//console.log("obj.basis_path=",obj.basis_path,obj)
+		//console.log("checking transform. obj.basis_path=",obj.basis_path)
+		if (!obj.basis_path) {
+			console.error('warning: objs2objs during transform phase. basis_path of object is null. obj=',obj)
+		}
 		let env_rec = get_record( state,obj.basis_path, obj, true, false )
+		//console.log(env_rec?.transform,"env_rec=",env_rec)
 		if (env_rec?.transform) {
 			 //console.log("transform found! i=", i, env_rec)
 			 let result = env_rec.transform( i, objs, state )
@@ -430,6 +435,8 @@ export function objs2objs( objs, state, one_tick )
 			i++
 		}
 	}
+
+	//console.log('transform finished')
 
 	objs.i_processed = i_processed;
 
@@ -480,7 +487,12 @@ export function obj2obj( obj, objs, index )
 export function get_record(state,id,obj_info,allow_defaults=true, error_if_not_found=true) {
 	//console.log("get_Record",id,obj_info)
 
-	let id_arr = Array.isArray(id) ? id : id.split(".")
+	let id_arr
+	if (Array.isArray(id)) id_arr = id; else {
+		if (typeof(id) !== "string")
+			console.error("warning: get_record input id is not string nor array: id=",id)
+		id_arr = id.split(".")
+	} 
 
 	if (id_arr.length == 1) { // просто имя вида имя
 		let x = state.current[id_arr[0]] // временный тупняк

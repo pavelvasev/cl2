@@ -29,6 +29,9 @@ sigma: const 20
 //sigma := 5
 
 f: foo @sigma
+assert (@f.alfa == @sigma)
+
+====
 
 f1: foo1 11 14
 print "f1.beta = " @f1.beta
@@ -39,5 +42,4 @@ print "intern" (apply {: return f.alfa :})
 print "intern2" @f.alfa
 print "intern3" @f.output
 
-assert (@f.alfa == @sigma)
 assert (@f.output == @sigma)

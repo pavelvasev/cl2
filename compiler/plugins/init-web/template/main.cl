@@ -8,14 +8,21 @@ import std="std" dom="dom.cl"
 mixin "tree_node"
 process "box" {
   in { cf&:cell }
-  output := dom.element "div" style="display: flex; flex-direction: column; border: 1px solid;" cf=@cf
+  output := dom.element "div" style="border: 1px solid;" {
+    apply_children @cf
+  }
 }
 
+dom.custom "cl-main"
 mixin "tree_node"
 process "main" {
+  in { style: cell "" }
 
-  output := box {
-    dom.element "h3" "Input:"
+  output := dom.column style=@style {
+    dom.dark_theme
+    box {
+      dom.element "h3" "Input:"
+    }
     input_space: dom.element "textarea" style="height: 300px;"
     btn: dom.element "button" "Visualize!"
 
@@ -28,9 +35,6 @@ process "main" {
       let idom = input_space.output.get()
       odom.textContent = idom.value
     :}
-
   }
 
 }
-
-

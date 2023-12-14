@@ -283,7 +283,8 @@ export function _obj( obj, state )
 			// задача - по каждому указанному входному параметру дать информацию
 			// как его следует подавать
 			// - как именованный (и как именно - это касается позиционной подачи)
-			// - в рест позиционный - в рест именованный (и какое имя)
+			// - в рест позиционный 
+			// - в рест именованный (и какое имя)
 			// F-CHECK-EXTRA проверяет что не дано лишних параметров
 			// F-CHECK-REQUIRED проверяет также что все обязательные параметры заданы 
 
@@ -322,7 +323,8 @@ export function _obj( obj, state )
 				}
 				if (const_params.hasOwnProperty( k )) {
 					// k встречается в списке параметров объекта - значит это именованный
-					_const_params.push( k )
+					named.push( k )
+					_const_params[ k ] = true
 					delete required_rm[k]
 					continue
 				}
@@ -335,6 +337,17 @@ export function _obj( obj, state )
 				}
 				
 				let qq = positional_names[k] // F-POSITIONAL-RENAME
+
+				// обрабатывается до obj_params
+				if (const_params.hasOwnProperty( qq )) {
+					// k встречается в списке параметров объекта - значит это именованный
+					_const_params[ qq ] = true
+					renamed[k] = qq
+					named.push( k )
+					delete required_rm[qq]
+					continue
+				}
+
 				if (obj_params.hasOwnProperty( qq )) {
 					// k есть позиционный параметр. запомним как его надо переименовать при присвоении
 					named.push( k )
@@ -342,6 +355,7 @@ export function _obj( obj, state )
 					delete required_rm[qq]
 					continue
 				}
+
 				// есть рест и обычные - заполнены
 				// и при этом имя параметра это число. todo как-то отдельно эти бы числа просто пройти..
 				if (rest_param && named.length == positional_names.length && /^(0|[1-9]\d*)$/.test(k)) {
@@ -378,9 +392,14 @@ export function _obj( obj, state )
 				}
 			}
 
-			return {normal:named,renamed,pos_rest:pos_rest_names, 
+			//console.log("CC co=",_const_params)
+
+			let r = {normal:named,renamed,pos_rest:pos_rest_names, 
 			   named_rest: named_rest_names, children_param, 
 			   pos_splat, named_splat, const_params: _const_params}
+
+			   //console.log("R=",r)
+			return r   
 		},
 		get_params: () => {
 			return obj_params

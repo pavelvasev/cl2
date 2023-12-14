@@ -43,6 +43,8 @@ export function get_module_dir( r, current_dir, modules_root_dir=current_dir ) {
 // пока считается что там файл init.js в папке лежит
 // и дорабатывает этот конфиг, считает для него карту импорта (зачем-то)
 // modules_root_dir - папка модулей проекта, F-SINGLE-MODULES-DIR
+// include_package_json - надо ли добавлять пакеты из package.json
+// потому что при слон инсталл - их не надо добавлять. (а то он пытается их ставить)
 export function	load_module_config( module_path, modules_root_dir, include_package_json=true ) {
 	    
 		//console.log("load_module_config module_path=",module_path)
@@ -52,7 +54,7 @@ export function	load_module_config( module_path, modules_root_dir, include_packa
 
 		let init_file, dir
 
-		//console.log("load_module: module_path=",module_path)
+		//console.log("load_module: module_path=",module_path,"modules_root_dir=",modules_root_dir)
 
 		if (module_path.endsWith(".js") || module_path.endsWith(".mjs")) {
 			init_file = module_path
@@ -65,15 +67,22 @@ export function	load_module_config( module_path, modules_root_dir, include_packa
 
 		// если папка модулей проекта не задана, то это считается папка
 		//if (!modules_root_dir) console.log("modules_root_dir not specified! computing.")
-		modules_root_dir ||= path.join( dir, "modules" )
+		//modules_root_dir ||= path.join( dir, "modules" )
+
 
 		// F-PACKAGE-JSON
 		// "вычислим" модули из package.json
-
+		// вообще это надо убрать в отдельную функцию. и вызывать отдельно.
+		// т.к. load_module_config вызывается только из cl-tool и nest, а надо только для cl-tool
 		let package_json_modules_p
 		if (include_package_json) {
+
 			let p = path.join(dir,"package.json")
 			package_json_modules_p = fs.access(p, fs.constants.R_OK).then( () => {
+			    // получается логика такая - если есть package.json
+		    	// то работаем с ним..
+		    	modules_root_dir ||= path.join( dir, "node_modules" )					    
+
 				//console.log("OK file exist")
 				return fs.readFile(p).then( content => {
 					const info = JSON.parse(content);
@@ -82,7 +91,8 @@ export function	load_module_config( module_path, modules_root_dir, include_packa
 					  if (name.endsWith(".cl")) {
 					    //let short_name = name.split(".cl")[0]
 					    let short_name = name;
-					    acc[short_name]={dir:`./node_modules/${name}`}
+					    acc[short_name]={dir:name}
+					    //acc[short_name]={dir:`./node_modules/${name}`}
 					    //acc[short_name] = `./node_modules/${name}`
 					  }
 					  return acc
@@ -91,11 +101,13 @@ export function	load_module_config( module_path, modules_root_dir, include_packa
 				})				
 			}).catch( () => {} )
 		} else {
-			package_json_modules_p = Promise.resolve({})
+			package_json_modules_p = Promise.resolve({})			
 		}
 
 		//console.log("load_module_config: importing",init_file)
 		return package_json_modules_p.then( package_json_modules => {
+
+			modules_root_dir ||= path.join( dir, "modules" )
 
 			 return import( init_file ).then( m => {
 				let inner_modules = m.modules || m.sources || {}
