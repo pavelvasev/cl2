@@ -455,6 +455,9 @@ process "read_value" {
 // idea: приводить к read_cell записи вида @alfa.beta.gamma ...
 // но там надо смотреть, если beta не ячейка - то просто ее читать.
 // а так то это пайпа: read @x | read_cell "y" | read_cell "some"
+
+// parts.get еще есть.. вообще к этой истории надо чуть внимательнее отнестись и все сделать.
+// смысл в том, что в ячейки подают объект, а мы хотим в него зайти и его ячейки почитать.
 process "read_cell" {
   in {
     input: cell
@@ -692,6 +695,23 @@ func "concat" {: a b |
    throw `concat: incompatible types.`
 :}
 
+func "prepend" {: a b | 
+   //console.log('concat',a,b)
+   if (Array.isArray(a)) return [b,...a]
+   if (a instanceof Set) return {b,...a}
+
+   throw `prepend: incompatible types.`
+:}
+
+func "append" {: a b | 
+   //console.log('concat',a,b)
+   if (Array.isArray(a)) return [...a,b]
+   if (a instanceof Set) return {...a,b}
+
+   throw `append: incompatible types.`
+:}
+
+// возвращает массив длины max со значениями 0...max-1
 // ну пока такое
 func "range" {: max |
   let arr = new Array(max)

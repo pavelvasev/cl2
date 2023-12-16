@@ -688,6 +688,7 @@ export function pipe( obj, state )
 	let prev_from = null // `${objid}.input`
 	let ch = C.get_children(obj,'children')
 	//console.log("pipe children is",ch, obj)
+	//console.log("pipe is", obj)
 	if (ch) {
 		let mod_state = C.modify_parent(state,objid)
 		for (let f of ch) {
@@ -718,17 +719,27 @@ export function pipe( obj, state )
 						// сдвигаем всех кто после input, освобождаем для него место
 						while (i > input_pos) {
 							f.params[i] = f.params[i-1]
+							let l = f.links[i-1]
+							if (l) {
+								f.links[i] = l;
+								l.to = i;
+							}
 							i = i-1
 						}
 					}
 				}
 				else if (f.basis == "apply") { // F-PIPE-APPLY
-					// случай apply особый
+					// случай apply особый					
 
 					let i = f.positional_params_count
 					// сдвигаем
 					while (i > 1) {
 						f.params[i] = f.params[i-1]
+						let l = f.links[i-1]
+							if (l) {
+								f.links[i] = l;
+								l.to = i;
+							}
 						i = i-1
 					}
 					// ставим первый позиционный				
@@ -740,11 +751,17 @@ export function pipe( obj, state )
 				else
 				{
 					// нет инпута - делаем позиционное
+					// console.log("case 3",f)
 
 					let i = f.positional_params_count
 					// сдвигаем
 					while (i > 0) {
 						f.params[i] = f.params[i-1]
+						let l = f.links[i-1]
+							if (l) {
+								f.links[i] = l;
+								l.to = i;
+							}
 						i = i-1
 					}
 					// ставим первый позиционный				
@@ -752,6 +769,7 @@ export function pipe( obj, state )
 					f.links[0] = {to:0,from:`${prev_from}`}
 					f.positional_params_count = f.positional_params_count+1					
 					/// вставка готова
+					//console.log('done',f)
 				}	
 		  }
 
