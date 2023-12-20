@@ -19,11 +19,15 @@ export function init( state, tool ) {
 
 		let mmm0 = access(config_file, constants.R_OK)
 		let config = {}
-		let mmm = mmm0.then( () => {
+		let load_config_p = mmm0.then( () => {
 			return tool.load_module( config_file,state ).then( conf => {
 				//console.log("loaded conf",conf)
 				tool.config = conf
 				config = conf
+
+				// хорошо бы сделать эту штуку абсолютной..
+				//if (config.output_dir) config.output_dir = path.resolve( project_dir, ...
+
 				//config.output_dir ||= path.dirname( path.resolve(file) ) // todo мб не здесь
 				state.import_map = conf.import_map //{...state.space.default_import_map, ...conf.import_map}
 			}).catch( err => {
@@ -38,7 +42,7 @@ export function init( state, tool ) {
 		})
 
 		// F-EMBED-RUNTIME		
-		mmm = mmm.then( () => {
+		let mmm = load_config_p.then( () => {
 			let file_p = "file://" + path.resolve( path.join(tool.platform_dir,"./runtime/cl2.js"))
 			return fetch( file_p ).then( r => r.text() ).then( content => {
 				tool.prepend_global_code(['// clon cl2.js runtime',content])
@@ -67,12 +71,17 @@ export function init( state, tool ) {
 		let out_file = file + ".js"
 		let out_file_mjs = file + ".mjs"
 
-/*
-		if (config.output_dir) {
-			out_file = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".js"
-			out_file_mjs = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".mjs"
-		}
-*/		
+		// F-MK-OUTPUT-DIR - создать перед компиляцией целевой каталог, указанный в output_dir
+		// как-то оно успевает создать папку до компиляции..
+		let output_dir_ready_p = load_config_p.then( () => {
+			if (config.output_dir) {
+				//let targetDir = path.resolve( path.join( config.output_dir ))
+				//console.log("mkdir sync config.output_dir=",config.output_dir)
+				fs.mkdirSync(config.output_dir, { recursive: true });			
+				//out_file = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".js"
+				//out_file_mjs = path.resolve( path.join( config.output_dir, path.basename( file ) )) + ".mjs"
+			}
+		}) 
 
 		let nodejs = compiled.then( k => {
 			let code = tool.gen_full_code( k.code )
