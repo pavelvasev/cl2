@@ -69,48 +69,31 @@ export function	load_module_config( module_path, modules_root_dir, include_packa
 		//if (!modules_root_dir) console.log("modules_root_dir not specified! computing.")
 		//modules_root_dir ||= path.join( dir, "modules" )
 
+		//console.log("load_module_config: importing",init_file)		 
 
-		// F-PACKAGE-JSON
-		// "вычислим" модули из package.json
-		// вообще это надо убрать в отдельную функцию. и вызывать отдельно.
-		// т.к. load_module_config вызывается только из cl-tool и nest, а надо только для cl-tool
-		let package_json_modules_p
-		if (include_package_json) {
+		 return import( init_file ).then( m => {
+			let inner_modules = m.modules || m.sources || {}
 
-			let p = path.join(dir,"package.json")
-			package_json_modules_p = fs.access(p, fs.constants.R_OK).then( () => {
-			    // получается логика такая - если есть package.json
-		    	// то работаем с ним..
-		    	modules_root_dir ||= path.join( dir, "node_modules" )					    
+			// F-PACKAGE-JSON
+			// "вычислим" модули из package.json
+			// вообще это надо убрать в отдельную функцию. и вызывать отдельно.
+			// т.к. load_module_config вызывается только из cl-tool и nest, а надо только для cl-tool
+			let package_json_modules_p
+			if (include_package_json) {
+				let p = path.join(dir,m.package_json_path || "package.json")
+				//console.log("p=",p)
+				package_json_modules_p = load_package_json( p )
+				// получается логика такая - если есть package.json
+			   	// то работаем с ним..
+			   	// update: да всегда получается работаем. но мы тут имеем возможность поправить путь
+			   	modules_root_dir ||= path.join( path.dirname(p), "node_modules" )					
+			}
+			else {
+				package_json_modules_p = Promise.resolve({})
+				modules_root_dir ||= path.join( dir, "node_modules" )
+			}
 
-				//console.log("OK file exist")
-				return fs.readFile(p).then( content => {
-					const info = JSON.parse(content);
-					let keys = info.dependencies || {}
-					let xtra = Object.keys(keys).reduce( (acc,name) => {
-					  if (name.endsWith(".cl")) {
-					    //let short_name = name.split(".cl")[0]
-					    let short_name = name;
-					    acc[short_name]={dir:name}
-					    //acc[short_name]={dir:`./node_modules/${name}`}
-					    //acc[short_name] = `./node_modules/${name}`
-					  }
-					  return acc
-					},{})
-					return xtra
-				})				
-			}).catch( () => {} )
-		} else {
-			package_json_modules_p = Promise.resolve({})			
-		}
-
-		//console.log("load_module_config: importing",init_file)
-		return package_json_modules_p.then( package_json_modules => {
-
-			modules_root_dir ||= path.join( dir, "modules" )
-
-			 return import( init_file ).then( m => {
-				let inner_modules = m.modules || m.sources || {}
+			return package_json_modules_p.then( package_json_modules => {
 
 				inner_modules = {...inner_modules,...package_json_modules}
 				// F-MODULES-DIR
@@ -128,8 +111,12 @@ export function	load_module_config( module_path, modules_root_dir, include_packa
 				let conf = {...m, modules: inner_modules, import_map, dir, modules_dir}
 
 				return conf
+
 			})
+
+			
 		})
+		
 	}
 
 // проект - выносим генерацию карт импорта в отдельный модуль
@@ -138,4 +125,26 @@ export function	load_module_config( module_path, modules_root_dir, include_packa
 export function generate_import_map( module_config, root_dir ) 
 {
 
+}
+
+// p - путь к файлу package.json
+function load_package_json( p ) {
+	return fs.access(p, fs.constants.R_OK).then( () => {    
+		//console.log("OK file exist")
+		return fs.readFile(p).then( content => {
+			const info = JSON.parse(content);
+			let keys = info.dependencies || {}
+			let xtra = Object.keys(keys).reduce( (acc,name) => {
+			  if (name.endsWith(".cl")) {
+			    //let short_name = name.split(".cl")[0]
+			    let short_name = name;
+			    acc[short_name]={dir:name}
+			    //acc[short_name]={dir:`./node_modules/${name}`}
+			    //acc[short_name] = `./node_modules/${name}`
+			  }
+			  return acc
+			},{})
+			return xtra
+		})				
+	}).catch( () => {} )
 }

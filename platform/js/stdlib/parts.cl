@@ -10,29 +10,28 @@
   кусочки с одинаковым идентификатором, и применяет их.
 
   Функции (процессы):
-    get: массив-фич, идентификатор -> массив кусочков.
-    create: массив-функций -> процесс создания объектов описанных в функциях
-    func_chain: массив функций -> функция, которая построена по принципу цепочки (см ниже)
+    parts.get: массив-фич, идентификатор -> массив кусочков.
+    parts.create: массив-функций -> процесс создания объектов описанных в функциях
+    parts.func_chain: массив функций -> функция, которая построена по принципу цепочки (см ниже)
 */
 
 /* пример кусочка:
 
    process "some_feature" {
      top_gui_panel := { dom.button "Привет" dom.element "span" "Нажмите кнопку" }
+     output := @self
    }
 
-   features := list (some_feature) ...
+   features_list := list (some_feature) ... 
 */
 
-/*
-*/
 
 // добывает кусочки из списка объектов
 // сделано процессом, это позволяет кусочкам меняться во времени
 // требование - каждый кусочек должен быть ячейкой (или каналом)
 /*
    пример:
-   items := parts.get @features "top_gui_panel"
+   items := parts.get @features_list "top_gui_panel"
 */
 // примечание. на самом деле это процесс map-get. просто наш map он не процесс, увы.
 // ну вообще-то тут еще и чистка - убираем пустые записи.
@@ -58,16 +57,20 @@ process "get" {
 
    dom.element "div" {
      parts.create @items
+     parts.create (parts.get @features_list "some_feature")
    }
+
+   todo: добавить rest-значений
 */
 mixin "tree_lift"
 process "create"
 {
   in {
     parts: cell
+    arg: cell false
   }
   repeater @parts { c |
-    apply_children @c
+    apply_children @c @arg
   }
 }
 

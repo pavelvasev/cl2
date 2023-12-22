@@ -146,14 +146,14 @@ func "write" {: url content |
 obj "watch" { 
 
   in {
-    path: cell
+    fs_path: cell
     once: cell false
   }
 
   output: channel
 
-  react (list @path @once) {:
-    let path = self.path.get()
+  react (list @fs_path @once) {:
+    let p = self.fs_path.get()
     let once = self.once.get()
   
     //console.log("iter=",iter, iter.next)
@@ -163,7 +163,9 @@ obj "watch" {
     // что-то вотч рекурсивно не работает.. рекомендуют
     // https://github.com/paulmillr/chokidar
     // https://github.com/nodejs/node/pull/45098 вроде с ноды 19.1
-    let iter = fs.watch( path, {recursive: true, signal, persistent: true} )  
+    //console.log("starting watch",path.resolve(p))
+    p = path.resolve(p)
+    let iter = fs.watch( p, {recursive: true, signal, persistent: true} )  
 
     let my_id = Math.random()*10000
 
@@ -173,7 +175,7 @@ obj "watch" {
       let nx = iter.next()
       // console.log({nx})
       nx.then( rec => {
-        //console.log("nx then! my_id=",my_id,rec)
+        console.log("nx then! my_id=",my_id,rec)
         //console.log("submitting")
         self.output.submit( rec.value )
         if (once) {
