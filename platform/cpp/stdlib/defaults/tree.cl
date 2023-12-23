@@ -272,3 +272,9 @@ obj "apply_children" {
 
   bind @self.children @output
 }
+
+mixin "tree_node"
+process "node" {
+  in { cf&: cell }
+  apply_children @cf
+}

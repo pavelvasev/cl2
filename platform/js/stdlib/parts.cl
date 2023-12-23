@@ -31,6 +31,9 @@
 // требование - каждый кусочек должен быть ячейкой (или каналом)
 /*
    пример:
+
+   import parts="std/parts.cl"
+
    items := parts.get @features_list "top_gui_panel"
 */
 // примечание. на самом деле это процесс map-get. просто наш map он не процесс, увы.
@@ -54,6 +57,8 @@ process "get" {
 /* Создает объекты указанные в кусочках. Кусочки должны быть функциями.
 
    пример:
+
+   import parts="std/parts.cl"
 
    dom.element "div" {
      parts.create @items

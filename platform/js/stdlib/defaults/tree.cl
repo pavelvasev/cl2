@@ -214,7 +214,7 @@ obj "func_process" {
 
 // добавляет детей из указанного описания (данного в форме функции)
 // apply_children @children_arr
-obj "apply_children" {
+process "apply_children" {
   in {
     action: cell
     rest*: cell
@@ -261,12 +261,21 @@ obj "apply_children" {
   func "stop_result_process" {: 
     if (self.result.is_set) {
       let p = self.result.get()
-      if (p)
+      if (p) {
+          //console.log("apply_children: destroy p=",p)
           p.destroy()
+      }
       self.result.set( CL2.NOVALUE )
     }
   :}
   react @self.release @stop_result_process
 
   bind @self.children @output
+}
+
+// просто узел для использования по месту
+mixin "tree_node"
+process "node" {
+  in { cf&: cell }
+  apply_children @cf
 }
