@@ -642,8 +642,9 @@ export function bind( obj, state )
 
   let base = {main:[],bindings:[]}
 	base.bindings.push( `let ${name} = ${bst}(${obj.params[0].from},${obj.params[1].from})`)
-	base.bindings.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )` )
 
+	if (state.struc_parent_id) // в корне может и не быть..
+	    base.bindings.push( `CL2.attach( ${state.struc_parent_id},"${name}",${name} )` )
 
 	//  и фичеры.. это у нас дети которые не дети	
 	// это позволяет писать bind (formula) (formula)
