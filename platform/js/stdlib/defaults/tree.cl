@@ -84,6 +84,7 @@ obj "tree_lift" //base_code="create_tree_child({})"{
 
     r.add( child )
     // мы получается и лифтов добавляем. ок.
+    // todo слушать destroy и вызывать forget.
 
     child.lift_parent.set( self )
 
@@ -242,7 +243,7 @@ process "apply_children" {
 
       if (f && args) {
         //console.log("calling")
-        //console.log("-------------- apply_children call! self=",self+'')
+        //console.log("-------------- apply_children call! self=",self+'',args)
         let res = f( ...args )
         // console.log( "apply_children: appending result",self+'',res)
         // тут у нас гарантированно процесс прислали
@@ -261,8 +262,9 @@ process "apply_children" {
   func "stop_result_process" {: 
     if (self.result.is_set) {
       let p = self.result.get()
+      if (p && p.is_set) p = p.get() // значение процесса (контекста) f
       if (p) {
-          //console.log("apply_children: destroy p=",p)
+          console.log("apply_children: destroy p=",p)
           p.destroy()
       }
       self.result.set( CL2.NOVALUE )

@@ -837,7 +837,11 @@ process "repeater" {
   :}
 
   func "forget_all" {:
-    running.get().map( r => r.destroy() ) // пока так
+    running.get().map( r => {
+       // странно что destroy не ведет к forget-у.? да не, ведет
+       // self.forget( r )
+       r.destroy()
+    } ) // пока так
     running.submit( [] )
   :}
 

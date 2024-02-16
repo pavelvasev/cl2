@@ -77,6 +77,7 @@ process "create"
   repeater @parts { c |
     apply_children @c @arg
   }
+  //print "parts created called. parts=" @parts
 }
 
 // возвращает функцию построенную из кусочков
