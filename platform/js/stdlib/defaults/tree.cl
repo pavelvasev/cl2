@@ -55,6 +55,11 @@ obj "tree_lift" //base_code="create_tree_child({})"{
     allow_default: cell true skip_expose=true
   }
 
+  /* получается что исходное дерево хранится в req - список детей из описания
+     а children - это фактические дети, построенные из req - либо элементы req,
+     либо их children-ы для элементов-лифтов.
+  */
+
   req: state skip_expose=true       // храним тут заявки
   children: cell skip_expose=true  // а тут результат сбора
 
@@ -260,6 +265,7 @@ process "apply_children" {
 
   // это все заради бонуса чтобы аргументы передавать
   func "stop_result_process" {: 
+    //console.log("apply_children: stop_result_process called",self+'')
     if (self.result.is_set) {
       let p = self.result.get()
       if (p && p.is_set) p = p.get() // значение процесса (контекста) f
