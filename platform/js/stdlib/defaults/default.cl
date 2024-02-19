@@ -441,11 +441,11 @@ process "read_value" {
 
   init {:
     input.subscribe( comm => {
-      if (self.binding) self.binding.destoy();  
+      if (self.binding) self.binding.unsub();  
       self.binding = CL2.create_binding( comm, output )
     })
     self.release.subscribe( () => {
-      if (self.binding) self.binding.destoy();  
+      if (self.binding) self.binding.unsub();  
     })
   :} 
 }

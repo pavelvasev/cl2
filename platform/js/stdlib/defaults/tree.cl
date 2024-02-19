@@ -264,7 +264,7 @@ process "apply_children" {
       let p = self.result.get()
       if (p && p.is_set) p = p.get() // значение процесса (контекста) f
       if (p) {
-          console.log("apply_children: destroy p=",p)
+          //console.log("apply_children: destroy p=",p)
           p.destroy()
       }
       self.result.set( CL2.NOVALUE )
