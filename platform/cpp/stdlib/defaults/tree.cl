@@ -262,8 +262,10 @@ obj "apply_children" {
     :}
 
   func "stop_result_process" {: // это все заради бонуса чтобы аргументы передавать
+    //console.log("apply_children: stop_result_process called")
     if (self.result.is_set) {
       let p = self.result.get()
+      console.log("destroying result process",p)
       p.destroy()
       self.result.set( CL2.NOVALUE )
     }
