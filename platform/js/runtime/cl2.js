@@ -406,7 +406,7 @@ export class Item extends ClObject {
 		if (child.parent.get() != this)
 			child.parent.set( this )
 		this.children.changed.emit( this.children.get() )
-		this.appended.emit( child ) 
+		this.appended.emit( child )
 	}
 	remove( child ) {
 		if (!(child instanceof Item)) return
@@ -485,14 +485,25 @@ export class Binding {
 		//if (tgt instanceof Function)
 		if (!src)
 			console.error("binding src is null! tgt=", tgt + "")
-		if (!src.subscribe)
-			console.error("binding src have no subscribe method. src=", src + "","tgt=", tgt + "")
 		if (!tgt)
-			console.error("binding tgt is null! src=", src + "","tgt=", tgt + "")					
+			console.error("binding tgt is null! src=", src + "","tgt=", tgt + "")
 		if (!tgt.submit)
-			console.error("binding tgt have no submit method. src=", src + "","tgt=", tgt + "")		
+			console.error("binding tgt have no submit method. src=", src + "","tgt=", tgt + "")
+   
+    // это пока для теста
+    // мб лучше кстати уметь связывать 2 объекта и это значит их input-output
+    if (false && src instanceof ClObject) {
+      // F-MAY-BIND-TO-OBJECT
+      this.unsub = () => {}
+      //console.log("Case 2", src, tgt );
+      tgt.submit( src );
+    }
+    else {
+      if (!src.subscribe)
+          console.error("binding src have no subscribe method. src=", src + "","tgt=", tgt + "")    
+      this.unsub = src.subscribe( tgt.submit.bind(tgt) )
+    }
 
-		this.unsub = src.subscribe( tgt.submit.bind(tgt) )
 
 		tgt.set_m_priority( src )
 
